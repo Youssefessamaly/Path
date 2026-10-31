@@ -110,6 +110,7 @@ export default function ApplicationsRoute() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView
+        style={{ backgroundColor: PathoraColors.paper }}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -120,7 +121,7 @@ export default function ApplicationsRoute() {
           <View style={styles.center}><ActivityIndicator size="large" color={PathoraColors.teal600} /></View>
         ) : error ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>We could not load your applications</Text>
+            <Text style={styles.emptyTitle}>We couldn't load your applications</Text>
             <Text style={styles.emptyBody}>{error}</Text>
             <PathoraButton label="Try again" variant="secondary" onPress={() => void load()} style={styles.retry} />
           </View>
@@ -164,7 +165,7 @@ export default function ApplicationsRoute() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: PathoraColors.paper },
+  safeArea: { flex: 1, backgroundColor: PathoraColors.teal700 },
   content: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 155, gap: 16 },
   metrics: { flexDirection: 'row', gap: 9, marginBottom: 6 },
   filters: { gap: 9, paddingVertical: 2 },

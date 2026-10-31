@@ -7,14 +7,15 @@ export type PathoraPageHeaderProps = {
   eyebrow: string;
   title: string;
   subtitle: string;
-  /** Optional genuine action, e.g. Post internship. Do not use for decorative art. */
   action?: ReactNode;
 };
 
-/** Consistent header for top-level student/company tabs (dashboard uses WelcomeHeader). */
+/** Deep-teal header shared across student and company main tabs.
+ * Parent content uses 24px horizontal and 12px top padding.
+ */
 export function PathoraPageHeader({ eyebrow, title, subtitle, action }: PathoraPageHeaderProps) {
   return (
-    <View style={styles.container}>
+    <View style={styles.panel}>
       <View style={styles.copy}>
         <Text style={styles.eyebrow}>{eyebrow}</Text>
         <Text style={styles.title}>{title}</Text>
@@ -26,22 +27,27 @@ export function PathoraPageHeader({ eyebrow, title, subtitle, action }: PathoraP
 }
 
 const styles = StyleSheet.create({
-  container: {
+  panel: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     gap: PathoraSpacing[12],
+    marginHorizontal: -PathoraSpacing[24], marginTop: -PathoraSpacing[12],
+    paddingHorizontal: PathoraSpacing[24], paddingTop: PathoraSpacing[24],
+    paddingBottom: PathoraSpacing[32],
+    backgroundColor: PathoraColors.teal700,
+    borderBottomLeftRadius: 26, borderBottomRightRadius: 26,
   },
-  copy: { flex: 1, minWidth: 0, gap: PathoraSpacing[4] },
+  copy: { flex: 1, minWidth: 0, gap: PathoraSpacing[8] },
   eyebrow: {
     fontFamily: PathoraFonts.en.bold, fontSize: 11, letterSpacing: 1.35,
-    color: PathoraColors.teal600,
+    color: 'rgba(255,255,255,0.78)',
   },
   title: {
     fontFamily: PathoraFonts.en.extraBold, fontSize: 28, lineHeight: 37,
-    letterSpacing: -0.65, color: PathoraColors.ink900,
+    letterSpacing: -0.65, color: PathoraColors.surface,
   },
   subtitle: {
-    fontFamily: PathoraFonts.en.medium, fontSize: 13.5, lineHeight: 20,
-    color: PathoraColors.textSecondary,
+    fontFamily: PathoraFonts.en.medium, fontSize: 13.5, lineHeight: 21,
+    color: 'rgba(255,255,255,0.80)',
   },
   action: { flexShrink: 0, alignSelf: 'center' },
 });

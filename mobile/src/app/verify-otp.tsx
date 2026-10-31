@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AuthBackButton } from '@/components/auth-back-button';
+import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraInput } from '@/components/pathora-input';
 import { PathoraColors, PathoraFonts, PathoraSpacing } from '@/constants/pathora-theme';
@@ -121,15 +121,11 @@ export default function VerifyOtpScreen() {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
+          style={{ backgroundColor: PathoraColors.paper }}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          <AuthBackButton onPress={handleBack} style={styles.backButton} />
-
-          <Text style={styles.title}>Enter verification code</Text>
-          <Text style={styles.subtitle}>
-            A 6-digit code was sent to {email ?? 'your email'} and is valid for 5 minutes.
-          </Text>
+          <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATHORA" title="Enter verification code" subtitle={`A 6-digit code was sent to ${email ?? 'your email'} and is valid for 5 minutes.`} onBack={handleBack} />
 
           <View style={styles.fields}>
             <PathoraInput
@@ -174,7 +170,7 @@ export default function VerifyOtpScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: PathoraColors.paper,
+    backgroundColor: PathoraColors.teal700,
   },
   flex: {
     flex: 1,
@@ -182,24 +178,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: PathoraSpacing[24],
-  },
-  backButton: {
-    marginTop: 8,
-    marginBottom: PathoraSpacing[24],
-    alignSelf: 'flex-start',
-  },
-  title: {
-    fontFamily: PathoraFonts.en.extraBold,
-    fontSize: 24,
-    color: PathoraColors.ink900,
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontFamily: PathoraFonts.en.regular,
-    fontSize: 14,
-    lineHeight: 22,
-    color: PathoraColors.textSecondary,
-    marginBottom: PathoraSpacing[32],
   },
   fields: {
     gap: PathoraSpacing[20],

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AuthBackButton } from '@/components/auth-back-button';
+import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraInput } from '@/components/pathora-input';
 import { PathoraColors, PathoraFonts, PathoraSpacing } from '@/constants/pathora-theme';
@@ -55,15 +55,11 @@ export default function ForgotPasswordScreen() {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
+          style={{ backgroundColor: PathoraColors.paper }}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          <AuthBackButton onPress={handleBack} style={styles.backButton} />
-
-          <Text style={styles.title}>Reset your password</Text>
-          <Text style={styles.subtitle}>
-            Enter your email address and we&apos;ll send you a 6-digit code to reset your password.
-          </Text>
+          <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATHORA" title="Reset your password" subtitle="Enter your email address and we'll send you a 6-digit code to reset your password." onBack={handleBack} />
 
           <View style={styles.fields}>
             <PathoraInput
@@ -96,7 +92,7 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: PathoraColors.paper,
+    backgroundColor: PathoraColors.teal700,
   },
   flex: {
     flex: 1,
@@ -104,24 +100,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: PathoraSpacing[24],
-  },
-  backButton: {
-    marginTop: 8,
-    marginBottom: PathoraSpacing[24],
-    alignSelf: 'flex-start',
-  },
-  title: {
-    fontFamily: PathoraFonts.en.extraBold,
-    fontSize: 24,
-    color: PathoraColors.ink900,
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontFamily: PathoraFonts.en.regular,
-    fontSize: 14,
-    lineHeight: 22,
-    color: PathoraColors.textSecondary,
-    marginBottom: PathoraSpacing[32],
   },
   fields: {
     gap: PathoraSpacing[20],

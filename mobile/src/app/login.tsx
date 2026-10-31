@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AuthBackButton } from '@/components/auth-back-button';
+import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraInput } from '@/components/pathora-input';
 import { PathoraColors, PathoraFonts, PathoraSpacing } from '@/constants/pathora-theme';
@@ -102,11 +102,9 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <AuthBackButton style={styles.backButton} />
-
-        <Text style={styles.title}>Welcome back</Text>
-        <Text style={styles.subtitle}>Log in to keep tracking your applications.</Text>
+      <ScrollView
+          style={{ backgroundColor: PathoraColors.paper }} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATHORA" title="Welcome back" subtitle="Log in to keep tracking your applications." onBack={() => router.replace('/welcome')} />
 
         {registrationMessage && <Text style={styles.successMessage}>{registrationMessage}</Text>}
 
@@ -166,29 +164,11 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: PathoraColors.paper,
+    backgroundColor: PathoraColors.teal700,
   },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: PathoraSpacing[24],
-  },
-  backButton: {
-    marginTop: 8,
-    marginBottom: PathoraSpacing[24],
-    alignSelf: 'flex-start',
-  },
-  title: {
-    fontFamily: PathoraFonts.en.extraBold,
-    fontSize: 24,
-    color: PathoraColors.ink900,
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontFamily: PathoraFonts.en.regular,
-    fontSize: 14,
-    lineHeight: 22,
-    color: PathoraColors.textSecondary,
-    marginBottom: PathoraSpacing[32],
   },
   successMessage: {
     fontFamily: PathoraFonts.en.medium,

@@ -5,7 +5,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ApplicationMethodField } from '@/components/application-method-field';
-import { AuthBackButton } from '@/components/auth-back-button';
+import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { DateInputGroup } from '@/components/date-input-group';
 import { MajorTagInput } from '@/components/major-tag-input';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
@@ -189,13 +189,11 @@ function NewInternshipScreen() {
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
+        style={{ backgroundColor: PathoraColors.paper }}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          <AuthBackButton onPress={() => router.back()} style={styles.backButton} />
-
-          <Text style={styles.title}>Post an internship</Text>
-          <Text style={styles.subtitle}>Fill in the details Pathora interns will see.</Text>
+          <PathoraDetailHeader topInset={0} onBack={() => router.back()} eyebrow="COMPANY WORKSPACE" title="Post an internship" subtitle="Fill in the details Pathora interns will see." />
 
           <View style={styles.fields}>
             <PathoraInput
@@ -344,7 +342,7 @@ export default function NewInternshipRoute() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: PathoraColors.paper,
+    backgroundColor: PathoraColors.teal700,
   },
   flex: {
     flex: 1,
@@ -352,24 +350,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: PathoraSpacing[24],
-  },
-  backButton: {
-    marginTop: 8,
-    marginBottom: PathoraSpacing[24],
-    alignSelf: 'flex-start',
-  },
-  title: {
-    fontFamily: PathoraFonts.en.extraBold,
-    fontSize: 24,
-    color: PathoraColors.ink900,
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontFamily: PathoraFonts.en.regular,
-    fontSize: 14,
-    lineHeight: 22,
-    color: PathoraColors.textSecondary,
-    marginBottom: PathoraSpacing[32],
   },
   fields: {
     gap: PathoraSpacing[20],

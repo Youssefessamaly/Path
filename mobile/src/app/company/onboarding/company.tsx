@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
 import { OnboardingOptionGroup } from '@/components/onboarding/onboarding-option-group';
 import { OnboardingStepHeader } from '@/components/onboarding/onboarding-step-header';
+import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraInput } from '@/components/pathora-input';
 import { PathoraColors, PathoraFonts, PathoraSpacing } from '@/constants/pathora-theme';
@@ -82,9 +83,12 @@ function CompanyBasicsScreen() {
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
+          style={{ backgroundColor: PathoraColors.paper }}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
+          <PathoraDetailHeader bottomGap={24} topInset={24} eyebrow="COMPANY SETUP" title="Company profile" subtitle="Step 1 of 3" />
+
           <OnboardingStepHeader step={1} heading="Tell us about your company" />
 
           <View style={styles.fields}>
@@ -138,7 +142,7 @@ export default function CompanyBasicsRoute() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: PathoraColors.paper,
+    backgroundColor: PathoraColors.teal700,
   },
   flex: {
     flex: 1,

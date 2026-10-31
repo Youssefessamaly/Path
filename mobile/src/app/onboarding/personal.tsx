@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AuthBackButton } from '@/components/auth-back-button';
+import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
 import { OnboardingStepHeader } from '@/components/onboarding/onboarding-step-header';
 import { PathoraButton } from '@/components/pathora-button';
@@ -141,10 +141,11 @@ function PersonalDetailsScreen() {
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
+          style={{ backgroundColor: PathoraColors.paper }}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          <AuthBackButton onPress={handleBack} style={styles.backButton} />
+          <PathoraDetailHeader bottomGap={24} topInset={0} eyebrow="STUDENT SETUP" title="Your profile" subtitle="Step 1 of 3" onBack={handleBack} />
 
           <OnboardingStepHeader step={1} heading="Tell us about yourself" />
 
@@ -236,7 +237,7 @@ export default function PersonalDetailsRoute() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: PathoraColors.paper,
+    backgroundColor: PathoraColors.teal700,
   },
   flex: {
     flex: 1,
@@ -244,11 +245,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: PathoraSpacing[24],
-  },
-  backButton: {
-    marginTop: 8,
-    marginBottom: PathoraSpacing[24],
-    alignSelf: 'flex-start',
   },
   fields: {
     gap: PathoraSpacing[20],

@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ApplicationDetailCard, ApplicationDetailText } from '@/components/application-polish';
 import { ApplicationStatusBadge } from '@/components/application-status-badge';
 import { AuthBackButton } from '@/components/auth-back-button';
+import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraColors, PathoraFonts } from '@/constants/pathora-theme';
@@ -57,13 +58,9 @@ function ApplicationDetailsScreen({ applicationId }: { applicationId: string }) 
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <AuthBackButton onPress={() => router.back()} style={styles.backButton} />
-        <View style={styles.heading}>
-          <Text style={styles.eyebrow}>APPLICATION HISTORY</Text>
-          <Text style={styles.headingTitle}>Application details<Text style={styles.dot}>.</Text></Text>
-          <Text style={styles.subtitle}>A record of what you submitted through Path.</Text>
-        </View>
+      <ScrollView
+        style={{ backgroundColor: PathoraColors.paper }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <PathoraDetailHeader horizontalInset={20} onBack={() => router.back()} eyebrow="APPLICATION HISTORY" title="Application details" subtitle="A record of what you submitted through Path." />
 
         <View style={styles.profileCard}>
           <View style={styles.profileTop}>
@@ -139,18 +136,13 @@ export default function ApplicationDetailsRoute() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: PathoraColors.paper },
+  safeArea: { flex: 1, backgroundColor: PathoraColors.teal700 },
   content: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 158, gap: 14 },
   backButton: { alignSelf: 'flex-start', marginLeft: -5 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24, gap: 14 },
   stateTitle: { color: PathoraColors.ink900, fontFamily: PathoraFonts.en.extraBold, fontSize: 18, textAlign: 'center' },
   stateBody: { color: PathoraColors.textSecondary, fontFamily: PathoraFonts.en.medium, fontSize: 13, lineHeight: 21, textAlign: 'center' },
   retry: { minWidth: 160 },
-  heading: { gap: 6, marginBottom: 4 },
-  eyebrow: { fontFamily: PathoraFonts.en.bold, color: PathoraColors.teal600, fontSize: 10, letterSpacing: 1.5 },
-  headingTitle: { fontFamily: PathoraFonts.en.extraBold, color: PathoraColors.ink900, fontSize: 26, lineHeight: 35 },
-  dot: { color: PathoraColors.teal500 },
-  subtitle: { fontFamily: PathoraFonts.en.medium, fontSize: 12.5, color: PathoraColors.textSecondary },
   profileCard: { borderRadius: 20, borderWidth: 1, borderColor: PathoraColors.border,
     padding: 19, gap: 17, backgroundColor: PathoraColors.surface },
   profileTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },

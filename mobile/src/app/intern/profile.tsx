@@ -144,6 +144,7 @@ export default function InternProfileRoute() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView
+        style={{ backgroundColor: C.paper }}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}>
         <PathoraPageHeader eyebrow="STUDENT WORKSPACE" title="My profile" subtitle="The person behind the application." />
@@ -223,7 +224,7 @@ export default function InternProfileRoute() {
               </Text>
             </View>
           </View>
-          {profile.cvFileName && (
+          {Boolean(profile.cvFileName) && (
             <Pressable
               onPress={viewCv}
               accessibilityRole="button"
@@ -235,16 +236,15 @@ export default function InternProfileRoute() {
           )}
         </SectionCard>
 
-        {(profile.careerInterests || profile.phoneNumber || profile.linkedinUrl) && (
+        {Boolean(profile.careerInterests || profile.phoneNumber || profile.linkedinUrl) && (
           <SectionCard title="More about you" icon={{ ios: 'person.text.rectangle', android: 'person', web: 'person' }}>
-            {profile.careerInterests && (
+            {Boolean(profile.careerInterests) && (
               <View style={styles.detailBlock}>
                 <Text style={styles.subheading}>CAREER INTERESTS</Text>
                 <Text style={styles.description}>{profile.careerInterests}</Text>
               </View>
             )}
-            {profile.phoneNumber && <InfoLine label="Phone" value={profile.phoneNumber} />}
-            {profile.linkedinUrl && (
+              {profile.phoneNumber ? <InfoLine label="Phone" value={profile.phoneNumber} /> : null}            {Boolean(profile.linkedinUrl) && (
               <View style={styles.detailBlock}>
                 <Text style={styles.subheading}>LINKEDIN</Text>
                 <Text style={styles.linkText} selectable>{profile.linkedinUrl}</Text>
@@ -267,7 +267,7 @@ export default function InternProfileRoute() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: C.paper },
+  safeArea: { flex: 1, backgroundColor: C.teal700 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 144, gap: 18 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 26, gap: 16 },
   centerCaption: { fontFamily: F.en.medium, color: C.textSecondary, fontSize: 13 },

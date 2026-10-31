@@ -286,6 +286,7 @@ export default function CompanyInternshipsListRoute() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView
+        style={{ backgroundColor: PathoraColors.paper }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.scrollContent}
@@ -307,7 +308,7 @@ export default function CompanyInternshipsListRoute() {
               accessibilityRole="button"
               accessibilityLabel="Post an internship"
               style={({ pressed }) => [styles.headerAddButton, pressed && styles.touchPressed]}>
-              <SmallIcon name={{ ios: 'plus', android: 'add', web: 'add' }} color={PathoraColors.surface} size={23} />
+              <SmallIcon name={{ ios: 'plus', android: 'add', web: 'add' }} color={PathoraColors.teal700} size={23} />
             </Pressable>
           }
         />
@@ -412,7 +413,7 @@ export default function CompanyInternshipsListRoute() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: PathoraColors.paper },
+  safeArea: { flex: 1, backgroundColor: PathoraColors.teal700 },
   scrollContent: {
     paddingHorizontal: PathoraSpacing[24],
     paddingTop: PathoraSpacing[12],
@@ -423,9 +424,9 @@ const styles = StyleSheet.create({
   touchPressed: { opacity: 0.74 },
   headerAddButton: {
     height: 46, width: 46, borderRadius: 16,
-    backgroundColor: PathoraColors.teal700,
+    backgroundColor: PathoraColors.surface,
     justifyContent: 'center', alignItems: 'center',
-    shadowColor: PathoraColors.teal700, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.17, shadowRadius: 9, elevation: 3,
+    shadowColor: PathoraColors.teal700, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.10, shadowRadius: 9, elevation: 2,
   },
   loadingPanel: { flex: 1, minHeight: 330, gap: 14, justifyContent: 'center', alignItems: 'center' },
   loadingCaption: { color: PathoraColors.textSecondary, fontFamily: PathoraFonts.en.medium, fontSize: 13 },

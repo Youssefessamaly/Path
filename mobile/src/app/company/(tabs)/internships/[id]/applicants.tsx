@@ -7,7 +7,7 @@ import Animated, { FadeInDown, ReduceMotion } from 'react-native-reanimated';
 
 import { ApplicationFilter, ApplicationMetric } from '@/components/application-polish';
 import { ApplicationStatusBadge } from '@/components/application-status-badge';
-import { AuthBackButton } from '@/components/auth-back-button';
+import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraColors, PathoraFonts } from '@/constants/pathora-theme';
@@ -96,14 +96,10 @@ function RoleApplicants({ internshipId }: { internshipId: string }) {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled"
+      <ScrollView
+        style={{ backgroundColor: PathoraColors.paper }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={PathoraColors.teal600} />}>
-        <AuthBackButton onPress={() => router.back()} style={styles.backButton} />
-        <View style={styles.heading}>
-          <Text style={styles.eyebrow}>ROLE MANAGEMENT</Text>
-          <Text style={styles.title}>Applicants<Text style={styles.titleDot}>.</Text></Text>
-          <Text style={styles.subtitle}>Review applications for this internship.</Text>
-        </View>
+        <PathoraDetailHeader horizontalInset={20} onBack={() => router.back()} eyebrow="ROLE MANAGEMENT" title="Applicants" subtitle="Review applications for this internship." />
         {applications === null && !error && !notFound ? (
           <View style={styles.center}><ActivityIndicator size="large" color={PathoraColors.teal600} /></View>
         ) : error || notFound ? (
@@ -128,7 +124,8 @@ function RoleApplicants({ internshipId }: { internshipId: string }) {
               <TextInput value={query} onChangeText={setQuery} placeholder="Search candidates" autoCorrect={false}
                 placeholderTextColor={PathoraColors.textTertiary} style={styles.searchInput} />
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
+            <ScrollView
+        style={{ backgroundColor: PathoraColors.paper }} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
               {FILTERS.map(({ key, label }) => <ApplicationFilter key={key} title={label} count={counts[key]} selected={filter === key} onPress={() => setFilter(key)} />)}
             </ScrollView>
             <View style={styles.resultsHead}>
@@ -157,14 +154,9 @@ export default function ApplicantsRoute() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: PathoraColors.paper },
+  safeArea: { flex: 1, backgroundColor: PathoraColors.teal700 },
   content: { flexGrow: 1, paddingTop: 12, paddingHorizontal: 20, paddingBottom: 155, gap: 16 },
-  backButton: { alignSelf: 'flex-start', marginLeft: -5 },
-  heading: { gap: 6 },
   eyebrow: { color: PathoraColors.teal600, fontFamily: PathoraFonts.en.bold, fontSize: 10, letterSpacing: 1.5 },
-  title: { color: PathoraColors.ink900, fontFamily: PathoraFonts.en.extraBold, fontSize: 29, lineHeight: 39 },
-  titleDot: { color: PathoraColors.teal500 },
-  subtitle: { color: PathoraColors.textSecondary, fontFamily: PathoraFonts.en.medium, fontSize: 12.5 },
   sectionHeading: { gap: 4, marginTop: 5 },
   sectionTitle: { color: PathoraColors.ink900, fontFamily: PathoraFonts.en.extraBold, fontSize: 21 },
   metrics: { flexDirection: 'row', gap: 9 },

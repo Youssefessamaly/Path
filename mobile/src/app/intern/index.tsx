@@ -2,7 +2,6 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 
 import { DashboardWelcomeHeader } from '@/components/dashboard-welcome-header';
 import { InternshipFeedCard } from '@/components/internship-feed-card';
@@ -32,11 +31,6 @@ const RECOMMENDED_PREVIEW_COUNT = 3;
 function InternHomeScreen() {
   const router = useRouter();
   const { user, token } = useAuth();
-  const [isDashboardFocused, setDashboardFocused] = useState(false);
-  useFocusEffect(useCallback(() => {
-    setDashboardFocused(true);
-    return () => setDashboardFocused(false);
-  }, []));
 
   const [internships, setInternships] = useState<InternInternship[] | null>(null);
   const [profile, setProfile] = useState<InternProfile | null>(null);
@@ -139,7 +133,6 @@ function InternHomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      {isDashboardFocused && <StatusBar style="light" backgroundColor={PathoraColors.teal700} />}
       {internships === null && !error && (
         <View style={[styles.centerContent, styles.fallbackContent]}>
           <ActivityIndicator color={PathoraColors.teal600} />

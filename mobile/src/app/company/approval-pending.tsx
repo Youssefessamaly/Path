@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CompanyApprovalBadge } from '@/components/company-approval-badge';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
+import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraColors, PathoraFonts, PathoraRadius, PathoraSpacing } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
@@ -79,6 +80,7 @@ function ApprovalPendingScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <PathoraDetailHeader standalone eyebrow="COMPANY WORKSPACE" title="Under review" />
       <View style={styles.content}>
         <View style={styles.card}>
           <View style={styles.iconCircle}>
@@ -140,10 +142,10 @@ export default function ApprovalPendingRoute() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: PathoraColors.paper,
+    backgroundColor: PathoraColors.teal700,
   },
   content: {
-    flex: 1,
+    flex: 1, backgroundColor: PathoraColors.paper,
     justifyContent: 'center',
     paddingHorizontal: PathoraSpacing[24],
     gap: PathoraSpacing[24],

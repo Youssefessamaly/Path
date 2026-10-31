@@ -156,6 +156,7 @@ function InternshipsListScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView
+        style={{ backgroundColor: PathoraColors.paper }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -256,7 +257,7 @@ export default function InternshipsListRoute() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: PathoraColors.paper },
+  safeArea: { flex: 1, backgroundColor: PathoraColors.teal700 },
   // Preserves the latest full-bleed change: content scrolls behind the floating bottom bar.
   scrollContent: { paddingHorizontal: PathoraSpacing[24], paddingTop: 12, paddingBottom: 150, gap: 24 },
   searchSection: { gap: 12 },

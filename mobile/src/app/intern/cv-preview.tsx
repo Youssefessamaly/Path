@@ -5,7 +5,7 @@ import { ActivityIndicator, Linking, Platform, StyleSheet, Text, View } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 
-import { AuthBackButton } from '@/components/auth-back-button';
+import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraColors, PathoraFonts, PathoraSpacing } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
@@ -104,17 +104,7 @@ export default function CvPreviewScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <View style={styles.header}>
-        <AuthBackButton onPress={handleBack} />
-
-        <View style={styles.headerText}>
-          <Text style={styles.title}>CV Preview</Text>
-
-          <Text style={styles.fileName} numberOfLines={1}>
-            {fileName ?? 'Your CV'}
-          </Text>
-        </View>
-      </View>
+      <PathoraDetailHeader standalone eyebrow="STUDENT WORKSPACE" title="CV preview" subtitle={fileName ?? 'Your CV'} onBack={handleBack} />
 
       <View style={styles.content}>
         {!token ? (
@@ -183,36 +173,7 @@ export default function CvPreviewScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: PathoraColors.paper,
-  },
-
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: PathoraSpacing[12],
-    paddingHorizontal: PathoraSpacing[16],
-    paddingVertical: PathoraSpacing[12],
-    backgroundColor: PathoraColors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: PathoraColors.border,
-  },
-
-  headerText: {
-    flex: 1,
-    minWidth: 0,
-  },
-
-  title: {
-    fontFamily: PathoraFonts.en.bold,
-    fontSize: 17,
-    color: PathoraColors.ink900,
-  },
-
-  fileName: {
-    marginTop: 2,
-    fontFamily: PathoraFonts.en.regular,
-    fontSize: 12,
-    color: PathoraColors.textSecondary,
+    backgroundColor: PathoraColors.teal700,
   },
 
   content: {

@@ -145,7 +145,8 @@ export default function CompanyProfileRoute() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={{ backgroundColor: C.paper }} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <PathoraPageHeader eyebrow="COMPANY WORKSPACE" title="Company profile" subtitle="Your team is present on Path." />
 
         <Animated.View entering={FadeInDown.duration(300).reduceMotion(ReduceMotion.System)} style={styles.identityCard}>
@@ -207,7 +208,7 @@ export default function CompanyProfileRoute() {
               {contactFacts.map((fact) => <InfoLine key={fact.label} label={fact.label} value={fact.value} />)}
             </View>
           ) : <Text style={styles.muted}>No contact details added yet.</Text>}
-          {profile.website && (
+          {Boolean(profile.website) && (
             <View style={styles.websiteBlock}>
               <Text style={styles.microLabel}>WEBSITE</Text>
               <Text style={styles.websiteValue} selectable>{profile.website}</Text>
@@ -229,7 +230,7 @@ export default function CompanyProfileRoute() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: C.paper },
+  safeArea: { flex: 1, backgroundColor: C.teal700 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 144, gap: 18 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 26, gap: 16 },
   centerCaption: { fontFamily: F.en.medium, color: C.textSecondary, fontSize: 13 },

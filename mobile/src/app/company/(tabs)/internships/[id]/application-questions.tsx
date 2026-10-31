@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AuthBackButton } from '@/components/auth-back-button';
+import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
 import { OnboardingOptionGroup } from '@/components/onboarding/onboarding-option-group';
 import { PathoraButton } from '@/components/pathora-button';
@@ -375,12 +375,11 @@ function ApplicationQuestionsScreen({ internshipId }: { internshipId: string }) 
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
+        style={{ backgroundColor: PathoraColors.paper }}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          <AuthBackButton onPress={() => router.back()} style={styles.backButton} />
-
-          <Text style={styles.title}>Application questions</Text>
+          <PathoraDetailHeader topInset={0} onBack={() => router.back()} eyebrow="COMPANY WORKSPACE" title="Application questions" subtitle="Customize what candidates answer." />
           <Text style={styles.subtitle}>Add questions applicants will answer when applying through Pathora.</Text>
 
           {isLocked && (
@@ -488,7 +487,7 @@ export default function ApplicationQuestionsRoute() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: PathoraColors.paper,
+    backgroundColor: PathoraColors.teal700,
   },
   flex: {
     flex: 1,
@@ -502,17 +501,6 @@ const styles = StyleSheet.create({
     // of its own here (behavior is undefined on that platform), so the ScrollView itself must
     // provide enough room to scroll the buttons into view.
     paddingBottom: PathoraSpacing[64] * 3,
-  },
-  backButton: {
-    marginTop: 8,
-    marginBottom: PathoraSpacing[24],
-    alignSelf: 'flex-start',
-  },
-  title: {
-    fontFamily: PathoraFonts.en.extraBold,
-    fontSize: 24,
-    color: PathoraColors.ink900,
-    marginBottom: 8,
   },
   subtitle: {
     fontFamily: PathoraFonts.en.regular,

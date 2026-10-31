@@ -10,7 +10,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 
 import { ApplicantPreviewRow } from '@/components/applicant-preview-row';
 import { DashboardWelcomeHeader } from '@/components/dashboard-welcome-header';
@@ -155,11 +154,6 @@ function InternshipPreview({
 function CompanyHomeScreen() {
   const router = useRouter();
   const { user, token } = useAuth();
-  const [isDashboardFocused, setDashboardFocused] = useState(false);
-  useFocusEffect(useCallback(() => {
-    setDashboardFocused(true);
-    return () => setDashboardFocused(false);
-  }, []));
 
   const [internships, setInternships] = useState<CompanyInternship[] | null>(null);
   const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
@@ -218,7 +212,6 @@ function CompanyHomeScreen() {
   if (internships === null && !error) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-      {isDashboardFocused && <StatusBar style="light" backgroundColor={PathoraColors.teal700} />}
         <View style={[styles.centerContent, styles.fallbackContent]}>
           <PathoraLogo size={34} wordmarkSize={21} />
           <ActivityIndicator color={PathoraColors.teal600} style={styles.startupSpinner} />
@@ -231,7 +224,6 @@ function CompanyHomeScreen() {
   if (error) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-      {isDashboardFocused && <StatusBar style="light" backgroundColor={PathoraColors.teal700} />}
         <View style={[styles.centerContent, styles.fallbackContent]}>
           <Text style={styles.errorTitle}>We could not load your dashboard</Text>
           <Text style={styles.errorText}>{error}</Text>
@@ -249,7 +241,6 @@ function CompanyHomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      {isDashboardFocused && <StatusBar style="light" backgroundColor={PathoraColors.teal700} />}
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}

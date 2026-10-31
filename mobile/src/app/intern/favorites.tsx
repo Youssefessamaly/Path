@@ -99,6 +99,7 @@ function FavoritesScreen() {
 
       {favorites !== null && !error && favorites.length === 0 && (
         <ScrollView
+          style={{ backgroundColor: PathoraColors.paper }}
           contentContainerStyle={styles.emptyContent}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}>
           <Text style={styles.emptyTitle}>No favorites yet</Text>
@@ -116,6 +117,7 @@ function FavoritesScreen() {
 
       {favorites !== null && !error && favorites.length > 0 && (
         <ScrollView
+          style={{ backgroundColor: PathoraColors.paper }}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}>
@@ -143,11 +145,11 @@ export default function FavoritesRoute() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: PathoraColors.paper,
+    backgroundColor: PathoraColors.teal700,
   },
-  headerWrap: { paddingHorizontal: PathoraSpacing[24], paddingTop: 12, paddingBottom: PathoraSpacing[16] },
+  headerWrap: { paddingHorizontal: PathoraSpacing[24], paddingTop: 12, paddingBottom: PathoraSpacing[16], backgroundColor: PathoraColors.paper },
   centerContent: {
-    flex: 1,
+    flex: 1, backgroundColor: PathoraColors.paper,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: PathoraSpacing[24],

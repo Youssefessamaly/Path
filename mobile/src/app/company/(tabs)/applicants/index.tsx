@@ -119,6 +119,7 @@ function CompanyApplicantsContent({ initialFilter }: { initialFilter: Filter }) 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView
+        style={{ backgroundColor: PathoraColors.paper }}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -176,7 +177,7 @@ function CompanyApplicantsContent({ initialFilter }: { initialFilter: Filter }) 
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: PathoraColors.paper },
+  safeArea: { flex: 1, backgroundColor: PathoraColors.teal700 },
   content: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 155, gap: 16 },
   metrics: { flexDirection: 'row', gap: 9, marginBottom: 6 },
   filters: { gap: 9, paddingVertical: 2 },

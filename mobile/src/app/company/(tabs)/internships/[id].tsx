@@ -4,6 +4,7 @@ import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AuthBackButton } from '@/components/auth-back-button';
+import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraColors, PathoraFonts, PathoraRadius, PathoraSpacing } from '@/constants/pathora-theme';
@@ -105,8 +106,9 @@ function InternshipDetailsScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <AuthBackButton onPress={() => router.back()} style={styles.backButton} />
+      <ScrollView
+        style={{ backgroundColor: PathoraColors.paper }} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <PathoraDetailHeader topInset={0} onBack={() => router.back()} eyebrow="COMPANY WORKSPACE" title="Internship details" />
 
         <View style={styles.headerRow}>
           <Text style={styles.title}>{internship.title}</Text>
@@ -232,7 +234,7 @@ export default function InternshipDetailsRoute() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: PathoraColors.paper,
+    backgroundColor: PathoraColors.teal700,
   },
   scrollContent: {
     flexGrow: 1,

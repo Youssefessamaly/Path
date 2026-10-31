@@ -27,9 +27,10 @@ import Animated, { FadeInDown, ReduceMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AuthBackButton } from '@/components/auth-back-button';
+import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
 import { PathoraButton } from '@/components/pathora-button';
-import { PathoraColors, PathoraFonts, PathoraRadius, PathoraSpacing } from '@/constants/pathora-theme';
+import { PathoraColors, PathoraFonts, PathoraSpacing } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
 import {
   ApiError,
@@ -211,14 +212,12 @@ function InternInternshipDetailsScreen({ internshipId }: { internshipId: string 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView
+        style={{ backgroundColor: PathoraColors.paper }}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled">
+        <PathoraDetailHeader horizontalInset={20} onBack={() => router.back()} eyebrow="STUDENT WORKSPACE" title="Internship details" />
         <View style={styles.topBar}>
-          <View style={styles.backWrap}>
-            <AuthBackButton onPress={() => router.back()} />
-            <Text style={styles.topBarTitle}>Internship details</Text>
-          </View>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={internship.favorited ? 'Remove from favorites' : 'Save internship to favorites'}
@@ -429,7 +428,7 @@ export default function InternInternshipDetailsRoute() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: PathoraColors.paper },
+  safeArea: { flex: 1, backgroundColor: PathoraColors.teal700 },
   scrollContent: {
     paddingHorizontal: PathoraSpacing[20],
     paddingTop: PathoraSpacing[12],
@@ -439,8 +438,6 @@ const styles = StyleSheet.create({
   touchPressed: { opacity: 0.77, transform: [{ scale: 0.96 }] },
   disabled: { opacity: 0.5 },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 1 },
-  backWrap: { flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1 },
-  topBarTitle: { fontFamily: PathoraFonts.en.bold, color: PathoraColors.ink900, fontSize: 13 },
   saveButton: { width: 43, height: 43, alignItems: 'center', justifyContent: 'center', borderRadius: 14, borderWidth: 1, borderColor: PathoraColors.border, backgroundColor: PathoraColors.surface },
   saveButtonActive: { backgroundColor: PathoraColors.teal100, borderColor: '#C5E4DE' },
   identityRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 13 },

@@ -14,7 +14,8 @@ import {
   PlusJakartaSans_800ExtraBold,
   useFonts as usePlusJakartaSansFonts,
 } from '@expo-google-fonts/plus-jakarta-sans';
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 
@@ -50,6 +51,13 @@ export default function RootLayout() {
 
 function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
   const { isInitializing } = useAuth();
+  const pathname = usePathname();
+  const hasTealHeader =
+    pathname.startsWith('/intern') ||
+    pathname.startsWith('/company') ||
+    pathname.startsWith('/onboarding') ||
+    pathname.startsWith('/register') ||
+    ['/account-type', '/login', '/forgot-password', '/verify-otp', '/reset-password'].includes(pathname);
   const isReady = fontsReady && !isInitializing;
 
   useEffect(() => {
@@ -63,11 +71,13 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
   }
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: PathoraColors.paper },
-      }}
-    />
+    <>
+<StatusBar style={hasTealHeader ? 'light' : 'dark'} />      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: PathoraColors.paper },
+        }}
+      />
+    </>
   );
 }

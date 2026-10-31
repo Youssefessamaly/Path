@@ -8,6 +8,7 @@ import * as Sharing from 'expo-sharing';
 import { ApplicationDetailCard, ApplicationDetailText } from '@/components/application-polish';
 import { ApplicationStatusBadge } from '@/components/application-status-badge';
 import { AuthBackButton } from '@/components/auth-back-button';
+import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraColors, PathoraFonts } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
@@ -124,13 +125,9 @@ export function CompanyApplicantDetailContent({ internshipId, applicationId }: {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <AuthBackButton onPress={() => router.back()} style={styles.backButton} />
-        <View style={styles.heading}>
-          <Text style={styles.eyebrow}>CANDIDATE REVIEW</Text>
-          <Text style={styles.headingTitle}>Application details<Text style={styles.dot}>.</Text></Text>
-          <Text style={styles.subheading}>Review the candidate and their submission.</Text>
-        </View>
+      <ScrollView
+        style={{ backgroundColor: PathoraColors.paper }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <PathoraDetailHeader horizontalInset={20} onBack={() => router.back()} eyebrow="CANDIDATE REVIEW" title="Application details" subtitle="Review the candidate and their submission." />
 
         <View style={styles.profileCard}>
           <View style={styles.profileTop}>
@@ -226,18 +223,13 @@ export function CompanyApplicantDetailContent({ internshipId, applicationId }: {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: PathoraColors.paper },
+  safeArea: { flex: 1, backgroundColor: PathoraColors.teal700 },
   content: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 158, gap: 14 },
   backButton: { alignSelf: 'flex-start', marginLeft: -5 },
   center: { flex: 1, paddingHorizontal: 26, justifyContent: 'center', alignItems: 'center', gap: 14 },
   stateTitle: { fontFamily: PathoraFonts.en.extraBold, color: PathoraColors.ink900, fontSize: 18, textAlign: 'center' },
   stateBody: { fontFamily: PathoraFonts.en.medium, color: PathoraColors.textSecondary, fontSize: 13, textAlign: 'center', lineHeight: 21 },
   retry: { minWidth: 160 },
-  heading: { gap: 6, marginBottom: 4 },
-  eyebrow: { fontFamily: PathoraFonts.en.bold, color: PathoraColors.teal600, fontSize: 10, letterSpacing: 1.5 },
-  headingTitle: { fontFamily: PathoraFonts.en.extraBold, color: PathoraColors.ink900, fontSize: 26, lineHeight: 35 },
-  dot: { color: PathoraColors.teal500 },
-  subheading: { fontFamily: PathoraFonts.en.medium, color: PathoraColors.textSecondary, fontSize: 12.5 },
   profileCard: { backgroundColor: PathoraColors.surface, borderRadius: 20, borderWidth: 1,
     borderColor: PathoraColors.border, padding: 19, gap: 17 },
   profileTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
