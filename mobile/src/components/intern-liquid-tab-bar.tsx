@@ -131,7 +131,7 @@ function LiquidTabButton({
   );
 }
 
-export function InternLiquidTabBar({ state, navigation }: InternTabBarProps) {
+export function InternLiquidTabBar({ state, emitter, navigateToTab }: InternTabBarProps) {
   const { bottom } = useSafeAreaInsets();
   const [trackWidth, setTrackWidth] = useState(0);
   const reducedMotion = useReducedMotion();
@@ -239,16 +239,16 @@ export function InternLiquidTabBar({ state, navigation }: InternTabBarProps) {
                 icon={definition.icon}
                 selected={focused}
                 onPress={() => {
-                  const event = navigation.emit({
+                  const event = emitter.emit({
                     type: 'tabPress',
                     target: route.key,
                     canPreventDefault: true,
                   });
                   if (!focused && !event.defaultPrevented) {
-                    navigation.navigate(route.name, route.params);
+                    navigateToTab(route.key);
                   }
                 }}
-                onLongPress={() => navigation.emit({ type: 'tabLongPress', target: route.key })}
+                onLongPress={() => emitter.emit({ type: 'tabLongPress', target: route.key })}
               />
             );
           })}

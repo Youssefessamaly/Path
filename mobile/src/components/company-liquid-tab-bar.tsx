@@ -123,7 +123,7 @@ function LiquidTabButton({
   );
 }
 
-export function CompanyLiquidTabBar({ state, navigation }: CompanyTabBarProps) {
+export function CompanyLiquidTabBar({ state, emitter, navigateToTab }: CompanyTabBarProps) {
   const { bottom } = useSafeAreaInsets();
   const [trackWidth, setTrackWidth] = useState(0);
   const reducedMotion = useReducedMotion();
@@ -222,16 +222,16 @@ export function CompanyLiquidTabBar({ state, navigation }: CompanyTabBarProps) {
                 icon={definition.icon}
                 selected={focused}
                 onPress={() => {
-                  const event = navigation.emit({
+                  const event = emitter.emit({
                     type: 'tabPress',
                     target: route.key,
                     canPreventDefault: true,
                   });
                   if (!focused && !event.defaultPrevented) {
-                    navigation.navigate(route.name, route.params);
+                    navigateToTab(route.key);
                   }
                 }}
-                onLongPress={() => navigation.emit({ type: 'tabLongPress', target: route.key })}
+                onLongPress={() => emitter.emit({ type: 'tabLongPress', target: route.key })}
               />
             );
           })}
