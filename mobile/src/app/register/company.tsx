@@ -60,7 +60,8 @@ export default function CompanyRegistrationScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.bottomSafeArea} edges={['bottom']}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -145,11 +146,18 @@ export default function CompanyRegistrationScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      </SafeAreaView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  // The home-indicator area must match the form's beige page surface.
+  bottomSafeArea: {
+    flex: 1,
+    backgroundColor: PathoraColors.paper,
+  },
+  // Keep the status-bar/header safe area teal.
   safeArea: {
     flex: 1,
     backgroundColor: PathoraColors.teal700,

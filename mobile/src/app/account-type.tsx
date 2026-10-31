@@ -18,30 +18,39 @@ export default function AccountTypeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <ScrollView
-          style={{ backgroundColor: PathoraColors.paper }} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATHORA" title="How will you use Pathora?" subtitle="Choose the account that fits what you'll do on Pathora." onBack={() => router.replace('/welcome')} />
+    <SafeAreaView style={styles.bottomSafeArea} edges={['bottom']}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScrollView
+          style={{ backgroundColor: PathoraColors.paper }}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}>
+          <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATHORA" title="How will you use Pathora?" subtitle="Choose the account that fits what you'll do on Pathora." onBack={() => router.replace('/welcome')} />
 
-        <AccountTypeCard
-          title="I'm a student"
-          description="Find and apply to internships that match your profile."
-          iconName={{ ios: 'person.fill', android: 'person', web: 'person' }}
-          onPress={handleStudent}
-        />
+          <AccountTypeCard
+            title="I'm a student"
+            description="Find and apply to internships that match your profile."
+            iconName={{ ios: 'person.fill', android: 'person', web: 'person' }}
+            onPress={handleStudent}
+          />
 
-        <AccountTypeCard
-          title="I'm a company"
-          description="Post internships and review applicants."
-          iconName={{ ios: 'building.2.fill', android: 'apartment', web: 'apartment' }}
-          onPress={handleCompany}
-        />
-      </ScrollView>
+          <AccountTypeCard
+            title="I'm a company"
+            description="Post internships and review applicants."
+            iconName={{ ios: 'building.2.fill', android: 'apartment', web: 'apartment' }}
+            onPress={handleCompany}
+          />
+        </ScrollView>
+      </SafeAreaView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  // The bottom safe-area matches the page, while the top remains teal.
+  bottomSafeArea: {
+    flex: 1,
+    backgroundColor: PathoraColors.paper,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: PathoraColors.teal700,
