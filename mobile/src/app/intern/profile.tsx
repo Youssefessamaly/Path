@@ -19,6 +19,8 @@ import Animated, { FadeInDown, ReduceMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PathoraButton } from '@/components/pathora-button';
+import { PathoraPageHeader } from '@/components/pathora-page-header';
+import { PathoraSectionHeading } from '@/components/pathora-section-heading';
 import { PathoraColors as C, PathoraFonts as F } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
 import { getInternProfileOrNull, type InternProfile } from '@/lib/api';
@@ -144,13 +146,7 @@ export default function InternProfileRoute() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}>
-        <View style={styles.pageHeader}>
-          <View style={styles.pageHeaderText}>
-            <Text style={styles.eyebrow}>STUDENT WORKSPACE</Text>
-            <Text style={styles.pageTitle}>My profile<Text style={styles.titleDot}>.</Text></Text>
-            <Text style={styles.subtitle}>The person behind the application.</Text>
-          </View>
-        </View>
+        <PathoraPageHeader eyebrow="STUDENT WORKSPACE" title="My profile" subtitle="The person behind the application." />
 
         <Animated.View entering={FadeInDown.duration(300).reduceMotion(ReduceMotion.System)} style={styles.identityCard}>
           <View style={styles.identityTop}>
@@ -182,10 +178,7 @@ export default function InternProfileRoute() {
           </View>
         </Animated.View>
 
-        <View style={styles.sectionIntro}>
-          <Text style={styles.eyebrow}>YOUR DETAILS</Text>
-          <Text style={styles.sectionIntroTitle}>Your story so far</Text>
-        </View>
+        <PathoraSectionHeading eyebrow="YOUR DETAILS" title="Your story so far" />
 
         <SectionCard title="Education" icon={{ ios: 'graduationcap.fill', android: 'school', web: 'school' }}>
           <Text style={styles.primaryValue}>{profile.institutionName || 'Add your institution'}</Text>
@@ -268,7 +261,6 @@ export default function InternProfileRoute() {
           <Icon name={{ ios: 'rectangle.portrait.and.arrow.right', android: 'logout', web: 'logout' }} color={C.error} size={19} />
           <Text style={styles.logoutText}>Log out</Text>
         </Pressable>
-        <Text style={styles.footer}>Built for the next step in your journey.</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -276,18 +268,12 @@ export default function InternProfileRoute() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: C.paper },
-  scrollContent: { paddingHorizontal: 20, paddingTop: 18, paddingBottom: 144, gap: 18 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 144, gap: 18 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 26, gap: 16 },
   centerCaption: { fontFamily: F.en.medium, color: C.textSecondary, fontSize: 13 },
   errorText: { color: C.error, fontFamily: F.en.medium, fontSize: 14, textAlign: 'center' },
   retry: { maxWidth: 220 },
   pressed: { opacity: 0.76, transform: [{ scale: 0.99 }] },
-  pageHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  pageHeaderText: { flex: 1, gap: 5 },
-  eyebrow: { color: C.teal600, fontSize: 10, letterSpacing: 1.8, fontFamily: F.en.bold },
-  pageTitle: { fontFamily: F.en.extraBold, fontSize: 30, lineHeight: 39, color: C.ink900, letterSpacing: -0.85 },
-  titleDot: { color: C.teal500 },
-  subtitle: { fontSize: 12.5, lineHeight: 19, color: C.textSecondary, fontFamily: F.en.medium },
   identityCard: { backgroundColor: C.surface, borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 18, gap: 17 },
   identityTop: { flexDirection: 'row', gap: 14, alignItems: 'center' },
   avatar: { width: 66, height: 66, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
@@ -302,8 +288,6 @@ const styles = StyleSheet.create({
   identityTagText: { fontFamily: F.en.medium, color: C.textSecondary, fontSize: 11 },
   editAction: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.teal100, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 11 },
   editText: { color: C.teal700, fontFamily: F.en.bold, fontSize: 12 },
-  sectionIntro: { marginTop: 7, gap: 4 },
-  sectionIntroTitle: { fontFamily: F.en.extraBold, fontSize: 21, color: C.ink900, lineHeight: 29, letterSpacing: -0.5 },
   sectionCard: { backgroundColor: C.surface, borderColor: C.border, borderWidth: 1, borderRadius: 19, padding: 18, gap: 12 },
   accentLine: { backgroundColor: C.teal500, width: 25, height: 4, borderRadius: 99 },
   cardHeading: { flexDirection: 'row', alignItems: 'center', gap: 9 },
@@ -336,5 +320,4 @@ const styles = StyleSheet.create({
   linkText: { fontFamily: F.en.medium, fontSize: 12.5, lineHeight: 20, color: C.teal700 },
   logoutAction: { height: 51, backgroundColor: C.surface, borderRadius: 15, borderColor: C.border, borderWidth: 1, alignItems: 'center', justifyContent: 'center', gap: 9, flexDirection: 'row' },
   logoutText: { color: C.error, fontFamily: F.en.bold, fontSize: 13.5 },
-  footer: { textAlign: 'center', color: C.textTertiary, fontFamily: F.en.medium, fontSize: 11 },
 });

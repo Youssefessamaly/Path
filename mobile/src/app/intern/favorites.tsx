@@ -4,6 +4,7 @@ import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text,
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { InternshipFeedCard } from '@/components/internship-feed-card';
+import { PathoraPageHeader } from '@/components/pathora-page-header';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraColors, PathoraFonts, PathoraSpacing } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
@@ -79,8 +80,9 @@ function FavoritesScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <Text style={styles.title}>Favorites</Text>
-      <Text style={styles.subtitle}>Internships you saved for later.</Text>
+      <View style={styles.headerWrap}>
+        <PathoraPageHeader eyebrow="STUDENT WORKSPACE" title="Favorites" subtitle="Internships you saved for later." />
+      </View>
 
       {favorites === null && !error && (
         <View style={styles.centerContent}>
@@ -143,21 +145,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: PathoraColors.paper,
   },
-  title: {
-    fontFamily: PathoraFonts.en.extraBold,
-    fontSize: 22,
-    color: PathoraColors.ink900,
-    paddingHorizontal: PathoraSpacing[24],
-    paddingTop: 8,
-  },
-  subtitle: {
-    fontFamily: PathoraFonts.en.regular,
-    fontSize: 13,
-    color: PathoraColors.textSecondary,
-    paddingHorizontal: PathoraSpacing[24],
-    paddingTop: 4,
-    paddingBottom: PathoraSpacing[16],
-  },
+  headerWrap: { paddingHorizontal: PathoraSpacing[24], paddingTop: 12, paddingBottom: PathoraSpacing[16] },
   centerContent: {
     flex: 1,
     alignItems: 'center',

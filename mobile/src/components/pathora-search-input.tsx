@@ -1,7 +1,8 @@
 import { SymbolView } from 'expo-symbols';
 import { Pressable, StyleSheet, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { PathoraColors, PathoraFonts, PathoraRadius } from '@/constants/pathora-theme';
+import { PathoraColors, PathoraFonts } from '@/constants/pathora-theme';
+import { pathoraSearchSurface } from '@/components/pathora-search-styles';
 
 export type PathoraSearchInputProps = {
   value: string;
@@ -53,17 +54,7 @@ export function PathoraSearchInput({ value, onChangeText, placeholder, style }: 
 }
 
 const styles = StyleSheet.create({
-  bar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    borderRadius: PathoraRadius[999],
-    backgroundColor: PathoraColors.surface,
-    borderWidth: 1,
-    borderColor: PathoraColors.border,
-    paddingHorizontal: 16,
-    paddingVertical: 11,
-  },
+  bar: { ...pathoraSearchSurface },
   input: {
     flex: 1,
     padding: 0,

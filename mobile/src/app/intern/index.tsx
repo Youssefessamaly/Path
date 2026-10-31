@@ -1,9 +1,13 @@
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 
+import { DashboardWelcomeHeader } from '@/components/dashboard-welcome-header';
 import { InternshipFeedCard } from '@/components/internship-feed-card';
+import { PathoraMetricCard } from '@/components/pathora-metric-card';
+import { PathoraSectionHeading } from '@/components/pathora-section-heading';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraSearchBar } from '@/components/pathora-search-bar';
 import { ProfileStrengthCard } from '@/components/profile-strength-card';
@@ -25,47 +29,19 @@ import { calculateProfileStrength } from '@/lib/profile-strength';
 
 const RECOMMENDED_PREVIEW_COUNT = 3;
 
-function greetingForHour(hour: number): string {
-  if (hour < 12) {
-    return 'Good morning';
-  }
-  if (hour < 18) {
-    return 'Good afternoon';
-  }
-  return 'Good evening';
-}
-
-/** Same metric-card design as the Company Home dashboard. */
-function MetricCard({
-  label,
-  value,
-  onPress,
-}: {
-  label: string;
-  value: number;
-  onPress?: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={!onPress}
-      accessibilityRole={onPress ? 'button' : undefined}
-      accessibilityLabel={`${label}: ${value}`}
-      style={({ pressed }) => [styles.metricCard, pressed && onPress && styles.metricCardPressed]}>
-      <View style={styles.metricIndicator} />
-      <Text style={styles.metricValue}>{value}</Text>
-      <Text style={styles.metricLabel}>{label}</Text>
-    </Pressable>
-  );
-}
-
 function InternHomeScreen() {
   const router = useRouter();
   const { user, token } = useAuth();
+  const [isDashboardFocused, setDashboardFocused] = useState(false);
+  useFocusEffect(useCallback(() => {
+    setDashboardFocused(true);
+    return () => setDashboardFocused(false);
+  }, []));
 
   const [internships, setInternships] = useState<InternInternship[] | null>(null);
   const [profile, setProfile] = useState<InternProfile | null>(null);
   const [applicationsCount, setApplicationsCount] = useState(0);
+  const [acceptedCount, setAcceptedCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [updatingFavoriteIds, setUpdatingFavoriteIds] = useState<Set<string>>(new Set());
@@ -99,6 +75,8 @@ function InternHomeScreen() {
     ]);
     setProfile(profileResult.status === 'fulfilled' ? profileResult.value : null);
     setApplicationsCount(applicationsResult.status === 'fulfilled' ? applicationsResult.value.length : 0);
+    setAcceptedCount(applicationsResult.status === 'fulfilled'
+      ? applicationsResult.value.filter((application) => application.status === 'ACCEPTED').length : 0);
   }, [token, router]);
 
   useFocusEffect(
@@ -155,21 +133,21 @@ function InternHomeScreen() {
     }
   };
 
-  const greeting = greetingForHour(new Date().getHours());
   const firstName = profile?.firstName?.trim();
   const strength = profile ? calculateProfileStrength(profile) : null;
   const savedCount = internships?.filter((internship) => internship.favorited).length ?? 0;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
+      {isDashboardFocused && <StatusBar style="light" backgroundColor={PathoraColors.teal700} />}
       {internships === null && !error && (
-        <View style={styles.centerContent}>
+        <View style={[styles.centerContent, styles.fallbackContent]}>
           <ActivityIndicator color={PathoraColors.teal600} />
         </View>
       )}
 
       {error && (
-        <View style={styles.centerContent}>
+        <View style={[styles.centerContent, styles.fallbackContent]}>
           <Text style={styles.errorText}>{error}</Text>
           <PathoraButton label="Try again" variant="secondary" onPress={load} style={styles.retryButton} />
         </View>
@@ -177,21 +155,18 @@ function InternHomeScreen() {
 
       {internships !== null && !error && (
         <ScrollView
+          style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}>
-          <View style={styles.headerRow}>
-            <View style={styles.headerText}>
-              <Text style={styles.title}>
-                {greeting}
-                {firstName ? `, ${firstName}` : ''}
-              </Text>
-              <Text style={styles.subtitle}>Let&apos;s find your next opportunity.</Text>
-            </View>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{initialsFor(profile?.firstName ?? null, profile?.lastName ?? null, user?.email)}</Text>
-            </View>
-          </View>
+          <DashboardWelcomeHeader
+            workspaceLabel="STUDENT WORKSPACE"
+            name={firstName || 'there'}
+            subtitle="Let's find your next opportunity."
+            avatarInitials={initialsFor(profile?.firstName ?? null, profile?.lastName ?? null, user?.email)}
+            avatarAccessibilityLabel="Open your profile"
+            onAvatarPress={() => router.push('/intern/profile')}
+          />
 
           <PathoraSearchBar
             placeholder="Search internships"
@@ -199,7 +174,7 @@ function InternHomeScreen() {
             style={styles.searchBar}
           />
 
-          {strength && (
+          {strength && strength.percentage < 100 && (
             <ProfileStrengthCard
               percentage={strength.percentage}
               isOnboardingComplete={strength.isOnboardingComplete}
@@ -208,29 +183,29 @@ function InternHomeScreen() {
           )}
 
           <View style={styles.metricsRow}>
-            <MetricCard
+            <PathoraMetricCard
               label="Applications"
               value={applicationsCount}
               onPress={() => router.push('/intern/applications')}
             />
-            <MetricCard
+            <PathoraMetricCard
               label="Saved"
               value={savedCount}
               onPress={() => router.push('/intern/favorites')}
             />
-            {/* No INTERVIEW application status exists yet — always 0, never derived from
-                ACCEPTED. This card remains non-interactive until that feature exists. */}
-            <MetricCard label="Interviews" value={0} />
+            <PathoraMetricCard
+              label="Accepted"
+              value={acceptedCount}
+              onPress={() => router.push('/intern/applications')}
+            />
           </View>
 
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Recommended for you</Text>
-            {internships.length > 0 && (
-              <Pressable onPress={handleSeeAllPress} accessibilityRole="button" hitSlop={8}>
-                <Text style={styles.seeAllText}>See all</Text>
-              </Pressable>
-            )}
-          </View>
+          <PathoraSectionHeading
+            eyebrow="YOUR OPPORTUNITIES"
+            title="Recommended for you"
+            actionLabel={internships.length > 0 ? 'See all' : undefined}
+            onAction={handleSeeAllPress}
+          />
 
           {internships.length === 0 ? (
             <View style={styles.emptyState}>
@@ -265,8 +240,9 @@ export default function InternHomeRoute() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: PathoraColors.paper,
+    backgroundColor: PathoraColors.teal700,
   },
+  scrollView: { backgroundColor: PathoraColors.paper },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: PathoraSpacing[24],
@@ -274,42 +250,10 @@ const styles = StyleSheet.create({
     paddingBottom: 130,
     gap: PathoraSpacing[20],
   },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: PathoraSpacing[12],
-  },
-  headerText: {
-    flex: 1,
-    gap: 4,
-  },
-  title: {
-    fontFamily: PathoraFonts.en.extraBold,
-    fontSize: 22,
-    color: PathoraColors.ink900,
-  },
-  subtitle: {
-    fontFamily: PathoraFonts.en.regular,
-    fontSize: 13,
-    color: PathoraColors.textSecondary,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: PathoraRadius[999],
-    backgroundColor: PathoraColors.teal100,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    fontFamily: PathoraFonts.en.extraBold,
-    fontSize: 15,
-    color: PathoraColors.teal700,
-  },
   searchBar: {
     marginTop: -4,
   },
+  fallbackContent: { backgroundColor: PathoraColors.paper },
   centerContent: {
     flex: 1,
     alignItems: 'center',
@@ -327,39 +271,6 @@ const styles = StyleSheet.create({
     minWidth: 140,
   },
   metricsRow: { flexDirection: 'row', gap: PathoraSpacing[8] },
-  metricCard: {
-    flex: 1,
-    minWidth: 0,
-    backgroundColor: PathoraColors.surface,
-    borderRadius: PathoraRadius[14],
-    borderWidth: 1,
-    borderColor: PathoraColors.border,
-    paddingHorizontal: PathoraSpacing[12],
-    paddingVertical: PathoraSpacing[16],
-    minHeight: 112,
-    justifyContent: 'center',
-    gap: PathoraSpacing[8],
-  },
-  metricCardPressed: { opacity: 0.72 },
-  metricIndicator: { width: 25, height: 4, borderRadius: 999, backgroundColor: PathoraColors.teal500 },
-  metricValue: { fontFamily: PathoraFonts.en.extraBold, fontSize: 28, color: PathoraColors.ink900, lineHeight: 32 },
-  metricLabel: { fontFamily: PathoraFonts.en.semiBold, fontSize: 11.5, color: PathoraColors.textSecondary },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: PathoraSpacing[8],
-  },
-  sectionTitle: {
-    fontFamily: PathoraFonts.en.extraBold,
-    fontSize: 16,
-    color: PathoraColors.ink900,
-  },
-  seeAllText: {
-    fontFamily: PathoraFonts.en.bold,
-    fontSize: 13,
-    color: PathoraColors.teal600,
-  },
   emptyState: {
     borderRadius: PathoraRadius[14],
     backgroundColor: PathoraColors.surface,

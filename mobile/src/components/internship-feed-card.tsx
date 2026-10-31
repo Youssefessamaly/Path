@@ -6,6 +6,7 @@
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { pathoraCardSurface, pathoraCardPressed } from '@/components/pathora-card-styles';
 import { PathoraColors, PathoraFonts, PathoraSpacing } from '@/constants/pathora-theme';
 import type { InternInternship } from '@/lib/api';
 import { formatDisplayDate } from '@/lib/date';
@@ -149,20 +150,8 @@ export function InternshipFeedCard({
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: PathoraColors.surface,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: PathoraColors.border,
-    padding: 17,
-    marginBottom: PathoraSpacing[12],
-    shadowColor: PathoraColors.ink900,
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.045,
-    shadowRadius: 13,
-    elevation: 2,
-  },
-  pressed: { opacity: 0.87, transform: [{ scale: 0.993 }] },
+  card: { ...pathoraCardSurface, padding: 17, marginBottom: PathoraSpacing[12] },
+  pressed: { ...pathoraCardPressed },
   topRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 11, marginBottom: 15 },
   companyMark: { height: 48, width: 48, borderRadius: 15, backgroundColor: PathoraColors.teal100, alignItems: 'center', justifyContent: 'center' },
   companyInitials: { fontFamily: PathoraFonts.en.extraBold, fontSize: 15, color: PathoraColors.teal700 },

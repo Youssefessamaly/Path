@@ -106,11 +106,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: PathoraColors.borderStrong,
     borderRadius: PathoraRadius[12],
     backgroundColor: PathoraColors.surface,
     paddingHorizontal: 14,
+    minHeight: 50,
     paddingVertical: 13,
   },
   inputContainerMultiline: {

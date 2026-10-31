@@ -37,8 +37,8 @@ const styles = StyleSheet.create({
 const badgeStyles: Record<InternApplicationStatus, { backgroundColor: string }> = {
   // Informational/in-progress — same teal tint used elsewhere for an active/open state.
   APPLIED: { backgroundColor: PathoraColors.teal100 },
-  // Success — same light tint, dedicated success text color.
-  ACCEPTED: { backgroundColor: PathoraColors.teal100 },
+  // Accepted uses its own success tint, distinct from applied/in progress.
+  ACCEPTED: { backgroundColor: 'rgba(46,158,109,0.14)' },
   // Error — light tint built from the existing error color (no separate "error100" token).
   REJECTED: { backgroundColor: 'rgba(193, 68, 58, 0.12)' },
 };

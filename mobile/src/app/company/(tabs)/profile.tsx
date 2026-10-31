@@ -20,6 +20,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CompanyApprovalBadge } from '@/components/company-approval-badge';
 import { PathoraButton } from '@/components/pathora-button';
+import { PathoraPageHeader } from '@/components/pathora-page-header';
+import { PathoraSectionHeading } from '@/components/pathora-section-heading';
 import { PathoraColors as C, PathoraFonts as F } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
 import {
@@ -144,11 +146,7 @@ export default function CompanyProfileRoute() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.pageHeader}>
-          <Text style={styles.eyebrow}>COMPANY WORKSPACE</Text>
-          <Text style={styles.pageTitle}>Company profile<Text style={styles.titleDot}>.</Text></Text>
-          <Text style={styles.subtitle}>Your team is present on Path.</Text>
-        </View>
+        <PathoraPageHeader eyebrow="COMPANY WORKSPACE" title="Company profile" subtitle="Your team is present on Path." />
 
         <Animated.View entering={FadeInDown.duration(300).reduceMotion(ReduceMotion.System)} style={styles.identityCard}>
           <View style={styles.identityTop}>
@@ -187,10 +185,7 @@ export default function CompanyProfileRoute() {
           </View>
         </SectionCard>
 
-        <View style={styles.sectionIntro}>
-          <Text style={styles.eyebrow}>YOUR ORGANIZATION</Text>
-          <Text style={styles.sectionIntroTitle}>The essentials</Text>
-        </View>
+        <PathoraSectionHeading eyebrow="YOUR ORGANIZATION" title="The essentials" />
 
         <SectionCard title="About the company" icon={{ ios: 'building.2.fill', android: 'domain', web: 'domain' }}>
           <Text style={styles.bodyText}>{profile.description?.trim() || 'Add a company description to introduce your team to future interns.'}</Text>
@@ -228,7 +223,6 @@ export default function CompanyProfileRoute() {
           <Icon name={{ ios: 'rectangle.portrait.and.arrow.right', android: 'logout', web: 'logout' }} size={19} color={C.error} />
           <Text style={styles.logoutText}>Log out</Text>
         </Pressable>
-        <Text style={styles.footer}>Your next great hire starts with Path.</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -236,17 +230,12 @@ export default function CompanyProfileRoute() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: C.paper },
-  scrollContent: { paddingHorizontal: 20, paddingTop: 18, paddingBottom: 144, gap: 18 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 144, gap: 18 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 26, gap: 16 },
   centerCaption: { fontFamily: F.en.medium, color: C.textSecondary, fontSize: 13 },
   errorText: { color: C.error, fontFamily: F.en.medium, textAlign: 'center', fontSize: 14 },
   retry: { maxWidth: 220 },
   pressed: { opacity: 0.76, transform: [{ scale: 0.99 }] },
-  pageHeader: { gap: 5 },
-  eyebrow: { fontFamily: F.en.bold, color: C.teal600, fontSize: 10, letterSpacing: 1.8 },
-  pageTitle: { fontFamily: F.en.extraBold, color: C.ink900, fontSize: 30, lineHeight: 39, letterSpacing: -0.85 },
-  titleDot: { color: C.teal500 },
-  subtitle: { fontFamily: F.en.medium, color: C.textSecondary, fontSize: 12.5, lineHeight: 19 },
   identityCard: { backgroundColor: C.surface, borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 18, gap: 17 },
   identityTop: { flexDirection: 'row', gap: 14, alignItems: 'center' },
   avatar: { width: 66, height: 66, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
@@ -267,8 +256,6 @@ const styles = StyleSheet.create({
   cardTitle: { fontFamily: F.en.bold, color: C.ink900, fontSize: 16 },
   approvalRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12 },
   approvalCopy: { flex: 1, minWidth: 170, fontFamily: F.en.medium, color: C.textSecondary, fontSize: 12.5, lineHeight: 19 },
-  sectionIntro: { gap: 4, marginTop: 8 },
-  sectionIntroTitle: { fontFamily: F.en.extraBold, color: C.ink900, fontSize: 21, lineHeight: 28, letterSpacing: -0.5 },
   bodyText: { fontFamily: F.en.regular, color: C.textSecondary, fontSize: 13.5, lineHeight: 22 },
   facts: { gap: 13 },
   infoLine: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
@@ -280,5 +267,4 @@ const styles = StyleSheet.create({
   websiteValue: { fontFamily: F.en.medium, color: C.teal700, fontSize: 12.5, lineHeight: 20 },
   logoutAction: { backgroundColor: C.surface, borderRadius: 15, borderColor: C.border, borderWidth: 1, height: 51, flexDirection: 'row', gap: 9, justifyContent: 'center', alignItems: 'center' },
   logoutText: { color: C.error, fontFamily: F.en.bold, fontSize: 13.5 },
-  footer: { fontFamily: F.en.medium, fontSize: 11, color: C.textTertiary, textAlign: 'center' },
 });

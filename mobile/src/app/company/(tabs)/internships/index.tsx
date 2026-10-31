@@ -21,7 +21,12 @@ import Animated, { FadeInDown, ReduceMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PathoraButton } from '@/components/pathora-button';
+import { pathoraCardSurface } from '@/components/pathora-card-styles';
+import { PathoraFilterChip } from '@/components/pathora-filter-chip';
 import { PathoraSearchInput } from '@/components/pathora-search-input';
+import { PathoraPageHeader } from '@/components/pathora-page-header';
+import { PathoraSectionHeading } from '@/components/pathora-section-heading';
+import { PathoraMetricCard } from '@/components/pathora-metric-card';
 import { PathoraColors, PathoraFonts, PathoraRadius, PathoraSpacing } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
 import {
@@ -71,13 +76,7 @@ function StatusPill({ status }: { status: InternshipStatus }) {
 }
 
 function OverviewTile({ number, label, tone }: { number: number; label: string; tone?: 'teal' | 'muted' }) {
-  return (
-    <View style={styles.overviewTile}>
-      <View style={[styles.overviewAccent, tone === 'teal' && styles.overviewAccentTeal, tone === 'muted' && styles.overviewAccentMuted]} />
-      <Text style={styles.overviewNumber}>{number}</Text>
-      <Text style={styles.overviewLabel}>{label}</Text>
-    </View>
-  );
+  return <PathoraMetricCard label={label} value={number} tone={tone ?? 'amber'} />;
 }
 
 function InternshipCard({
@@ -181,31 +180,6 @@ function InternshipCard({
         </Pressable>
       </View>
     </Animated.View>
-  );
-}
-
-function FilterOption({
-  title,
-  total,
-  active,
-  onPress,
-}: {
-  title: string;
-  total: number;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityState={{ selected: active }}
-      style={({ pressed }) => [styles.filterChip, active && styles.filterChipActive, pressed && styles.touchPressed]}>
-      <Text style={[styles.filterText, active && styles.filterTextActive]}>{title}</Text>
-      <View style={[styles.filterCountBox, active && styles.filterCountBoxActive]}>
-        <Text style={[styles.filterCount, active && styles.filterCountActive]}>{total}</Text>
-      </View>
-    </Pressable>
   );
 }
 
@@ -323,20 +297,20 @@ export default function CompanyInternshipsListRoute() {
             colors={[PathoraColors.teal600]}
           />
         }>
-        <View style={styles.headerRow}>
-          <View style={styles.headerTitleWrap}>
-            <Text style={styles.eyebrow}>COMPANY WORKSPACE</Text>
-            <Text style={styles.pageTitle}>Internships<Text style={styles.titleDot}>.</Text></Text>
-            <Text style={styles.pageSubtitle}>Every opportunity, beautifully organized.</Text>
-          </View>
-          <Pressable
-            onPress={createRole}
-            accessibilityRole="button"
-            accessibilityLabel="Post an internship"
-            style={({ pressed }) => [styles.headerAddButton, pressed && styles.touchPressed]}>
-            <SmallIcon name={{ ios: 'plus', android: 'add', web: 'add' }} color={PathoraColors.surface} size={23} />
-          </Pressable>
-        </View>
+        <PathoraPageHeader
+          eyebrow="COMPANY WORKSPACE"
+          title="Internships"
+          subtitle="Manage your opportunities and applications."
+          action={
+            <Pressable
+              onPress={createRole}
+              accessibilityRole="button"
+              accessibilityLabel="Post an internship"
+              style={({ pressed }) => [styles.headerAddButton, pressed && styles.touchPressed]}>
+              <SmallIcon name={{ ios: 'plus', android: 'add', web: 'add' }} color={PathoraColors.surface} size={23} />
+            </Pressable>
+          }
+        />
 
         {isInitialLoading ? (
           <View style={styles.loadingPanel}>
@@ -355,10 +329,7 @@ export default function CompanyInternshipsListRoute() {
         ) : (
           <>
             <View style={styles.overviewSection}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionEyebrow}>AT A GLANCE</Text>
-                <Text style={styles.sectionTitle}>Your opportunities</Text>
-              </View>
+              <PathoraSectionHeading eyebrow="AT A GLANCE" title="Your opportunities" />
               <View style={styles.overviewRow}>
                 <OverviewTile number={totalCount} label="Total" />
                 <OverviewTile number={openCount} label="Open" tone="teal" />
@@ -379,25 +350,21 @@ export default function CompanyInternshipsListRoute() {
               </View>
             ) : (
               <View style={styles.listSection}>
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionEyebrow}>ROLE MANAGEMENT</Text>
-                  <Text style={styles.sectionTitle}>Manage your listings</Text>
-                </View>
+                <PathoraSectionHeading eyebrow="ROLE MANAGEMENT" title="Manage your listings" />
 
                 <PathoraSearchInput
                   value={query}
                   onChangeText={setQuery}
                   placeholder="Search your internships"
-                  style={styles.searchInput}
                 />
 
                 <View style={styles.filterRow}>
                   {FILTERS.map(({ value, title }) => (
-                    <FilterOption
+                    <PathoraFilterChip
                       key={value}
-                      title={title}
-                      total={value === 'ALL' ? totalCount : value === 'OPEN' ? openCount : closedCount}
-                      active={filter === value}
+                      label={title}
+                      count={value === 'ALL' ? totalCount : value === 'OPEN' ? openCount : closedCount}
+                      selected={filter === value}
                       onPress={() => setFilter(value)}
                     />
                   ))}
@@ -437,7 +404,6 @@ export default function CompanyInternshipsListRoute() {
                 )}
               </View>
             )}
-            <Text style={styles.footerSignature}>Your next great hire starts with Path.</Text>
           </>
         )}
       </ScrollView>
@@ -448,19 +414,13 @@ export default function CompanyInternshipsListRoute() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: PathoraColors.paper },
   scrollContent: {
-    paddingHorizontal: PathoraSpacing[20],
-    paddingTop: PathoraSpacing[16],
+    paddingHorizontal: PathoraSpacing[24],
+    paddingTop: PathoraSpacing[12],
     paddingBottom: 130,
     flexGrow: 1,
     gap: PathoraSpacing[24],
   },
   touchPressed: { opacity: 0.74 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  headerTitleWrap: { flex: 1, gap: 4 },
-  eyebrow: { color: PathoraColors.teal600, fontSize: 10, letterSpacing: 1.7, fontFamily: PathoraFonts.en.bold },
-  pageTitle: { fontFamily: PathoraFonts.en.extraBold, fontSize: 29, lineHeight: 39, letterSpacing: -0.9, color: PathoraColors.ink900 },
-  titleDot: { color: PathoraColors.teal500 },
-  pageSubtitle: { color: PathoraColors.textSecondary, fontSize: 12.5, lineHeight: 19, fontFamily: PathoraFonts.en.medium },
   headerAddButton: {
     height: 46, width: 46, borderRadius: 16,
     backgroundColor: PathoraColors.teal700,
@@ -470,43 +430,13 @@ const styles = StyleSheet.create({
   loadingPanel: { flex: 1, minHeight: 330, gap: 14, justifyContent: 'center', alignItems: 'center' },
   loadingCaption: { color: PathoraColors.textSecondary, fontFamily: PathoraFonts.en.medium, fontSize: 13 },
   overviewSection: { gap: PathoraSpacing[16] },
-  sectionHeader: { gap: 3 },
-  sectionEyebrow: { fontFamily: PathoraFonts.en.bold, fontSize: 10, letterSpacing: 1.5, color: PathoraColors.teal600 },
-  sectionTitle: { fontFamily: PathoraFonts.en.extraBold, fontSize: 21, lineHeight: 28, letterSpacing: -0.5, color: PathoraColors.ink900 },
   overviewRow: { flexDirection: 'row', gap: 9 },
-  overviewTile: {
-    flex: 1, minWidth: 0, backgroundColor: PathoraColors.surface, borderColor: PathoraColors.border, borderWidth: 1,
-    borderRadius: 16, paddingVertical: 16, paddingHorizontal: 13, gap: 7,
-    shadowColor: PathoraColors.ink900, shadowOpacity: 0.025, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 1,
-  },
-  overviewAccent: { width: 22, height: 4, borderRadius: 999, backgroundColor: PathoraColors.amber500 },
-  overviewAccentTeal: { backgroundColor: PathoraColors.teal500 },
-  overviewAccentMuted: { backgroundColor: '#BBC3C7' },
-  overviewNumber: { color: PathoraColors.ink900, fontFamily: PathoraFonts.en.extraBold, fontSize: 25, lineHeight: 32 },
-  overviewLabel: { color: PathoraColors.textSecondary, fontFamily: PathoraFonts.en.medium, fontSize: 12 },
   listSection: { gap: PathoraSpacing[16] },
-  searchInput: { borderColor: '#DDE5DD', backgroundColor: '#FFFFFF', borderRadius: 15, paddingVertical: 13 },
   filterRow: { flexDirection: 'row', gap: 8 },
-  filterChip: {
-    flexDirection: 'row', gap: 6, alignItems: 'center', paddingHorizontal: 12, paddingVertical: 9,
-    backgroundColor: '#FFFFFF', borderRadius: 999, borderColor: PathoraColors.border, borderWidth: 1,
-  },
-  filterChipActive: { backgroundColor: PathoraColors.teal700, borderColor: PathoraColors.teal700 },
-  filterText: { fontFamily: PathoraFonts.en.bold, fontSize: 12, color: PathoraColors.textSecondary },
-  filterTextActive: { color: '#FFFFFF' },
-  filterCountBox: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 99, backgroundColor: PathoraColors.paper },
-  filterCountBoxActive: { backgroundColor: 'rgba(255,255,255,0.18)' },
-  filterCount: { fontFamily: PathoraFonts.en.bold, fontSize: 10, color: PathoraColors.textSecondary },
-  filterCountActive: { color: '#FFFFFF' },
   resultsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 1 },
   resultsLabel: { color: PathoraColors.ink900, fontFamily: PathoraFonts.en.bold, fontSize: 13 },
   resultsSort: { color: PathoraColors.textTertiary, fontFamily: PathoraFonts.en.medium, fontSize: 11.5 },
-  listingCard: {
-    backgroundColor: '#FFFFFF', borderRadius: 19, borderWidth: 1, borderColor: PathoraColors.border,
-    overflow: 'hidden',
-    shadowColor: PathoraColors.ink900, shadowOpacity: 0.045, shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 }, elevation: 2,
-  },
+  listingCard: { ...pathoraCardSurface, overflow: 'hidden' },
   cardMain: { paddingHorizontal: 17, paddingTop: 18, paddingBottom: 16, gap: 16 },
   cardTopLine: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   roleMark: { backgroundColor: PathoraColors.teal100, borderRadius: 14, width: 46, height: 46, alignItems: 'center', justifyContent: 'center' },
@@ -564,5 +494,4 @@ const styles = StyleSheet.create({
   noResultsBody: { color: PathoraColors.textSecondary, fontFamily: PathoraFonts.en.medium, fontSize: 12, textAlign: 'center' },
   resetTouch: { paddingHorizontal: 10, paddingVertical: 8, marginTop: 4 },
   resetText: { color: PathoraColors.teal700, fontFamily: PathoraFonts.en.bold, fontSize: 12.5 },
-  footerSignature: { textAlign: 'center', color: PathoraColors.textTertiary, fontSize: 11, fontFamily: PathoraFonts.en.medium, marginTop: 6 },
 });

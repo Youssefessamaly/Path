@@ -1,7 +1,8 @@
 import { SymbolView } from 'expo-symbols';
 import { Pressable, StyleSheet, Text, type StyleProp, type ViewStyle } from 'react-native';
 
-import { PathoraColors, PathoraFonts, PathoraRadius } from '@/constants/pathora-theme';
+import { PathoraColors, PathoraFonts } from '@/constants/pathora-theme';
+import { pathoraSearchSurface } from '@/components/pathora-search-styles';
 
 export type PathoraSearchBarProps = {
   placeholder: string;
@@ -10,7 +11,7 @@ export type PathoraSearchBarProps = {
 };
 
 /**
- * The rounded white "Search internships" bar from the dashboard design. Not a real text
+ * The white "Search internships" surface from the dashboard design. Not a real text
  * field — tapping it navigates to the Internships screen, which has the actual typable search
  * input (see PathoraSearchInput) and real backend-filtered results. Never produces fake
  * results itself.
@@ -28,22 +29,13 @@ export function PathoraSearchBar({ placeholder, onPress, style }: PathoraSearchB
         tintColor={PathoraColors.textTertiary}
       />
       <Text style={styles.placeholder}>{placeholder}</Text>
+      <SymbolView name={{ ios: 'arrow.up.right', android: 'arrow_outward', web: 'arrow_outward' }} size={15} tintColor={PathoraColors.teal600} />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  bar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    borderRadius: PathoraRadius[999],
-    backgroundColor: PathoraColors.surface,
-    borderWidth: 1,
-    borderColor: PathoraColors.border,
-    paddingHorizontal: 16,
-    paddingVertical: 13,
-  },
+  bar: { ...pathoraSearchSurface },
   barPressed: {
     opacity: 0.7,
   },
@@ -51,5 +43,6 @@ const styles = StyleSheet.create({
     fontFamily: PathoraFonts.en.regular,
     fontSize: 14,
     color: PathoraColors.textTertiary,
+    flex: 1,
   },
 });

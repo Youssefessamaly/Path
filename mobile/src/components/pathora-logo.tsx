@@ -24,14 +24,16 @@ export type PathoraLogoProps = {
    *  variant is 'mark'. Defaults to a size matched to the default `size` above. */
   wordmarkSize?: number;
   style?: StyleProp<ViewStyle>;
+  /** White logo treatment for dark teal surfaces. */
+  onDark?: boolean;
 };
 
-export function PathoraLogoMark({ size = 28 }: { size?: number }) {
+export function PathoraLogoMark({ size = 28, onDark = false }: { size?: number; onDark?: boolean }) {
   return (
     <Svg width={size} height={size} viewBox={PATHORA_LOGO_VIEWBOX} fill="none">
       <Path
         d={PATHORA_LOGO_PATH_D}
-        stroke={PathoraColors.teal500}
+        stroke={onDark ? PathoraColors.surface : PathoraColors.teal500}
         strokeWidth={6}
         strokeLinecap="round"
         fill="none"
@@ -49,19 +51,19 @@ export function PathoraLogoMark({ size = 28 }: { size?: number }) {
 /** The reusable Pathora logo lockup — the exact mark/dot geometry from the frozen design,
  *  rendered as real vector shapes (not a gradient placeholder) so it matches the splash
  *  screen's animated version exactly once settled in its final state. */
-export function PathoraLogo({ variant = 'full', size = 28, wordmarkSize = 16, style }: PathoraLogoProps) {
+export function PathoraLogo({ variant = 'full', size = 28, wordmarkSize = 16, style, onDark = false }: PathoraLogoProps) {
   if (variant === 'mark') {
     return (
       <View style={style}>
-        <PathoraLogoMark size={size} />
+        <PathoraLogoMark size={size} onDark={onDark} />
       </View>
     );
   }
 
   return (
     <View style={[styles.container, style]}>
-      <PathoraLogoMark size={size} />
-      <Text style={[styles.wordmark, { fontSize: wordmarkSize }]}>Path</Text>
+      <PathoraLogoMark size={size} onDark={onDark} />
+      <Text style={[styles.wordmark, onDark && styles.wordmarkOnDark, { fontSize: wordmarkSize }]}>Path</Text>
     </View>
   );
 }
@@ -76,4 +78,5 @@ const styles = StyleSheet.create({
     fontFamily: PathoraFonts.en.extraBold,
     color: PathoraColors.ink900,
   },
+  wordmarkOnDark: { color: PathoraColors.surface },
 });

@@ -37,6 +37,7 @@ export function PathoraButton({
 
   return (
     <Pressable
+      accessibilityRole="button"
       onPress={disabled ? undefined : onPress}
       disabled={disabled}
       accessibilityState={{ disabled }}
@@ -56,6 +57,7 @@ const styles = StyleSheet.create({
   base: {
     borderRadius: PathoraRadius[12],
     paddingVertical: 13,
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',

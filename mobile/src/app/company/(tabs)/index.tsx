@@ -2,7 +2,6 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -11,10 +10,14 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 
 import { ApplicantPreviewRow } from '@/components/applicant-preview-row';
+import { DashboardWelcomeHeader } from '@/components/dashboard-welcome-header';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraLogo } from '@/components/pathora-logo';
+import { PathoraMetricCard } from '@/components/pathora-metric-card';
+import { PathoraSectionHeading } from '@/components/pathora-section-heading';
 import { PathoraColors, PathoraFonts, PathoraRadius, PathoraSpacing } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
 import {
@@ -42,67 +45,6 @@ function companyInitials(companyName: string | null | undefined, email: string |
     .map((word) => word[0])
     .join('')
     .toUpperCase();
-}
-
-function SectionHeading({
-  eyebrow,
-  title,
-  actionLabel,
-  onAction,
-}: {
-  eyebrow: string;
-  title: string;
-  actionLabel?: string;
-  onAction?: () => void;
-}) {
-  return (
-    <View style={styles.sectionHeading}>
-      <View style={styles.sectionHeadingText}>
-        <Text style={styles.eyebrow}>{eyebrow}</Text>
-        <Text style={styles.sectionTitle}>{title}</Text>
-      </View>
-      {actionLabel && onAction ? (
-        <Pressable
-          onPress={onAction}
-          accessibilityRole="button"
-          accessibilityLabel={actionLabel}
-          hitSlop={10}
-          style={({ pressed }) => [styles.sectionLinkTouch, pressed && styles.pressed]}>
-          <Text style={styles.sectionLink}>{actionLabel}  →</Text>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
-
-function MetricCard({
-  label,
-  value,
-  accent,
-  unavailable,
-  onPress,
-}: {
-  label: string;
-  value: number | null;
-  accent?: boolean;
-  unavailable?: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`${label}: ${value === null ? (unavailable ? 'unavailable' : 'loading') : value}`}
-      style={({ pressed }) => [
-        styles.metricCard,
-        accent && styles.metricCardAccent,
-        pressed && styles.pressed,
-      ]}>
-      <View style={[styles.metricIndicator, accent && styles.metricIndicatorAmber]} />
-      <Text style={styles.metricValue}>{value === null ? '—' : value}</Text>
-      <Text style={styles.metricLabel}>{label}</Text>
-    </Pressable>
-  );
 }
 
 function ApplicantPreview({
@@ -212,7 +154,12 @@ function InternshipPreview({
  */
 function CompanyHomeScreen() {
   const router = useRouter();
-  const { user, token, signOut } = useAuth();
+  const { user, token } = useAuth();
+  const [isDashboardFocused, setDashboardFocused] = useState(false);
+  useFocusEffect(useCallback(() => {
+    setDashboardFocused(true);
+    return () => setDashboardFocused(false);
+  }, []));
 
   const [internships, setInternships] = useState<CompanyInternship[] | null>(null);
   const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
@@ -259,18 +206,7 @@ function CompanyHomeScreen() {
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    router.dismissAll();
-    router.replace('/welcome');
-  };
-
-  const handleAvatarPress = () => {
-    Alert.alert('Account', user?.email, [
-      { text: 'Log out', style: 'destructive', onPress: () => void handleSignOut() },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
-  };
+  const handleAvatarPress = () => router.push('/company/profile');
 
   const goToApplicantDetail = (application: CompanyApplicantEntry) => {
     router.push({
@@ -282,7 +218,8 @@ function CompanyHomeScreen() {
   if (internships === null && !error) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <View style={styles.centerContent}>
+      {isDashboardFocused && <StatusBar style="light" backgroundColor={PathoraColors.teal700} />}
+        <View style={[styles.centerContent, styles.fallbackContent]}>
           <PathoraLogo size={34} wordmarkSize={21} />
           <ActivityIndicator color={PathoraColors.teal600} style={styles.startupSpinner} />
           <Text style={styles.loadingCardLabel}>Preparing your company workspace…</Text>
@@ -294,7 +231,8 @@ function CompanyHomeScreen() {
   if (error) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <View style={styles.centerContent}>
+      {isDashboardFocused && <StatusBar style="light" backgroundColor={PathoraColors.teal700} />}
+        <View style={[styles.centerContent, styles.fallbackContent]}>
           <Text style={styles.errorTitle}>We could not load your dashboard</Text>
           <Text style={styles.errorText}>{error}</Text>
           <PathoraButton label="Try again" variant="secondary" onPress={() => void load()} style={styles.retryButton} />
@@ -311,7 +249,9 @@ function CompanyHomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
+      {isDashboardFocused && <StatusBar style="light" backgroundColor={PathoraColors.teal700} />}
       <ScrollView
+        style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -322,43 +262,32 @@ function CompanyHomeScreen() {
             colors={[PathoraColors.teal600]}
           />
         }>
-        <View style={styles.topBar}>
-          <View>
-            <PathoraLogo size={25} wordmarkSize={17} />
-            <Text style={styles.topBarCaption}>COMPANY WORKSPACE</Text>
-          </View>
-          <Pressable
-            onPress={handleAvatarPress}
-            accessibilityRole="button"
-            accessibilityLabel="Open account options"
-            style={({ pressed }) => [styles.companyAvatar, pressed && styles.pressed]}>
-            <Text style={styles.companyAvatarText}>{companyInitials(companyProfile?.companyName, user?.email)}</Text>
-          </Pressable>
-        </View>
-
-        <View style={styles.welcomeBlock}>
-          <Text style={styles.greeting}>GOOD TO SEE YOU</Text>
-          <Text style={styles.companyName} numberOfLines={2}>{companyName}</Text>
-          <Text style={styles.welcomeSubtext}>Here is what is happening with your hiring.</Text>
-        </View>
+        <DashboardWelcomeHeader
+          workspaceLabel="COMPANY WORKSPACE"
+          name={companyName}
+          subtitle="Here's what's happening with your hiring."
+          avatarInitials={companyInitials(companyProfile?.companyName, user?.email)}
+          avatarAccessibilityLabel="Open company profile"
+          onAvatarPress={handleAvatarPress}
+        />
 
         <View style={styles.section}>
-          <SectionHeading eyebrow="AT A GLANCE" title="Your hiring pulse" />
+          <PathoraSectionHeading eyebrow="AT A GLANCE" title="Your hiring pulse" />
           <View style={styles.metricsRow}>
-            <MetricCard label="Open roles" value={openInternships.length} onPress={() => router.push('/company/internships')} />
-            <MetricCard
+            <PathoraMetricCard label="Open roles" value={openInternships.length} onPress={() => router.push('/company/internships')} />
+            <PathoraMetricCard
               label="To review"
               value={applications ? reviewApplications.length : null}
-              accent={reviewApplications.length > 0}
+              tone={reviewApplications.length > 0 ? 'amber' : 'teal'}
               unavailable={applicantsUnavailable}
               onPress={() => router.push({ pathname: '/company/applicants', params: { status: 'APPLIED' } })}
             />
-            <MetricCard label="Applicants" value={applications?.length ?? null} unavailable={applicantsUnavailable} onPress={() => router.push('/company/applicants')} />
+            <PathoraMetricCard label="Applicants" value={applications?.length ?? null} unavailable={applicantsUnavailable} onPress={() => router.push('/company/applicants')} />
           </View>
         </View>
 
         <View style={styles.section}>
-          <SectionHeading
+          <PathoraSectionHeading
             eyebrow="STAY ON TOP"
             title="Needs your attention"
             actionLabel="View all"
@@ -375,7 +304,7 @@ function CompanyHomeScreen() {
         </View>
 
         <View style={styles.section}>
-          <SectionHeading
+          <PathoraSectionHeading
             eyebrow="YOUR OPPORTUNITIES"
             title="Open internships"
             actionLabel="View all"
@@ -408,24 +337,7 @@ function CompanyHomeScreen() {
           )}
         </View>
 
-        <View style={styles.section}>
-          <SectionHeading
-            eyebrow="RECENT ACTIVITY"
-            title="Latest applicants"
-            actionLabel="View all"
-            onAction={() => router.push('/company/applicants')}
-          />
-          <ApplicantPreview
-            applications={applications ?? []}
-            isLoading={applications === null && !applicantsUnavailable}
-            isUnavailable={applicantsUnavailable}
-            emptyTitle="No applications yet"
-            emptyDescription="Once students apply, you'll find their applications here."
-            onApplicantPress={goToApplicantDetail}
-          />
-        </View>
 
-        <Text style={styles.footerText}>Made for meaningful first steps.  ·  Path</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -436,13 +348,14 @@ export default function CompanyHomeRoute() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: PathoraColors.paper },
+  safeArea: { flex: 1, backgroundColor: PathoraColors.teal700 },
+  scrollView: { backgroundColor: PathoraColors.paper },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: PathoraSpacing[20],
+    paddingHorizontal: PathoraSpacing[24],
     paddingTop: PathoraSpacing[8],
     paddingBottom: 130,
-    gap: PathoraSpacing[24],
+    gap: PathoraSpacing[20],
   },
   centerContent: {
     flex: 1,
@@ -452,82 +365,10 @@ const styles = StyleSheet.create({
     gap: PathoraSpacing[12],
   },
   startupSpinner: { marginTop: PathoraSpacing[16] },
-  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  topBarCaption: {
-    marginTop: 2,
-    marginLeft: 2,
-    fontFamily: PathoraFonts.en.bold,
-    fontSize: 9,
-    letterSpacing: 1.6,
-    color: PathoraColors.textTertiary,
-  },
-  companyAvatar: {
-    width: 46,
-    height: 46,
-    borderRadius: PathoraRadius[14],
-    backgroundColor: PathoraColors.teal100,
-    borderWidth: 1,
-    borderColor: '#CFE5DF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  companyAvatarText: {
-    color: PathoraColors.teal700,
-    fontFamily: PathoraFonts.en.extraBold,
-    fontSize: 16,
-  },
+  fallbackContent: { backgroundColor: PathoraColors.paper },
   pressed: { opacity: 0.72 },
-  welcomeBlock: { gap: 3 },
-  greeting: {
-    fontFamily: PathoraFonts.en.bold,
-    fontSize: 10.5,
-    letterSpacing: 2.0,
-    color: PathoraColors.teal600,
-  },
-  companyName: {
-    fontFamily: PathoraFonts.en.extraBold,
-    fontSize: 28,
-    lineHeight: 36,
-    letterSpacing: -0.8,
-    color: PathoraColors.ink900,
-  },
-  welcomeSubtext: {
-    marginTop: 2,
-    fontFamily: PathoraFonts.en.regular,
-    fontSize: 13.5,
-    color: PathoraColors.textSecondary,
-  },
   section: { gap: PathoraSpacing[12] },
-  sectionHeading: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10 },
-  sectionHeadingText: { flex: 1, gap: 3 },
-  eyebrow: {
-    fontFamily: PathoraFonts.en.bold,
-    color: PathoraColors.teal600,
-    fontSize: 10,
-    letterSpacing: 1.6,
-  },
-  sectionTitle: { fontFamily: PathoraFonts.en.extraBold, fontSize: 19, letterSpacing: -0.4, color: PathoraColors.ink900 },
-  sectionLinkTouch: { paddingVertical: 5 },
-  sectionLink: { fontFamily: PathoraFonts.en.bold, fontSize: 12.5, color: PathoraColors.teal600 },
   metricsRow: { flexDirection: 'row', gap: PathoraSpacing[8] },
-  metricCard: {
-    flex: 1,
-    minWidth: 0,
-    backgroundColor: PathoraColors.surface,
-    borderRadius: PathoraRadius[14],
-    borderWidth: 1,
-    borderColor: PathoraColors.border,
-    paddingHorizontal: PathoraSpacing[12],
-    paddingVertical: PathoraSpacing[16],
-    minHeight: 112,
-    justifyContent: 'center',
-    gap: PathoraSpacing[8],
-  },
-  metricCardAccent: { backgroundColor: '#FFF6E8', borderColor: '#F3DDBA' },
-  metricIndicator: { width: 25, height: 4, borderRadius: 999, backgroundColor: PathoraColors.teal500 },
-  metricIndicatorAmber: { backgroundColor: PathoraColors.amber500 },
-  metricValue: { fontFamily: PathoraFonts.en.extraBold, fontSize: 28, color: PathoraColors.ink900, lineHeight: 32 },
-  metricLabel: { fontFamily: PathoraFonts.en.semiBold, fontSize: 11.5, color: PathoraColors.textSecondary },
   whiteCard: {
     borderRadius: PathoraRadius[14],
     backgroundColor: PathoraColors.surface,
@@ -586,7 +427,6 @@ const styles = StyleSheet.create({
   internshipMeta: { fontFamily: PathoraFonts.en.medium, color: PathoraColors.textSecondary, fontSize: 12 },
   internshipDeadline: { fontFamily: PathoraFonts.en.medium, color: PathoraColors.teal600, fontSize: 11.5 },
   chevron: { fontFamily: PathoraFonts.en.medium, fontSize: 26, color: PathoraColors.textTertiary },
-  footerText: { textAlign: 'center', fontFamily: PathoraFonts.en.medium, fontSize: 10.5, color: PathoraColors.textTertiary, marginTop: 2 },
   errorTitle: { textAlign: 'center', fontFamily: PathoraFonts.en.bold, fontSize: 18, color: PathoraColors.ink900 },
   errorText: { textAlign: 'center', fontFamily: PathoraFonts.en.medium, fontSize: 13.5, color: PathoraColors.error },
   retryButton: { maxWidth: 170, marginTop: PathoraSpacing[12] },

@@ -5,17 +5,19 @@
  * The tab remains full-bleed behind the floating navigation bar.
  */
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown, ReduceMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { InternshipFeedCard } from '@/components/internship-feed-card';
+import { PathoraFilterChip } from '@/components/pathora-filter-chip';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraSearchInput } from '@/components/pathora-search-input';
-import { PathoraColors, PathoraFonts, PathoraGradients, PathoraSpacing } from '@/constants/pathora-theme';
+import { PathoraPageHeader } from '@/components/pathora-page-header';
+import { PathoraSectionHeading } from '@/components/pathora-section-heading';
+import { PathoraColors, PathoraFonts, PathoraSpacing } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import {
@@ -42,26 +44,6 @@ function Icon({ name, color = PathoraColors.textSecondary, size = 16 }: {
   name: SymbolViewProps['name']; color?: string; size?: number;
 }) {
   return <SymbolView name={name} size={size} tintColor={color} />;
-}
-
-function ModeChip({ title, count, active, onPress }: {
-  title: string; count: number | null; active: boolean; onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityState={{ selected: active }}
-      accessibilityLabel={`${title}${count === null ? '' : `, ${count} internships`}`}
-      style={({ pressed }) => [styles.filterChip, active && styles.filterChipSelected, pressed && styles.pressed]}>
-      <Text style={[styles.filterLabel, active && styles.filterLabelSelected]}>{title}</Text>
-      {count !== null && (
-        <View style={[styles.filterCountBox, active && styles.filterCountBoxSelected]}>
-          <Text style={[styles.filterCount, active && styles.filterCountSelected]}>{count}</Text>
-        </View>
-      )}
-    </Pressable>
-  );
 }
 
 function StateCard({ title, description, icon, action, onAction, error = false }: {
@@ -178,40 +160,25 @@ function InternshipsListScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={PathoraColors.teal600} />}>
-        <View style={styles.pageHeader}>
-          <View style={styles.headerCopy}>
-            <Text style={styles.headerEyebrow}>PATH / FOR STUDENTS</Text>
-            <Text style={styles.pageTitle}>Discover<Text style={styles.titleDot}>.</Text></Text>
-            <Text style={styles.pageSubtitle}>Your next opportunity starts here.</Text>
-          </View>
-          <View style={styles.headerBadge}>
-            <Icon name={{ ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' }} size={25} color={PathoraColors.teal700} />
-          </View>
-        </View>
+        <PathoraPageHeader eyebrow="STUDENT WORKSPACE" title="Discover" subtitle="Your next opportunity starts here." />
 
         <View style={styles.searchSection}>
-          <View style={styles.sectionHeading}>
-            <View>
-              <Text style={styles.sectionEyebrow}>YOUR SEARCH</Text>
-              <Text style={styles.sectionTitle}>Explore internships</Text>
-            </View>
-            <Text style={styles.sectionHelper}>Find your fit</Text>
-          </View>
+          <PathoraSectionHeading eyebrow="YOUR SEARCH" title="Explore internships" />
           <PathoraSearchInput
             value={query}
             onChangeText={setQuery}
             placeholder="Role, company, city or skill"
-            style={styles.searchInput}
           />
           <Text style={styles.filterLabelHeading}>WORK STYLE</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtersRow} keyboardShouldPersistTaps="handled">
             {MODE_FILTERS.map((filter) => (
-              <ModeChip
+              <PathoraFilterChip
                 key={filter.value}
-                title={filter.label}
+                label={filter.label}
                 count={internships !== null && !error ? counts[filter.value] : null}
-                active={mode === filter.value}
+                selected={mode === filter.value}
                 onPress={() => setMode(filter.value)}
+                accessibilityLabel={`${filter.label}${internships !== null && !error ? `, ${counts[filter.value]} internships` : ''}`}
               />
             ))}
           </ScrollView>
@@ -279,7 +246,6 @@ function InternshipsListScreen() {
             </Animated.View>
           ))}
         </View>
-        <Text style={styles.bottomHint}>PATH · YOUR NEXT CHAPTER</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -293,41 +259,9 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: PathoraColors.paper },
   // Preserves the latest full-bleed change: content scrolls behind the floating bottom bar.
   scrollContent: { paddingHorizontal: PathoraSpacing[24], paddingTop: 12, paddingBottom: 150, gap: 24 },
-  pageHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  headerCopy: { flex: 1, gap: 3 },
-  headerEyebrow: { color: PathoraColors.teal600, letterSpacing: 1.7, fontFamily: PathoraFonts.en.bold, fontSize: 10 },
-  pageTitle: { color: PathoraColors.ink900, fontFamily: PathoraFonts.en.extraBold, fontSize: 29, lineHeight: 39, letterSpacing: -0.8 },
-  titleDot: { color: PathoraColors.teal500 },
-  pageSubtitle: { color: PathoraColors.textSecondary, fontFamily: PathoraFonts.en.medium, fontSize: 12.5, lineHeight: 18 },
-  headerBadge: { height: 49, width: 49, alignItems: 'center', justifyContent: 'center', borderRadius: 17, backgroundColor: PathoraColors.teal100 },
-  hero: { borderRadius: 20, padding: 22, overflow: 'hidden', gap: 13, minHeight: 230,
-    shadowColor: PathoraColors.teal700, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.16, shadowRadius: 17, elevation: 3 },
-  heroHalo: { position: 'absolute', width: 235, height: 235, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', right: -93, top: -106, backgroundColor: 'rgba(255,255,255,0.045)' },
-  heroHaloSmall: { position: 'absolute', width: 140, height: 140, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', right: -30, bottom: -73 },
-  heroEyebrowRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  heroDot: { height: 7, width: 7, borderRadius: 99, backgroundColor: PathoraColors.amber500 },
-  heroEyebrow: { color: '#E2F5F0', letterSpacing: 1.25, fontFamily: PathoraFonts.en.bold, fontSize: 9.5 },
-  heroTitle: { color: '#FFFFFF', fontFamily: PathoraFonts.en.extraBold, fontSize: 24, lineHeight: 32, letterSpacing: -0.5, maxWidth: '88%' },
-  heroSubtitle: { color: '#DBF0EB', fontFamily: PathoraFonts.en.medium, fontSize: 12.5, lineHeight: 19, maxWidth: '95%' },
-  heroFooter: { marginTop: 4, flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', borderRadius: 11, backgroundColor: 'rgba(255,255,255,0.14)', paddingHorizontal: 11, paddingVertical: 9, gap: 8 },
-  heroIconCircle: { height: 24, width: 24, borderRadius: 8, backgroundColor: '#E7F4F0', justifyContent: 'center', alignItems: 'center' },
-  heroFooterText: { color: '#FFFFFF', fontFamily: PathoraFonts.en.bold, fontSize: 11.5 },
   searchSection: { gap: 12 },
-  sectionHeading: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 6 },
-  sectionEyebrow: { color: PathoraColors.teal600, fontFamily: PathoraFonts.en.bold, fontSize: 10, letterSpacing: 1.45 },
-  sectionTitle: { fontFamily: PathoraFonts.en.extraBold, fontSize: 21, lineHeight: 29, letterSpacing: -0.55, color: PathoraColors.ink900, marginTop: 4 },
-  sectionHelper: { color: PathoraColors.textTertiary, fontFamily: PathoraFonts.en.medium, fontSize: 11.5, paddingBottom: 3 },
-  searchInput: { backgroundColor: PathoraColors.surface, borderColor: '#DDE5DD', borderRadius: 15, paddingVertical: 13 },
   filterLabelHeading: { marginTop: 2, color: PathoraColors.textSecondary, fontFamily: PathoraFonts.en.bold, fontSize: 10, letterSpacing: 1.1 },
   filtersRow: { gap: 8, paddingRight: 1 },
-  filterChip: { flexDirection: 'row', alignItems: 'center', gap: 7, borderRadius: 999, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: PathoraColors.border, paddingHorizontal: 12, paddingVertical: 9 },
-  filterChipSelected: { backgroundColor: PathoraColors.teal700, borderColor: PathoraColors.teal700 },
-  filterLabel: { color: PathoraColors.textSecondary, fontFamily: PathoraFonts.en.bold, fontSize: 11.5 },
-  filterLabelSelected: { color: '#FFFFFF' },
-  filterCountBox: { borderRadius: 9, paddingHorizontal: 6, paddingVertical: 2, backgroundColor: '#F1F2F0' },
-  filterCountBoxSelected: { backgroundColor: 'rgba(255,255,255,0.18)' },
-  filterCount: { fontFamily: PathoraFonts.en.bold, fontSize: 10, color: PathoraColors.textSecondary },
-  filterCountSelected: { color: '#FFFFFF' },
   resultsSection: { gap: 12 },
   resultsHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 1 },
   resultsTitleGroup: { flex: 1, gap: 3 },
@@ -343,6 +277,4 @@ const styles = StyleSheet.create({
   stateTitle: { color: PathoraColors.ink900, fontFamily: PathoraFonts.en.extraBold, fontSize: 17, lineHeight: 24, textAlign: 'center' },
   stateDescription: { color: PathoraColors.textSecondary, fontFamily: PathoraFonts.en.medium, fontSize: 12.5, lineHeight: 19, textAlign: 'center' },
   stateButton: { marginTop: 3, minWidth: 150 },
-  bottomHint: { marginTop: 5, textAlign: 'center', color: PathoraColors.textTertiary, fontFamily: PathoraFonts.en.bold, fontSize: 10, letterSpacing: 1.35 },
-  pressed: { opacity: 0.8, transform: [{ scale: 0.985 }] },
 });

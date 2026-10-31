@@ -1,13 +1,17 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, ReduceMotion } from 'react-native-reanimated';
 
 import { ApplicationFilter, ApplicationMetric } from '@/components/application-polish';
 import { ApplicationStatusBadge } from '@/components/application-status-badge';
 import { PathoraButton } from '@/components/pathora-button';
+import { pathoraCardSurface, pathoraCardPressed } from '@/components/pathora-card-styles';
+import { PathoraSearchInput } from '@/components/pathora-search-input';
+import { PathoraPageHeader } from '@/components/pathora-page-header';
+import { PathoraSectionHeading } from '@/components/pathora-section-heading';
 import { PathoraColors, PathoraFonts } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
 import { getCompanyInternships, type CompanyApplicationStatus } from '@/lib/api';
@@ -119,41 +123,27 @@ function CompanyApplicantsContent({ initialFilter }: { initialFilter: Filter }) 
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={PathoraColors.teal600} />}>
-        <View style={styles.heading}>
-          <Text style={styles.eyebrow}>COMPANY WORKSPACE</Text>
-          <Text style={styles.title}>Applicants<Text style={styles.titleDot}>.</Text></Text>
-          <Text style={styles.subtitle}>Meet the people behind every application.</Text>
-        </View>
+        <PathoraPageHeader eyebrow="COMPANY WORKSPACE" title="Applicants" subtitle="Meet the people behind every application." />
 
         {applications === null && !error ? (
           <View style={styles.center}><ActivityIndicator size="large" color={PathoraColors.teal600} /></View>
         ) : error ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>Applicants couldn't be loaded</Text>
+            <Text style={styles.emptyTitle}>Applicants could not be loaded</Text>
             <Text style={styles.emptyBody}>{error}</Text>
             <PathoraButton label="Try again" variant="secondary" onPress={() => void load()} style={styles.retry} />
           </View>
         ) : (
           <>
-            <View style={styles.sectionHeading}>
-              <Text style={styles.sectionEyebrow}>AT A GLANCE</Text>
-              <Text style={styles.sectionTitle}>Hiring overview</Text>
-            </View>
+            <PathoraSectionHeading eyebrow="AT A GLANCE" title="Hiring overview" />
             <View style={styles.metrics}>
               <ApplicationMetric label="Applicants" value={counts.ALL} />
               <ApplicationMetric label="To review" value={counts.APPLIED} tint="amber" />
               <ApplicationMetric label="Accepted" value={counts.ACCEPTED} />
             </View>
 
-            <View style={styles.sectionHeading}>
-              <Text style={styles.sectionEyebrow}>APPLICATION INBOX</Text>
-              <Text style={styles.sectionTitle}>Review candidates</Text>
-            </View>
-            <View style={styles.searchBox}>
-              <SymbolView name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }} size={19} tintColor={PathoraColors.textTertiary} />
-              <TextInput style={styles.searchInput} value={query} onChangeText={setQuery}
-                placeholder="Search people or internships" placeholderTextColor={PathoraColors.textTertiary} autoCorrect={false} />
-            </View>
+            <PathoraSectionHeading eyebrow="APPLICATION INBOX" title="Review candidates" />
+            <PathoraSearchInput value={query} onChangeText={setQuery} placeholder="Search people or internships" />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
               {FILTERS.map((item) => (
                 <ApplicationFilter key={item.key} title={item.label} count={counts[item.key]}
@@ -187,27 +177,14 @@ function CompanyApplicantsContent({ initialFilter }: { initialFilter: Filter }) 
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: PathoraColors.paper },
-  content: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 16, paddingBottom: 155, gap: 16 },
-  heading: { gap: 5, marginBottom: 5 },
-  eyebrow: { fontFamily: PathoraFonts.en.bold, letterSpacing: 1.6, fontSize: 10, color: PathoraColors.teal600 },
-  title: { color: PathoraColors.ink900, fontFamily: PathoraFonts.en.extraBold, fontSize: 30, lineHeight: 41 },
-  titleDot: { color: PathoraColors.teal500 },
-  subtitle: { color: PathoraColors.textSecondary, fontFamily: PathoraFonts.en.medium, fontSize: 12.5, lineHeight: 20 },
-  sectionHeading: { gap: 4, marginTop: 4 },
-  sectionEyebrow: { fontFamily: PathoraFonts.en.bold, letterSpacing: 1.4, fontSize: 10, color: PathoraColors.teal600 },
-  sectionTitle: { color: PathoraColors.ink900, fontFamily: PathoraFonts.en.extraBold, fontSize: 21, lineHeight: 28 },
+  content: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 155, gap: 16 },
   metrics: { flexDirection: 'row', gap: 9, marginBottom: 6 },
-  searchBox: { flexDirection: 'row', gap: 10, alignItems: 'center', borderWidth: 1,
-    borderColor: '#DDE5DD', borderRadius: 15, backgroundColor: PathoraColors.surface, paddingHorizontal: 14, minHeight: 50 },
-  searchInput: { flex: 1, color: PathoraColors.ink900, fontFamily: PathoraFonts.en.medium, fontSize: 13.5, paddingVertical: 12 },
   filters: { gap: 9, paddingVertical: 2 },
   resultsHead: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 3 },
   resultsText: { fontFamily: PathoraFonts.en.bold, color: PathoraColors.ink900, fontSize: 13 },
   sortText: { fontFamily: PathoraFonts.en.medium, color: PathoraColors.textTertiary, fontSize: 11.5 },
-  card: { borderRadius: 18, borderWidth: 1, borderColor: PathoraColors.border, backgroundColor: PathoraColors.surface,
-    padding: 16, gap: 14, shadowColor: PathoraColors.ink900, shadowOpacity: 0.035, shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 }, elevation: 1 },
-  cardPressed: { opacity: 0.75 },
+  card: { ...pathoraCardSurface, padding: 16, gap: 14 },
+  cardPressed: { ...pathoraCardPressed },
   cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   avatar: { width: 46, height: 46, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: PathoraColors.teal100 },
   avatarText: { color: PathoraColors.teal700, fontFamily: PathoraFonts.en.extraBold, fontSize: 16 },
