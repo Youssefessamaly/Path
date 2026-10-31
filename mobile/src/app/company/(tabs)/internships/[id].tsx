@@ -126,13 +126,13 @@ function InternshipDetailsScreen() {
           <InfoRow label="Location" value={internship.location} />
           <InfoRow label="Work mode" value={WORK_MODE_LABELS[internship.workMode]} />
           <InfoRow label="Application deadline" value={formatDisplayDate(internship.applicationDeadline)} />
-          {internship.startDate && <InfoRow label="Start date" value={formatDisplayDate(internship.startDate)} />}
-          {internship.durationMonths && (
+          {(internship.startDate) ? (<InfoRow label="Start date" value={formatDisplayDate(internship.startDate)} />) : null}
+          {(internship.durationMonths) ? (
             <InfoRow
               label="Duration"
               value={`${internship.durationMonths} month${internship.durationMonths === 1 ? '' : 's'}`}
             />
-          )}
+          ) : null}
           {internship.minimumAcademicYear !== null && (
             <InfoRow
               label="Minimum academic year"
@@ -143,9 +143,9 @@ function InternshipDetailsScreen() {
 
         <View style={styles.infoCard}>
           <InfoRow label="Application process" value={APPLICATION_METHOD_LABELS[internship.applicationMethod]} />
-          {internship.applicationMethod === 'EXTERNAL' && internship.externalApplicationUrl && (
+          {(internship.applicationMethod === 'EXTERNAL' && internship.externalApplicationUrl) ? (
             <InfoRow label="Application URL" value={internship.externalApplicationUrl} />
-          )}
+          ) : null}
         </View>
 
         <View>

@@ -61,9 +61,9 @@ function StateCard({ title, description, icon, action, onAction, error = false }
       </View>
       <Text style={styles.stateTitle}>{title}</Text>
       <Text style={styles.stateDescription}>{description}</Text>
-      {action && onAction && (
+      {(action && onAction) ? (
         <PathoraButton label={action} variant="secondary" onPress={onAction} style={styles.stateButton} />
-      )}
+      ) : null}
     </View>
   );
 }
@@ -211,7 +211,7 @@ function InternshipsListScreen() {
               <Text style={styles.loadingCaption}>Finding internships for you…</Text>
             </View>
           )}
-          {error && (
+          {(error) ? (
             <StateCard
               error
               title="Couldn't load internships"
@@ -220,7 +220,7 @@ function InternshipsListScreen() {
               action="Try again"
               onAction={() => { void load(debouncedQuery); }}
             />
-          )}
+          ) : null}
           {internships !== null && !error && visible.length === 0 && (
             <StateCard
               title={hasTextSearch ? 'No matching internships' : mode !== 'ALL' ? 'No roles in this work style' : 'Your next role is on its way'}

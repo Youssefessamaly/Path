@@ -106,7 +106,7 @@ export default function LoginScreen() {
           style={{ backgroundColor: PathoraColors.paper }} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATHORA" title="Welcome back" subtitle="Log in to keep tracking your applications." onBack={() => router.replace('/welcome')} />
 
-        {registrationMessage && <Text style={styles.successMessage}>{registrationMessage}</Text>}
+        {(registrationMessage) ? (<Text style={styles.successMessage}>{registrationMessage}</Text>) : null}
 
         <View style={styles.fields}>
           <PathoraInput
@@ -140,7 +140,7 @@ export default function LoginScreen() {
           </View>
         </View>
 
-        {submitError && <Text style={styles.submitError}>{submitError}</Text>}
+        {(submitError) ? (<Text style={styles.submitError}>{submitError}</Text>) : null}
 
         <PathoraButton
           label={isSubmitting ? 'Logging in…' : 'Log in'}

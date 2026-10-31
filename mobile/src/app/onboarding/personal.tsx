@@ -211,7 +211,7 @@ function PersonalDetailsScreen() {
             />
           </View>
 
-          {submitError && <Text style={styles.submitError}>{submitError}</Text>}
+          {(submitError) ? (<Text style={styles.submitError}>{submitError}</Text>) : null}
 
           <PathoraButton
             label={isSubmitting ? 'Saving…' : 'Continue'}

@@ -19,6 +19,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 
+import { PathoraRenderDiagnostic } from '@/components/pathora-render-diagnostic';
 import { PathoraColors } from '@/constants/pathora-theme';
 import { AuthProvider, useAuth } from '@/context/auth-context';
 
@@ -72,12 +73,24 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
 
   return (
     <>
-<StatusBar style={hasTealHeader ? 'light' : 'dark'} />      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: PathoraColors.paper },
-        }}
-      />
+      <StatusBar style={hasTealHeader ? 'light' : 'dark'} />
+      {__DEV__ ? (
+        <PathoraRenderDiagnostic route={pathname}>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: PathoraColors.paper },
+            }}
+          />
+        </PathoraRenderDiagnostic>
+      ) : (
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: PathoraColors.paper },
+          }}
+        />
+      )}
     </>
   );
 }

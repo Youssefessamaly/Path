@@ -74,7 +74,7 @@ export default function ForgotPasswordScreen() {
             />
           </View>
 
-          {submitError && <Text style={styles.submitError}>{submitError}</Text>}
+          {(submitError) ? (<Text style={styles.submitError}>{submitError}</Text>) : null}
 
           <PathoraButton
             label={isSubmitting ? 'Sending…' : 'Send code'}

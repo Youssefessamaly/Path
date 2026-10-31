@@ -99,18 +99,18 @@ function ApplicationDetailsScreen({ applicationId }: { applicationId: string }) 
           <ApplicationDetailText muted={!application.coverLetter}>{application.coverLetter || 'No cover letter provided'}</ApplicationDetailText>
         </ApplicationDetailCard>
 
-        {(application.linkedinUrl || application.portfolioUrl) && (
+        {((application.linkedinUrl || application.portfolioUrl)) ? (
           <ApplicationDetailCard label="Provided links">
-            {application.linkedinUrl && <>
+            {(application.linkedinUrl) ? (<>
               <Text style={styles.minorHeading}>LinkedIn</Text>
               <ApplicationDetailText>{application.linkedinUrl}</ApplicationDetailText>
-            </>}
-            {application.portfolioUrl && <>
+            </>) : null}
+            {(application.portfolioUrl) ? (<>
               <Text style={styles.minorHeading}>Portfolio</Text>
               <ApplicationDetailText>{application.portfolioUrl}</ApplicationDetailText>
-            </>}
+            </>) : null}
           </ApplicationDetailCard>
-        )}
+        ) : null}
 
         {application.answers.length > 0 && (
           <ApplicationDetailCard label="Your answers">

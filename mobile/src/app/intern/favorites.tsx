@@ -90,12 +90,12 @@ function FavoritesScreen() {
         </View>
       )}
 
-      {error && (
+      {(error) ? (
         <View style={styles.centerContent}>
           <Text style={styles.errorText}>{error}</Text>
           <PathoraButton label="Try again" variant="secondary" onPress={load} style={styles.retryButton} />
         </View>
-      )}
+      ) : null}
 
       {favorites !== null && !error && favorites.length === 0 && (
         <ScrollView

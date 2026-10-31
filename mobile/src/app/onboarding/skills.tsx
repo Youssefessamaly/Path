@@ -270,16 +270,16 @@ function SkillsAndInterestsScreen() {
                   {isUploadingCv ? 'Uploading…' : 'Upload your CV'}
                 </Text>
                 <Text style={styles.cvSubtitle}>PDF, up to 5MB</Text>
-                {cvFileName && !isUploadingCv && (
+                {(cvFileName && !isUploadingCv) ? (
                   <Text style={styles.cvFileName} numberOfLines={1}>
                     {cvFileName}
                   </Text>
-                )}
+                ) : null}
               </Pressable>
-              {cvError && <Text style={styles.cvError}>{cvError}</Text>}
+              {(cvError) ? (<Text style={styles.cvError}>{cvError}</Text>) : null}
             </View>
 
-            {cvFileName && !isUploadingCv && (
+            {(cvFileName && !isUploadingCv) ? (
               <View>
                 <Text style={styles.label}>Skills detected from your CV</Text>
                 {cvDetectedSkills.length > 0 ? (
@@ -294,10 +294,10 @@ function SkillsAndInterestsScreen() {
                   <Text style={styles.hint}>No Pathora skills were detected from this CV.</Text>
                 )}
               </View>
-            )}
+            ) : null}
           </View>
 
-          {submitError && <Text style={styles.submitError}>{submitError}</Text>}
+          {(submitError) ? (<Text style={styles.submitError}>{submitError}</Text>) : null}
 
           {isCompleted && (
             <View style={styles.successBanner}>

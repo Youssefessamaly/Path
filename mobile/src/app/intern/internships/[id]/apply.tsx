@@ -365,7 +365,7 @@ function ApplyScreen({ internshipId }: { internshipId: string }) {
                     autoCapitalize="none"
                     keyboardType="url"
                   />
-                  {linkedinError && <Text style={styles.fieldError}>{linkedinError}</Text>}
+                  {(linkedinError) ? (<Text style={styles.fieldError}>{linkedinError}</Text>) : null}
                 </View>
 
                 <View>
@@ -380,7 +380,7 @@ function ApplyScreen({ internshipId }: { internshipId: string }) {
                     autoCapitalize="none"
                     keyboardType="url"
                   />
-                  {portfolioError && <Text style={styles.fieldError}>{portfolioError}</Text>}
+                  {(portfolioError) ? (<Text style={styles.fieldError}>{portfolioError}</Text>) : null}
                 </View>
               </View>
 
@@ -433,7 +433,7 @@ function ApplyScreen({ internshipId }: { internshipId: string }) {
                 </View>
               )}
 
-              {step2Error && <Text style={styles.submitError}>{step2Error}</Text>}
+              {(step2Error) ? (<Text style={styles.submitError}>{step2Error}</Text>) : null}
 
               <PathoraButton
                 label="Continue"
@@ -500,7 +500,7 @@ function ApplyScreen({ internshipId }: { internshipId: string }) {
                 <Text style={styles.confirmText}>I confirm the information above is accurate.</Text>
               </Pressable>
 
-              {submitError && <Text style={styles.submitError}>{submitError}</Text>}
+              {(submitError) ? (<Text style={styles.submitError}>{submitError}</Text>) : null}
 
               <PathoraButton
                 label={isSubmitting ? 'Submitting…' : 'Submit application'}

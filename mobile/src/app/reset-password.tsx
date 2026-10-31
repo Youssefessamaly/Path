@@ -102,7 +102,7 @@ export default function ResetPasswordScreen() {
             </View>
           </View>
 
-          {submitError && <Text style={styles.submitError}>{submitError}</Text>}
+          {(submitError) ? (<Text style={styles.submitError}>{submitError}</Text>) : null}
 
           <PathoraButton
             label={isSubmitting ? 'Resetting…' : 'Reset password'}

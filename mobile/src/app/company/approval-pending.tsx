@@ -97,9 +97,9 @@ function ApprovalPendingScreen() {
             internships and applicants once your account is approved.
           </Text>
 
-          {companyName && <Text style={styles.companyName}>{companyName}</Text>}
+          {(companyName) ? (<Text style={styles.companyName}>{companyName}</Text>) : null}
 
-          {status && <CompanyApprovalBadge status={status} />}
+          {(status) ? (<CompanyApprovalBadge status={status} />) : null}
 
           {!status && !error && (
             <View style={styles.loadingRow}>
@@ -107,7 +107,7 @@ function ApprovalPendingScreen() {
             </View>
           )}
 
-          {error && <Text style={styles.errorText}>{error}</Text>}
+          {(error) ? (<Text style={styles.errorText}>{error}</Text>) : null}
         </View>
 
         <View style={styles.actions}>

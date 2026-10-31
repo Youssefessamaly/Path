@@ -139,12 +139,12 @@ function InternHomeScreen() {
         </View>
       )}
 
-      {error && (
+      {(error) ? (
         <View style={[styles.centerContent, styles.fallbackContent]}>
           <Text style={styles.errorText}>{error}</Text>
           <PathoraButton label="Try again" variant="secondary" onPress={load} style={styles.retryButton} />
         </View>
-      )}
+      ) : null}
 
       {internships !== null && !error && (
         <ScrollView

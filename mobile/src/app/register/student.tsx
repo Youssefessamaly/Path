@@ -125,7 +125,7 @@ export default function StudentRegistrationScreen() {
             </Text>
           </Pressable>
 
-          {submitError && <Text style={styles.submitError}>{submitError}</Text>}
+          {(submitError) ? (<Text style={styles.submitError}>{submitError}</Text>) : null}
 
           <PathoraButton
             label={isSubmitting ? 'Creating account…' : 'Continue'}

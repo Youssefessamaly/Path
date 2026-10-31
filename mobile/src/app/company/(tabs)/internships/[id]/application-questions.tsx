@@ -160,7 +160,7 @@ function QuestionCard({
           />
         </View>
 
-        {error && <Text style={styles.cardError}>{error}</Text>}
+        {(error) ? (<Text style={styles.cardError}>{error}</Text>) : null}
 
         <View style={styles.editActions}>
           <PathoraButton
@@ -394,12 +394,12 @@ function ApplicationQuestionsScreen({ internshipId }: { internshipId: string }) 
             </View>
           )}
 
-          {loadError && (
+          {(loadError) ? (
             <View style={styles.centerContent}>
               <Text style={styles.errorText}>{loadError}</Text>
               <PathoraButton label="Try again" variant="secondary" onPress={load} style={styles.retryButton} />
             </View>
-          )}
+          ) : null}
 
           {questions !== null && !loadError && (
             <>
@@ -454,7 +454,7 @@ function ApplicationQuestionsScreen({ internshipId }: { internshipId: string }) 
                   />
                 </View>
 
-                {addError && <Text style={styles.cardError}>{addError}</Text>}
+                {(addError) ? (<Text style={styles.cardError}>{addError}</Text>) : null}
 
                 <PathoraButton
                   label={isAddingQuestion ? 'Adding…' : 'Add question'}

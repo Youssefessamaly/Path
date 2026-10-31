@@ -182,7 +182,7 @@ export default function CompanyProfileRoute() {
         <SectionCard title="Verification status" icon={{ ios: 'checkmark.seal.fill', android: 'verified', web: 'verified' }}>
           <View style={styles.approvalRow}>
             {approval ? <CompanyApprovalBadge status={approval} /> : <Text style={styles.muted}>Status unavailable</Text>}
-            {approval && <Text style={styles.approvalCopy}>{APPROVAL_DESCRIPTIONS[approval]}</Text>}
+            {(approval) ? (<Text style={styles.approvalCopy}>{APPROVAL_DESCRIPTIONS[approval]}</Text>) : null}
           </View>
         </SectionCard>
 

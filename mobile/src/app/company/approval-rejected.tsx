@@ -93,9 +93,9 @@ function ApprovalRejectedScreen() {
             Your company account cannot access Pathora&apos;s employer features at this time.
           </Text>
 
-          {status && <CompanyApprovalBadge status={status} />}
+          {(status) ? (<CompanyApprovalBadge status={status} />) : null}
 
-          {reviewedAt && <Text style={styles.reviewedText}>Reviewed {formatDisplayDate(reviewedAt)}</Text>}
+          {(reviewedAt) ? (<Text style={styles.reviewedText}>Reviewed {formatDisplayDate(reviewedAt)}</Text>) : null}
 
           {!status && !error && (
             <View style={styles.loadingRow}>
@@ -103,7 +103,7 @@ function ApprovalRejectedScreen() {
             </View>
           )}
 
-          {error && <Text style={styles.errorText}>{error}</Text>}
+          {(error) ? (<Text style={styles.errorText}>{error}</Text>) : null}
         </View>
 
         <View style={styles.actions}>

@@ -244,7 +244,10 @@ export default function InternProfileRoute() {
                 <Text style={styles.description}>{profile.careerInterests}</Text>
               </View>
             )}
-              {profile.phoneNumber ? <InfoLine label="Phone" value={profile.phoneNumber} /> : null}            {Boolean(profile.linkedinUrl) && (
+            {profile.phoneNumber ? (
+              <InfoLine label="Phone" value={profile.phoneNumber} />
+            ) : null}
+            {Boolean(profile.linkedinUrl) && (
               <View style={styles.detailBlock}>
                 <Text style={styles.subheading}>LINKEDIN</Text>
                 <Text style={styles.linkText} selectable>{profile.linkedinUrl}</Text>
