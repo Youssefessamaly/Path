@@ -101,9 +101,9 @@ export default function InternProfileRoute() {
     router.push({ pathname: '/cv-preview', params: { fileName: profile.cvFileName } });
   };
   const logOut = async () => {
+    // The intern tab guard redirects to Welcome when the session is cleared.
+    // No stack-pop action is needed (and a tab may have no stack to pop).
     await signOut();
-    router.dismissAll();
-    router.replace('/welcome');
   };
 
   if (loading || error || !profile) {

@@ -103,9 +103,8 @@ export default function CompanyProfileRoute() {
 
   const editProfile = () => router.push('/company/onboarding/company');
   const logOut = async () => {
+    // The company tab guard owns signed-out navigation.
     await signOut();
-    router.dismissAll();
-    router.replace('/welcome');
   };
 
   if (loading || error || !profile) {

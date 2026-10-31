@@ -25,7 +25,10 @@ export function OnboardingGuard({ children, role = 'INTERN' }: OnboardingGuardPr
     if (isInitializing) {
       return;
     }
-    if (!isAuthenticated || !hasRequiredRole) {
+    if (!isAuthenticated) {
+      // A cleared session (including logout from an approval screen) goes to Welcome.
+      router.replace('/welcome');
+    } else if (!hasRequiredRole) {
       router.replace('/login');
     }
   }, [isInitializing, isAuthenticated, hasRequiredRole, router]);

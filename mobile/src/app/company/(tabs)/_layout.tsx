@@ -29,9 +29,7 @@ function CompanyTabsGuard({ children }: { children: ReactNode }) {
       return;
     }
     if (!isAuthenticated) {
-      // No valid session at all — clear any accumulated authenticated history and route to
-      // the signed-out flow via replacement.
-      router.dismissAll();
+      // Signed-out state is handled by route replacement, not a stack pop.
       router.replace('/welcome');
       return;
     }
@@ -67,9 +65,8 @@ function CompanyTabsGuard({ children }: { children: ReactNode }) {
   );
 
   const handleGuardSignOut = async () => {
+    // The authentication guard redirects once signOut clears the session.
     await signOut();
-    router.dismissAll();
-    router.replace('/welcome');
   };
 
   if (isInitializing || !isAuthenticated || !isCompany || checkState === 'checking') {

@@ -100,7 +100,7 @@ function CompanyApplicantsContent({ initialFilter }: { initialFilter: Filter }) 
     setRefreshing(true);
     try { await load(); } finally { setRefreshing(false); }
   };
-  const all = applications ?? [];
+  const all = useMemo(() => applications ?? [], [applications]);
   const counts = {
     ALL: all.length,
     APPLIED: all.filter((a) => a.status === 'APPLIED').length,
@@ -114,7 +114,7 @@ function CompanyApplicantsContent({ initialFilter }: { initialFilter: Filter }) 
       (!search || [a.applicantName, a.internshipTitle, a.institutionName, a.major]
         .some((value) => value?.toLowerCase().includes(search))),
     );
-  }, [applications, filter, query]);
+  }, [all, filter, query]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>

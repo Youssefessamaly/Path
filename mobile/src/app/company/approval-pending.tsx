@@ -73,9 +73,8 @@ function ApprovalPendingScreen() {
   };
 
   const handleSignOut = async () => {
+    // OnboardingGuard redirects signed-out users to Welcome.
     await signOut();
-    router.dismissAll();
-    router.replace('/welcome');
   };
 
   return (
@@ -97,9 +96,9 @@ function ApprovalPendingScreen() {
             internships and applicants once your account is approved.
           </Text>
 
-          {(companyName) ? (<Text style={styles.companyName}>{companyName}</Text>) : null}
+          {companyName && <Text style={styles.companyName}>{companyName}</Text>}
 
-          {(status) ? (<CompanyApprovalBadge status={status} />) : null}
+          {status && <CompanyApprovalBadge status={status} />}
 
           {!status && !error && (
             <View style={styles.loadingRow}>
@@ -107,7 +106,7 @@ function ApprovalPendingScreen() {
             </View>
           )}
 
-          {(error) ? (<Text style={styles.errorText}>{error}</Text>) : null}
+          {error && <Text style={styles.errorText}>{error}</Text>}
         </View>
 
         <View style={styles.actions}>

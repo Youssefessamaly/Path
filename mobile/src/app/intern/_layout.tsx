@@ -22,9 +22,8 @@ function InternTabsGuard({ children }: { children: ReactNode }) {
       return;
     }
     if (!isAuthenticated) {
-      // No valid session at all — clear any accumulated authenticated history (whatever
-      // depth this guard was mounted at) and route to the signed-out flow via replacement.
-      router.dismissAll();
+      // Replace the guarded route directly; popping a tab navigator can trigger
+      // an unhandled POP_TO_TOP when no stack history exists.
       router.replace('/welcome');
       return;
     }

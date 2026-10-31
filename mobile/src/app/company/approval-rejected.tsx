@@ -70,9 +70,8 @@ function ApprovalRejectedScreen() {
   };
 
   const handleSignOut = async () => {
+    // OnboardingGuard redirects signed-out users to Welcome.
     await signOut();
-    router.dismissAll();
-    router.replace('/welcome');
   };
 
   return (
@@ -93,9 +92,9 @@ function ApprovalRejectedScreen() {
             Your company account cannot access Pathora&apos;s employer features at this time.
           </Text>
 
-          {(status) ? (<CompanyApprovalBadge status={status} />) : null}
+          {status && <CompanyApprovalBadge status={status} />}
 
-          {(reviewedAt) ? (<Text style={styles.reviewedText}>Reviewed {formatDisplayDate(reviewedAt)}</Text>) : null}
+          {reviewedAt && <Text style={styles.reviewedText}>Reviewed {formatDisplayDate(reviewedAt)}</Text>}
 
           {!status && !error && (
             <View style={styles.loadingRow}>
@@ -103,7 +102,7 @@ function ApprovalRejectedScreen() {
             </View>
           )}
 
-          {(error) ? (<Text style={styles.errorText}>{error}</Text>) : null}
+          {error && <Text style={styles.errorText}>{error}</Text>}
         </View>
 
         <View style={styles.actions}>
