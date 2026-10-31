@@ -28,6 +28,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AuthBackButton } from '@/components/auth-back-button';
 import { PathoraDetailHeader } from '@/components/pathora-detail-header';
+import { PathoraSectionHeading } from '@/components/pathora-section-heading';
+import { pathoraCardSurface } from '@/components/pathora-card-styles';
+import { PathoraInlineNotice } from '@/components/pathora-inline-notice';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraColors, PathoraFonts, PathoraSpacing } from '@/constants/pathora-theme';
@@ -64,12 +67,7 @@ function initials(name: string) {
 }
 
 function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
-  return (
-    <View style={styles.sectionHeading}>
-      <Text style={styles.sectionEyebrow}>{eyebrow}</Text>
-      <Text style={styles.sectionTitle}>{title}</Text>
-    </View>
-  );
+  return <PathoraSectionHeading eyebrow={eyebrow} title={title} />;
 }
 
 function DetailTile({ label, value, icon }: { label: string; value: string; icon: IconName }) {
@@ -216,7 +214,7 @@ function InternInternshipDetailsScreen({ internshipId }: { internshipId: string 
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled">
-        <PathoraDetailHeader horizontalInset={20} onBack={() => router.back()} eyebrow="STUDENT WORKSPACE" title="Internship details" />
+        <PathoraDetailHeader horizontalInset={24} onBack={() => router.back()} eyebrow="STUDENT WORKSPACE" title="Internship details" />
         <View style={styles.topBar}>
           <Pressable
             accessibilityRole="button"
@@ -385,7 +383,7 @@ function InternInternshipDetailsScreen({ internshipId }: { internshipId: string 
               </Text>
             </View>
           </View>
-          {applyError ? <Text style={styles.applyError}>{applyError}</Text> : null}
+          {applyError ? <PathoraInlineNotice message={applyError} /> : null}
           <Pressable
             disabled={isOpeningExternalUrl}
             accessibilityRole="button"
@@ -412,7 +410,6 @@ function InternInternshipDetailsScreen({ internshipId }: { internshipId: string 
           </Pressable>
         </View>
 
-        <Text style={styles.endCaption}>Your next chapter starts with Path.</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -430,7 +427,7 @@ export default function InternInternshipDetailsRoute() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: PathoraColors.teal700 },
   scrollContent: {
-    paddingHorizontal: PathoraSpacing[20],
+    paddingHorizontal: PathoraSpacing[24],
     paddingTop: PathoraSpacing[12],
     paddingBottom: 160,
     gap: PathoraSpacing[24],
@@ -463,11 +460,8 @@ const styles = StyleSheet.create({
   reasonText: { flex: 1, color: PathoraColors.teal700, fontFamily: PathoraFonts.en.medium, fontSize: 12.5, lineHeight: 18 },
   matchFootnote: { color: PathoraColors.teal700, fontFamily: PathoraFonts.en.medium, fontSize: 12, lineHeight: 18 },
   contentSection: { gap: 12 },
-  sectionHeading: { gap: 4 },
-  sectionEyebrow: { fontFamily: PathoraFonts.en.bold, color: PathoraColors.teal600, letterSpacing: 1.45, fontSize: 9.5 },
-  sectionTitle: { fontFamily: PathoraFonts.en.extraBold, color: PathoraColors.ink900, fontSize: 20.5, lineHeight: 27, letterSpacing: -0.45 },
   sectionTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
-  sectionCard: { padding: 17, backgroundColor: '#FFFFFF', borderRadius: 19, borderWidth: 1, borderColor: PathoraColors.border, shadowColor: PathoraColors.ink900, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.03, shadowRadius: 8, elevation: 1 },
+  sectionCard: { ...pathoraCardSurface, padding: 18 },
   detailGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   detailTile: { backgroundColor: '#FFFFFF', borderColor: PathoraColors.border, borderWidth: 1, borderRadius: 16, padding: 12, flexBasis: '46%', flexGrow: 1, minWidth: 0, minHeight: 91, flexDirection: 'row', alignItems: 'flex-start', gap: 9 },
   tileIcon: { width: 32, height: 32, borderRadius: 10, backgroundColor: PathoraColors.teal100, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
@@ -493,12 +487,10 @@ const styles = StyleSheet.create({
   applicationTextWrap: { flex: 1, gap: 4 },
   applicationTitle: { fontFamily: PathoraFonts.en.bold, color: PathoraColors.ink900, fontSize: 15.5 },
   applicationSubtitle: { fontFamily: PathoraFonts.en.medium, color: PathoraColors.textSecondary, fontSize: 11.5, lineHeight: 17 },
-  applyError: { fontFamily: PathoraFonts.en.medium, fontSize: 12.5, color: PathoraColors.error, lineHeight: 18 },
   applyPressable: { borderRadius: 14, overflow: 'hidden' },
   applyPressed: { transform: [{ scale: 0.988 }], opacity: 0.9 },
   applyGradient: { minHeight: 53, paddingHorizontal: 17, paddingVertical: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 11 },
   applyLabel: { color: '#FFFFFF', fontFamily: PathoraFonts.en.bold, fontSize: 13.5, textAlign: 'center', flexShrink: 1 },
-  endCaption: { color: PathoraColors.textTertiary, fontFamily: PathoraFonts.en.medium, fontSize: 11.5, textAlign: 'center' },
   stateHeader: { paddingTop: 11, paddingHorizontal: 17, flexDirection: 'row', alignItems: 'center', gap: 8 },
   stateHeaderTitle: { fontFamily: PathoraFonts.en.bold, color: PathoraColors.ink900, fontSize: 14 },
   centerContent: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: PathoraSpacing[24], paddingBottom: 110, gap: 13 },

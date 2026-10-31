@@ -1,14 +1,16 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
 import { OnboardingStepHeader } from '@/components/onboarding/onboarding-step-header';
+import { PathoraOnboardingCard } from '@/components/pathora-onboarding-card';
+import { PathoraInlineNotice } from '@/components/pathora-inline-notice';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraInput } from '@/components/pathora-input';
-import { PathoraColors, PathoraFonts, PathoraSpacing } from '@/constants/pathora-theme';
+import { PathoraColors, PathoraSpacing } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
 import { completeCompanyOnboarding, getCompanyProfileOrNull, updateCompanyProfile } from '@/lib/api';
 import { describeOnboardingError, getOnboardingMissingFields, resolveCompanyPostAuthRoute } from '@/lib/onboarding';
@@ -95,38 +97,40 @@ function CompanyContactScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
           style={{ backgroundColor: PathoraColors.paper }}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          <PathoraDetailHeader bottomGap={24} topInset={0} eyebrow="COMPANY SETUP" title="Company profile" subtitle="Step 3 of 3" onBack={handleBack} />
+          <PathoraDetailHeader bottomGap={20} topInset={0} eyebrow="COMPANY SETUP" title="Company profile" subtitle="Set up your company workspace" onBack={handleBack} />
 
           <OnboardingStepHeader step={3} heading="Contact person" />
 
-          <View style={styles.fields}>
-            <PathoraInput
-              label="Contact name"
-              value={contactName}
-              onChangeText={setContactName}
-              placeholder="Sara Ahmed"
-              autoCapitalize="words"
-              textContentType="name"
-            />
+          <PathoraOnboardingCard>
+            <View style={styles.fields}>
+              <PathoraInput
+                label="Contact name"
+                value={contactName}
+                onChangeText={setContactName}
+                placeholder="Sara Ahmed"
+                autoCapitalize="words"
+                textContentType="name"
+              />
 
-            <PathoraInput
-              label="Contact phone"
-              value={contactPhone}
-              onChangeText={setContactPhone}
-              placeholder="01012345678"
-              keyboardType="phone-pad"
-              textContentType="telephoneNumber"
-            />
-          </View>
+              <PathoraInput
+                label="Contact phone"
+                value={contactPhone}
+                onChangeText={setContactPhone}
+                placeholder="01012345678"
+                keyboardType="phone-pad"
+                textContentType="telephoneNumber"
+              />
+            </View>
+          </PathoraOnboardingCard>
 
-          {(submitError) ? (<Text style={styles.submitError}>{submitError}</Text>) : null}
+          <PathoraInlineNotice message={submitError ?? ''} />
 
           <PathoraButton
             label={isSubmitting ? 'Finishing…' : 'Finish'}
@@ -156,20 +160,15 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1,
+    backgroundColor: PathoraColors.paper,
   },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: PathoraSpacing[24],
+    paddingBottom: PathoraSpacing[40],
   },
   fields: {
     gap: PathoraSpacing[20],
-    marginBottom: PathoraSpacing[24],
-  },
-  submitError: {
-    fontFamily: PathoraFonts.en.medium,
-    fontSize: 13,
-    color: PathoraColors.error,
-    marginBottom: PathoraSpacing[16],
   },
   finishButton: {
     marginBottom: PathoraSpacing[24],

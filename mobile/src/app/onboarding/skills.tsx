@@ -17,6 +17,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
 import { OnboardingStepHeader } from '@/components/onboarding/onboarding-step-header';
+import { PathoraOnboardingCard } from '@/components/pathora-onboarding-card';
+import { PathoraInlineNotice } from '@/components/pathora-inline-notice';
 import { SkillChip } from '@/components/onboarding/skill-chip';
 import { SkillPickerModal } from '@/components/onboarding/skill-picker-modal';
 import { PathoraButton } from '@/components/pathora-button';
@@ -195,117 +197,116 @@ function SkillsAndInterestsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.bottomSafeArea} edges={['bottom']}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
           style={{ backgroundColor: PathoraColors.paper }}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          <PathoraDetailHeader bottomGap={24} topInset={0} eyebrow="STUDENT SETUP" title="Your profile" subtitle="Step 3 of 3" onBack={handleBack} />
+          <PathoraDetailHeader bottomGap={20} topInset={0} eyebrow="STUDENT SETUP" title="Your profile" subtitle="Complete your student profile" onBack={handleBack} />
 
           <OnboardingStepHeader step={3} heading="Skills & interests" />
 
-          <View style={styles.fields}>
-            <View>
-              <Text style={styles.label}>Skills</Text>
-              <View style={styles.chipsWrap}>
-                {selectedSkills.map((skill) => (
-                  <SkillChip
-                    key={skill.id}
-                    label={skill.name}
-                    onRemove={() => handleToggleSkill(skill.id)}
-                  />
-                ))}
-                <Pressable
-                  onPress={() => setIsPickerVisible(true)}
-                  style={styles.addSkillButton}
-                  accessibilityRole="button">
-                  <SymbolView
-                    name={{ ios: 'plus', android: 'add', web: 'add' }}
-                    size={14}
-                    tintColor={PathoraColors.teal700}
-                  />
-                  <Text style={styles.addSkillText}>Add skill</Text>
-                </Pressable>
-              </View>
-              <Text style={styles.hint}>Choose from Pathora&apos;s skill list</Text>
-            </View>
-
-            <PathoraInput
-              label="Career interests"
-              value={careerInterests}
-              onChangeText={setCareerInterests}
-              placeholder="Tell us what kind of roles or industries interest you"
-              multiline
-              numberOfLines={4}
-            />
-
-            <PathoraInput
-              label="LinkedIn profile (optional)"
-              value={linkedinUrl}
-              onChangeText={setLinkedinUrl}
-              placeholder="linkedin.com/in/..."
-              autoCapitalize="none"
-              keyboardType="url"
-            />
-
-            <View>
-              <Text style={styles.label}>CV</Text>
-              <Pressable
-                onPress={handlePickCv}
-                disabled={isUploadingCv}
-                accessibilityRole="button"
-                style={({ pressed }) => [styles.cvBox, pressed && !isUploadingCv && styles.cvBoxPressed]}>
-                {isUploadingCv ? (
-                  <ActivityIndicator color={PathoraColors.teal600} />
-                ) : (
-                  <SymbolView
-                    name={{ ios: 'arrow.up.doc', android: 'upload_file', web: 'upload_file' }}
-                    size={22}
-                    tintColor={PathoraColors.textTertiary}
-                  />
-                )}
-                <Text style={styles.cvTitle}>
-                  {isUploadingCv ? 'Uploading…' : 'Upload your CV'}
-                </Text>
-                <Text style={styles.cvSubtitle}>PDF, up to 5MB</Text>
-                {(cvFileName && !isUploadingCv) ? (
-                  <Text style={styles.cvFileName} numberOfLines={1}>
-                    {cvFileName}
-                  </Text>
-                ) : null}
-              </Pressable>
-              {(cvError) ? (<Text style={styles.cvError}>{cvError}</Text>) : null}
-            </View>
-
-            {(cvFileName && !isUploadingCv) ? (
+          <PathoraOnboardingCard>
+            <View style={styles.fields}>
               <View>
-                <Text style={styles.label}>Skills detected from your CV</Text>
-                {cvDetectedSkills.length > 0 ? (
-                  <View style={styles.chipsWrap}>
-                    {cvDetectedSkills.map((skill) => (
-                      <View key={skill.id} style={styles.detectedSkillChip}>
-                        <Text style={styles.detectedSkillChipText}>{skill.name}</Text>
-                      </View>
-                    ))}
-                  </View>
-                ) : (
-                  <Text style={styles.hint}>No Pathora skills were detected from this CV.</Text>
-                )}
+                <Text style={styles.label}>Skills</Text>
+                <View style={styles.chipsWrap}>
+                  {selectedSkills.map((skill) => (
+                    <SkillChip
+                      key={skill.id}
+                      label={skill.name}
+                      onRemove={() => handleToggleSkill(skill.id)}
+                    />
+                  ))}
+                  <Pressable
+                    onPress={() => setIsPickerVisible(true)}
+                    style={styles.addSkillButton}
+                    accessibilityRole="button">
+                    <SymbolView
+                      name={{ ios: 'plus', android: 'add', web: 'add' }}
+                      size={14}
+                      tintColor={PathoraColors.teal700}
+                    />
+                    <Text style={styles.addSkillText}>Add skill</Text>
+                  </Pressable>
+                </View>
+                <Text style={styles.hint}>Choose from Pathora&apos;s skill list</Text>
               </View>
-            ) : null}
-          </View>
 
-          {(submitError) ? (<Text style={styles.submitError}>{submitError}</Text>) : null}
+              <PathoraInput
+                label="Career interests"
+                value={careerInterests}
+                onChangeText={setCareerInterests}
+                placeholder="Tell us what kind of roles or industries interest you"
+                multiline
+                numberOfLines={4}
+              />
 
-          {isCompleted && (
-            <View style={styles.successBanner}>
-              <Text style={styles.successText}>
-                You&apos;re all set — your Pathora profile is ready.
-              </Text>
+              <PathoraInput
+                label="LinkedIn profile (optional)"
+                value={linkedinUrl}
+                onChangeText={setLinkedinUrl}
+                placeholder="linkedin.com/in/..."
+                autoCapitalize="none"
+                keyboardType="url"
+              />
+
+              <View>
+                <Text style={styles.label}>CV</Text>
+                <Pressable
+                  onPress={handlePickCv}
+                  disabled={isUploadingCv}
+                  accessibilityRole="button"
+                  style={({ pressed }) => [styles.cvBox, pressed && !isUploadingCv && styles.cvBoxPressed]}>
+                  {isUploadingCv ? (
+                    <ActivityIndicator color={PathoraColors.teal600} />
+                  ) : (
+                    <SymbolView
+                      name={{ ios: 'arrow.up.doc', android: 'upload_file', web: 'upload_file' }}
+                      size={22}
+                      tintColor={PathoraColors.textTertiary}
+                    />
+                  )}
+                  <Text style={styles.cvTitle}>
+                    {isUploadingCv ? 'Uploading…' : 'Upload your CV'}
+                  </Text>
+                  <Text style={styles.cvSubtitle}>PDF, up to 5MB</Text>
+                  {(cvFileName && !isUploadingCv) ? (
+                    <Text style={styles.cvFileName} numberOfLines={1}>
+                      {cvFileName}
+                    </Text>
+                  ) : null}
+                </Pressable>
+                <PathoraInlineNotice message={cvError ?? ''} />
+              </View>
+
+              {(cvFileName && !isUploadingCv) ? (
+                <View>
+                  <Text style={styles.label}>Skills detected from your CV</Text>
+                  {cvDetectedSkills.length > 0 ? (
+                    <View style={styles.chipsWrap}>
+                      {cvDetectedSkills.map((skill) => (
+                        <View key={skill.id} style={styles.detectedSkillChip}>
+                          <Text style={styles.detectedSkillChipText}>{skill.name}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  ) : (
+                    <Text style={styles.hint}>No Pathora skills were detected from this CV.</Text>
+                  )}
+                </View>
+              ) : null}
             </View>
-          )}
+          </PathoraOnboardingCard>
+
+          <PathoraInlineNotice message={submitError ?? ''} />
+
+          {isCompleted ? (
+            <PathoraInlineNotice tone="success" message="Your Pathora profile is ready. You can save changes below." />
+          ) : null}
 
           <PathoraButton
             label={isSubmitting ? 'Saving…' : isCompleted ? 'Save changes' : 'Finish'}
@@ -324,6 +325,7 @@ function SkillsAndInterestsScreen() {
         onToggleSkill={handleToggleSkill}
         onClose={() => setIsPickerVisible(false)}
       />
+      </SafeAreaView>
     </SafeAreaView>
   );
 }
@@ -337,20 +339,26 @@ export default function SkillsRoute() {
 }
 
 const styles = StyleSheet.create({
+  // The outer inset matches the light form surface; only the top inset stays teal.
+  bottomSafeArea: {
+    flex: 1,
+    backgroundColor: PathoraColors.paper,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: PathoraColors.teal700,
   },
   flex: {
     flex: 1,
+    backgroundColor: PathoraColors.paper,
   },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: PathoraSpacing[24],
+    paddingBottom: PathoraSpacing[40],
   },
   fields: {
     gap: PathoraSpacing[20],
-    marginBottom: PathoraSpacing[24],
   },
   label: {
     fontFamily: PathoraFonts.en.bold,
@@ -428,30 +436,6 @@ const styles = StyleSheet.create({
     color: PathoraColors.teal700,
     marginTop: 8,
     maxWidth: '100%',
-  },
-  cvError: {
-    fontFamily: PathoraFonts.en.medium,
-    fontSize: 12,
-    color: PathoraColors.error,
-    marginTop: 8,
-  },
-  submitError: {
-    fontFamily: PathoraFonts.en.medium,
-    fontSize: 13,
-    color: PathoraColors.error,
-    marginBottom: PathoraSpacing[16],
-  },
-  successBanner: {
-    borderRadius: PathoraRadius[12],
-    backgroundColor: PathoraColors.teal100,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: PathoraSpacing[16],
-  },
-  successText: {
-    fontFamily: PathoraFonts.en.semiBold,
-    fontSize: 13.5,
-    color: PathoraColors.teal700,
   },
   finishButton: {
     marginBottom: PathoraSpacing[24],

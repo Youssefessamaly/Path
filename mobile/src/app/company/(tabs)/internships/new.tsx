@@ -6,6 +6,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ApplicationMethodField } from '@/components/application-method-field';
 import { PathoraDetailHeader } from '@/components/pathora-detail-header';
+import { PathoraFormSection } from '@/components/pathora-form-section';
+import { PathoraInlineNotice } from '@/components/pathora-inline-notice';
 import { DateInputGroup } from '@/components/date-input-group';
 import { MajorTagInput } from '@/components/major-tag-input';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
@@ -186,7 +188,7 @@ function NewInternshipScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
         style={{ backgroundColor: PathoraColors.paper }}
@@ -196,119 +198,130 @@ function NewInternshipScreen() {
           <PathoraDetailHeader topInset={0} onBack={() => router.back()} eyebrow="COMPANY WORKSPACE" title="Post an internship" subtitle="Fill in the details Pathora interns will see." />
 
           <View style={styles.fields}>
-            <PathoraInput
-              label="Title"
-              value={title}
-              onChangeText={setTitle}
-              placeholder="Backend Engineering Intern"
-              autoCapitalize="words"
-            />
-
-            <PathoraInput
-              label="Description"
-              value={description}
-              onChangeText={setDescription}
-              placeholder="What will the intern work on?"
-              multiline
-              numberOfLines={5}
-            />
-
-            <PathoraInput
-              label="Location"
-              value={location}
-              onChangeText={setLocation}
-              placeholder="Cairo, Egypt"
-              autoCapitalize="words"
-            />
-
-            <OnboardingOptionGroup
-              label="Work mode"
-              options={WORK_MODE_OPTIONS}
-              value={workMode}
-              onChange={(value) => setWorkMode(value as InternshipWorkMode)}
-            />
-
-            <DateInputGroup
-              label="Application deadline"
-              day={deadlineDay}
-              month={deadlineMonth}
-              year={deadlineYear}
-              onChangeDay={setDeadlineDay}
-              onChangeMonth={setDeadlineMonth}
-              onChangeYear={setDeadlineYear}
-            />
-
-            <DateInputGroup
-              label="Start date (optional)"
-              day={startDay}
-              month={startMonth}
-              year={startYear}
-              onChangeDay={setStartDay}
-              onChangeMonth={setStartMonth}
-              onChangeYear={setStartYear}
-            />
-
-            <PathoraInput
-              label="Duration in months (optional)"
-              value={durationMonths}
-              onChangeText={(text) => setDurationMonths(text.replace(/\D/g, '').slice(0, 2))}
-              placeholder="3"
-              keyboardType="number-pad"
-            />
-
-            <View>
-              <Text style={styles.label}>Required skills</Text>
-              <View style={styles.chipsWrap}>
-                {selectedSkills.map((skill) => (
-                  <SkillChip key={skill.id} label={skill.name} onRemove={() => handleToggleSkill(skill.id)} />
-                ))}
-                <Pressable
-                  onPress={() => setIsPickerVisible(true)}
-                  style={styles.addSkillButton}
-                  accessibilityRole="button">
-                  <SymbolView
-                    name={{ ios: 'plus', android: 'add', web: 'add' }}
-                    size={14}
-                    tintColor={PathoraColors.teal700}
-                  />
-                  <Text style={styles.addSkillText}>Add skill</Text>
-                </Pressable>
-              </View>
-              <Text style={styles.hint}>Select at least one required skill</Text>
-            </View>
-
-            <MajorTagInput
-              label="Target majors (optional)"
-              majors={targetMajors}
-              onChange={setTargetMajors}
-              helperText="Add the study tracks this internship is most relevant to."
-            />
-
-            <View>
-              <OnboardingOptionGroup
-                label="Minimum academic year (optional)"
-                options={MINIMUM_ACADEMIC_YEAR_OPTIONS}
-                value={minimumAcademicYear}
-                onChange={setMinimumAcademicYear}
+            <PathoraFormSection index={1} title="The opportunity" description="Introduce the internship and describe the work.">
+              <PathoraInput
+                label="Title"
+                value={title}
+                onChangeText={setTitle}
+                placeholder="Backend Engineering Intern"
+                autoCapitalize="words"
               />
-              <Text style={styles.hint}>
-                Only students in this university year or above will be eligible.
-              </Text>
-            </View>
 
-            <ApplicationMethodField
-              value={applicationMethod}
-              onChange={handleApplicationMethodChange}
-              externalUrl={externalUrl}
-              onChangeExternalUrl={(text) => {
-                setExternalUrl(text);
-                setUrlError(null);
-              }}
-              urlError={urlError}
-            />
+              <PathoraInput
+                label="Description"
+                value={description}
+                onChangeText={setDescription}
+                placeholder="What will the intern work on?"
+                multiline
+                numberOfLines={5}
+              />
+
+              <PathoraInput
+                label="Location"
+                value={location}
+                onChangeText={setLocation}
+                placeholder="Cairo, Egypt"
+                autoCapitalize="words"
+              />
+
+            </PathoraFormSection>
+
+            <PathoraFormSection index={2} title="Schedule & format" description="Help interns understand when and where the role takes place.">
+              <OnboardingOptionGroup
+                label="Work mode"
+                options={WORK_MODE_OPTIONS}
+                value={workMode}
+                onChange={(value) => setWorkMode(value as InternshipWorkMode)}
+              />
+
+              <DateInputGroup
+                label="Application deadline"
+                day={deadlineDay}
+                month={deadlineMonth}
+                year={deadlineYear}
+                onChangeDay={setDeadlineDay}
+                onChangeMonth={setDeadlineMonth}
+                onChangeYear={setDeadlineYear}
+              />
+
+              <DateInputGroup
+                label="Start date (optional)"
+                day={startDay}
+                month={startMonth}
+                year={startYear}
+                onChangeDay={setStartDay}
+                onChangeMonth={setStartMonth}
+                onChangeYear={setStartYear}
+              />
+
+              <PathoraInput
+                label="Duration in months (optional)"
+                value={durationMonths}
+                onChangeText={(text) => setDurationMonths(text.replace(/\D/g, '').slice(0, 2))}
+                placeholder="3"
+                keyboardType="number-pad"
+              />
+
+            </PathoraFormSection>
+
+            <PathoraFormSection index={3} title="Candidate requirements" description="Describe the skills and academic background that fit this role.">
+              <View>
+                <Text style={styles.label}>Required skills</Text>
+                <View style={styles.chipsWrap}>
+                  {selectedSkills.map((skill) => (
+                    <SkillChip key={skill.id} label={skill.name} onRemove={() => handleToggleSkill(skill.id)} />
+                  ))}
+                  <Pressable
+                    onPress={() => setIsPickerVisible(true)}
+                    style={styles.addSkillButton}
+                    accessibilityRole="button">
+                    <SymbolView
+                      name={{ ios: 'plus', android: 'add', web: 'add' }}
+                      size={14}
+                      tintColor={PathoraColors.teal700}
+                    />
+                    <Text style={styles.addSkillText}>Add skill</Text>
+                  </Pressable>
+                </View>
+                <Text style={styles.hint}>Select at least one required skill</Text>
+              </View>
+
+              <MajorTagInput
+                label="Target majors (optional)"
+                majors={targetMajors}
+                onChange={setTargetMajors}
+                helperText="Add the study tracks this internship is most relevant to."
+              />
+
+              <View>
+                <OnboardingOptionGroup
+                  label="Minimum academic year (optional)"
+                  options={MINIMUM_ACADEMIC_YEAR_OPTIONS}
+                  value={minimumAcademicYear}
+                  onChange={setMinimumAcademicYear}
+                />
+                <Text style={styles.hint}>
+                  Only students in this university year or above will be eligible.
+                </Text>
+              </View>
+
+            </PathoraFormSection>
+
+            <PathoraFormSection index={4} title="Application method" description="Choose where students should submit their applications.">
+              <ApplicationMethodField
+                value={applicationMethod}
+                onChange={handleApplicationMethodChange}
+                externalUrl={externalUrl}
+                onChangeExternalUrl={(text) => {
+                  setExternalUrl(text);
+                  setUrlError(null);
+                }}
+                urlError={urlError}
+              />
+            </PathoraFormSection>
           </View>
 
-          {(submitError) ? (<Text style={styles.submitError}>{submitError}</Text>) : null}
+          {submitError ? <PathoraInlineNotice message={submitError} /> : null}
 
           <PathoraButton
             label={isSubmitting ? 'Posting…' : 'Post internship'}
@@ -346,6 +359,7 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1,
+    backgroundColor: PathoraColors.paper,
   },
   scrollContent: {
     flexGrow: 1,
@@ -353,6 +367,7 @@ const styles = StyleSheet.create({
   },
   fields: {
     gap: PathoraSpacing[20],
+    marginTop: PathoraSpacing[16],
     marginBottom: PathoraSpacing[24],
   },
   label: {
@@ -387,12 +402,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: PathoraColors.textTertiary,
     marginTop: 8,
-  },
-  submitError: {
-    fontFamily: PathoraFonts.en.medium,
-    fontSize: 13,
-    color: PathoraColors.error,
-    marginBottom: PathoraSpacing[16],
   },
   submitButton: {
     marginBottom: PathoraSpacing[24],

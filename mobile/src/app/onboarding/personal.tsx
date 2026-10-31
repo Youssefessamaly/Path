@@ -6,6 +6,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
 import { OnboardingStepHeader } from '@/components/onboarding/onboarding-step-header';
+import { PathoraOnboardingCard } from '@/components/pathora-onboarding-card';
+import { PathoraInlineNotice } from '@/components/pathora-inline-notice';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraInput } from '@/components/pathora-input';
 import { PathoraColors, PathoraFonts, PathoraSpacing } from '@/constants/pathora-theme';
@@ -138,80 +140,83 @@ function PersonalDetailsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.bottomSafeArea} edges={['bottom']}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
           style={{ backgroundColor: PathoraColors.paper }}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          <PathoraDetailHeader bottomGap={24} topInset={0} eyebrow="STUDENT SETUP" title="Your profile" subtitle="Step 1 of 3" onBack={handleBack} />
+          <PathoraDetailHeader bottomGap={20} topInset={0} eyebrow="STUDENT SETUP" title="Your profile" subtitle="Complete your student profile" onBack={handleBack} />
 
           <OnboardingStepHeader step={1} heading="Tell us about yourself" />
 
-          <View style={styles.fields}>
-            <View style={styles.row}>
-              <PathoraInput
-                label="First name"
-                value={firstName}
-                onChangeText={setFirstName}
-                placeholder="Amina"
-                autoCapitalize="words"
-                textContentType="givenName"
-                style={styles.rowItem}
-              />
-              <PathoraInput
-                label="Last name"
-                value={lastName}
-                onChangeText={setLastName}
-                placeholder="Hassan"
-                autoCapitalize="words"
-                textContentType="familyName"
-                style={styles.rowItem}
-              />
-            </View>
-
-            <View>
-              <Text style={styles.label}>Date of birth</Text>
-              <View style={styles.dobRow}>
+          <PathoraOnboardingCard>
+            <View style={styles.fields}>
+              <View style={styles.row}>
                 <PathoraInput
-                  label=""
-                  value={day}
-                  onChangeText={(text) => setDay(text.replace(/\D/g, '').slice(0, 2))}
-                  placeholder="DD"
-                  keyboardType="number-pad"
-                  style={styles.dobItemSmall}
+                  label="First name"
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  placeholder="Amina"
+                  autoCapitalize="words"
+                  textContentType="givenName"
+                  style={styles.rowItem}
                 />
                 <PathoraInput
-                  label=""
-                  value={month}
-                  onChangeText={(text) => setMonth(text.replace(/\D/g, '').slice(0, 2))}
-                  placeholder="MM"
-                  keyboardType="number-pad"
-                  style={styles.dobItemSmall}
-                />
-                <PathoraInput
-                  label=""
-                  value={year}
-                  onChangeText={(text) => setYear(text.replace(/\D/g, '').slice(0, 4))}
-                  placeholder="YYYY"
-                  keyboardType="number-pad"
-                  style={styles.dobItemLarge}
+                  label="Last name"
+                  value={lastName}
+                  onChangeText={setLastName}
+                  placeholder="Hassan"
+                  autoCapitalize="words"
+                  textContentType="familyName"
+                  style={styles.rowItem}
                 />
               </View>
+
+              <View>
+                <Text style={styles.label}>Date of birth</Text>
+                <View style={styles.dobRow}>
+                  <PathoraInput
+                    label=""
+                    value={day}
+                    onChangeText={(text) => setDay(text.replace(/\D/g, '').slice(0, 2))}
+                    placeholder="DD"
+                    keyboardType="number-pad"
+                    style={styles.dobItemSmall}
+                  />
+                  <PathoraInput
+                    label=""
+                    value={month}
+                    onChangeText={(text) => setMonth(text.replace(/\D/g, '').slice(0, 2))}
+                    placeholder="MM"
+                    keyboardType="number-pad"
+                    style={styles.dobItemSmall}
+                  />
+                  <PathoraInput
+                    label=""
+                    value={year}
+                    onChangeText={(text) => setYear(text.replace(/\D/g, '').slice(0, 4))}
+                    placeholder="YYYY"
+                    keyboardType="number-pad"
+                    style={styles.dobItemLarge}
+                  />
+                </View>
+              </View>
+
+              <PathoraInput
+                label="Phone number"
+                value={phoneNumber}
+                onChangeText={setPhoneNumber}
+                placeholder="01012345678"
+                keyboardType="phone-pad"
+                textContentType="telephoneNumber"
+              />
             </View>
+          </PathoraOnboardingCard>
 
-            <PathoraInput
-              label="Phone number"
-              value={phoneNumber}
-              onChangeText={setPhoneNumber}
-              placeholder="01012345678"
-              keyboardType="phone-pad"
-              textContentType="telephoneNumber"
-            />
-          </View>
-
-          {(submitError) ? (<Text style={styles.submitError}>{submitError}</Text>) : null}
+          <PathoraInlineNotice message={submitError ?? ''} />
 
           <PathoraButton
             label={isSubmitting ? 'Saving…' : 'Continue'}
@@ -222,6 +227,7 @@ function PersonalDetailsScreen() {
           />
         </ScrollView>
       </KeyboardAvoidingView>
+      </SafeAreaView>
     </SafeAreaView>
   );
 }
@@ -235,20 +241,26 @@ export default function PersonalDetailsRoute() {
 }
 
 const styles = StyleSheet.create({
+  // The outer inset matches the light form surface; only the top inset stays teal.
+  bottomSafeArea: {
+    flex: 1,
+    backgroundColor: PathoraColors.paper,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: PathoraColors.teal700,
   },
   flex: {
     flex: 1,
+    backgroundColor: PathoraColors.paper,
   },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: PathoraSpacing[24],
+    paddingBottom: PathoraSpacing[40],
   },
   fields: {
     gap: PathoraSpacing[20],
-    marginBottom: PathoraSpacing[24],
   },
   row: {
     flexDirection: 'row',
@@ -272,12 +284,6 @@ const styles = StyleSheet.create({
   },
   dobItemLarge: {
     flex: 1.5,
-  },
-  submitError: {
-    fontFamily: PathoraFonts.en.medium,
-    fontSize: 13,
-    color: PathoraColors.error,
-    marginBottom: PathoraSpacing[16],
   },
   continueButton: {
     marginBottom: PathoraSpacing[24],

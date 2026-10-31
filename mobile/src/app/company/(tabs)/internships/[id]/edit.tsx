@@ -16,6 +16,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ApplicationMethodField } from '@/components/application-method-field';
 import { AuthBackButton } from '@/components/auth-back-button';
 import { PathoraDetailHeader } from '@/components/pathora-detail-header';
+import { PathoraFormSection } from '@/components/pathora-form-section';
+import { PathoraInlineNotice } from '@/components/pathora-inline-notice';
 import { DateInputGroup } from '@/components/date-input-group';
 import { MajorTagInput } from '@/components/major-tag-input';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
@@ -258,105 +260,116 @@ function EditInternshipScreen({ internshipId }: { internshipId: string }) {
           <PathoraDetailHeader topInset={0} onBack={() => router.back()} eyebrow="COMPANY WORKSPACE" title="Edit internship" />
 
           <View style={styles.fields}>
-            <PathoraInput label="Title" value={title} onChangeText={setTitle} autoCapitalize="words" />
+            <PathoraFormSection index={1} title="The opportunity" description="Keep the internship information clear and up to date.">
+              <PathoraInput label="Title" value={title} onChangeText={setTitle} autoCapitalize="words" />
 
-            <PathoraInput
-              label="Description"
-              value={description}
-              onChangeText={setDescription}
-              multiline
-              numberOfLines={5}
-            />
-
-            <PathoraInput label="Location" value={location} onChangeText={setLocation} autoCapitalize="words" />
-
-            <OnboardingOptionGroup
-              label="Work mode"
-              options={WORK_MODE_OPTIONS}
-              value={workMode}
-              onChange={(value) => setWorkMode(value as InternshipWorkMode)}
-            />
-
-            <DateInputGroup
-              label="Application deadline"
-              day={deadlineDay}
-              month={deadlineMonth}
-              year={deadlineYear}
-              onChangeDay={setDeadlineDay}
-              onChangeMonth={setDeadlineMonth}
-              onChangeYear={setDeadlineYear}
-            />
-
-            <DateInputGroup
-              label="Start date (optional)"
-              day={startDay}
-              month={startMonth}
-              year={startYear}
-              onChangeDay={setStartDay}
-              onChangeMonth={setStartMonth}
-              onChangeYear={setStartYear}
-            />
-
-            <PathoraInput
-              label="Duration in months (optional)"
-              value={durationMonths}
-              onChangeText={(text) => setDurationMonths(text.replace(/\D/g, '').slice(0, 2))}
-              keyboardType="number-pad"
-            />
-
-            <View>
-              <Text style={styles.label}>Required skills</Text>
-              <View style={styles.chipsWrap}>
-                {selectedSkills.map((skill) => (
-                  <SkillChip key={skill.id} label={skill.name} onRemove={() => handleToggleSkill(skill.id)} />
-                ))}
-                <Pressable
-                  onPress={() => setIsPickerVisible(true)}
-                  style={styles.addSkillButton}
-                  accessibilityRole="button">
-                  <SymbolView
-                    name={{ ios: 'plus', android: 'add', web: 'add' }}
-                    size={14}
-                    tintColor={PathoraColors.teal700}
-                  />
-                  <Text style={styles.addSkillText}>Add skill</Text>
-                </Pressable>
-              </View>
-              <Text style={styles.hint}>Select at least one required skill</Text>
-            </View>
-
-            <MajorTagInput
-              label="Target majors (optional)"
-              majors={targetMajors}
-              onChange={setTargetMajors}
-              helperText="Add the study tracks this internship is most relevant to."
-            />
-
-            <View>
-              <OnboardingOptionGroup
-                label="Minimum academic year (optional)"
-                options={MINIMUM_ACADEMIC_YEAR_OPTIONS}
-                value={minimumAcademicYear}
-                onChange={setMinimumAcademicYear}
+              <PathoraInput
+                label="Description"
+                value={description}
+                onChangeText={setDescription}
+                multiline
+                numberOfLines={5}
               />
-              <Text style={styles.hint}>
-                Only students in this university year or above will be eligible.
-              </Text>
-            </View>
 
-            <ApplicationMethodField
-              value={applicationMethod}
-              onChange={handleApplicationMethodChange}
-              externalUrl={externalUrl}
-              onChangeExternalUrl={(text) => {
-                setExternalUrl(text);
-                setUrlError(null);
-              }}
-              urlError={urlError}
-            />
+              <PathoraInput label="Location" value={location} onChangeText={setLocation} autoCapitalize="words" />
+
+            </PathoraFormSection>
+
+            <PathoraFormSection index={2} title="Schedule & format" description="Help interns understand when and where the role takes place.">
+              <OnboardingOptionGroup
+                label="Work mode"
+                options={WORK_MODE_OPTIONS}
+                value={workMode}
+                onChange={(value) => setWorkMode(value as InternshipWorkMode)}
+              />
+
+              <DateInputGroup
+                label="Application deadline"
+                day={deadlineDay}
+                month={deadlineMonth}
+                year={deadlineYear}
+                onChangeDay={setDeadlineDay}
+                onChangeMonth={setDeadlineMonth}
+                onChangeYear={setDeadlineYear}
+              />
+
+              <DateInputGroup
+                label="Start date (optional)"
+                day={startDay}
+                month={startMonth}
+                year={startYear}
+                onChangeDay={setStartDay}
+                onChangeMonth={setStartMonth}
+                onChangeYear={setStartYear}
+              />
+
+              <PathoraInput
+                label="Duration in months (optional)"
+                value={durationMonths}
+                onChangeText={(text) => setDurationMonths(text.replace(/\D/g, '').slice(0, 2))}
+                keyboardType="number-pad"
+              />
+
+            </PathoraFormSection>
+
+            <PathoraFormSection index={3} title="Candidate requirements" description="Describe the skills and academic background that fit this role.">
+              <View>
+                <Text style={styles.label}>Required skills</Text>
+                <View style={styles.chipsWrap}>
+                  {selectedSkills.map((skill) => (
+                    <SkillChip key={skill.id} label={skill.name} onRemove={() => handleToggleSkill(skill.id)} />
+                  ))}
+                  <Pressable
+                    onPress={() => setIsPickerVisible(true)}
+                    style={styles.addSkillButton}
+                    accessibilityRole="button">
+                    <SymbolView
+                      name={{ ios: 'plus', android: 'add', web: 'add' }}
+                      size={14}
+                      tintColor={PathoraColors.teal700}
+                    />
+                    <Text style={styles.addSkillText}>Add skill</Text>
+                  </Pressable>
+                </View>
+                <Text style={styles.hint}>Select at least one required skill</Text>
+              </View>
+
+              <MajorTagInput
+                label="Target majors (optional)"
+                majors={targetMajors}
+                onChange={setTargetMajors}
+                helperText="Add the study tracks this internship is most relevant to."
+              />
+
+              <View>
+                <OnboardingOptionGroup
+                  label="Minimum academic year (optional)"
+                  options={MINIMUM_ACADEMIC_YEAR_OPTIONS}
+                  value={minimumAcademicYear}
+                  onChange={setMinimumAcademicYear}
+                />
+                <Text style={styles.hint}>
+                  Only students in this university year or above will be eligible.
+                </Text>
+              </View>
+
+            </PathoraFormSection>
+
+            <PathoraFormSection index={4} title="Application method" description="Choose where students should submit their applications.">
+              <ApplicationMethodField
+                value={applicationMethod}
+                onChange={handleApplicationMethodChange}
+                externalUrl={externalUrl}
+                onChangeExternalUrl={(text) => {
+                  setExternalUrl(text);
+                  setUrlError(null);
+                }}
+                urlError={urlError}
+              />
+            </PathoraFormSection>
           </View>
 
-          {(submitError) ? (<Text style={styles.submitError}>{submitError}</Text>) : null}
+          {submitError ? <PathoraInlineNotice message={submitError} /> : null}
 
           <PathoraButton
             label={isSubmitting ? 'Saving…' : 'Save changes'}
@@ -454,12 +467,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: PathoraColors.textTertiary,
     marginTop: 8,
-  },
-  submitError: {
-    fontFamily: PathoraFonts.en.medium,
-    fontSize: 13,
-    color: PathoraColors.error,
-    marginBottom: PathoraSpacing[16],
   },
   submitButton: {
     marginBottom: PathoraSpacing[24],

@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { PathoraColors, PathoraFonts } from '@/constants/pathora-theme';
 import { PathoraMetricCard } from '@/components/pathora-metric-card';
 import { PathoraFilterChip } from '@/components/pathora-filter-chip';
+import { pathoraCardSurface } from '@/components/pathora-card-styles';
 
 /** Lightweight, shared visual pieces for the two application workspaces. */
 export function ApplicationMetric({ value, label, tint = 'teal' }: {
@@ -45,10 +46,7 @@ export function ApplicationDetailText({ children, muted = false }: { children: R
 }
 
 const styles = StyleSheet.create({
-  detailCard: {
-    backgroundColor: PathoraColors.surface, borderColor: PathoraColors.border,
-    borderWidth: 1, borderRadius: 18, padding: 18, gap: 10,
-  },
+  detailCard: { ...pathoraCardSurface, padding: 18, gap: 12 },
   detailAccent: { width: 24, height: 4, borderRadius: 99, backgroundColor: PathoraColors.teal500 },
   detailHeading: {
     fontFamily: PathoraFonts.en.bold, fontSize: 11, letterSpacing: 1.2,

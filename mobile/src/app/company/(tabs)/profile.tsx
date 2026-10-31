@@ -8,7 +8,6 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -19,8 +18,8 @@ import Animated, { FadeInDown, ReduceMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CompanyApprovalBadge } from '@/components/company-approval-badge';
-import { PathoraButton } from '@/components/pathora-button';
 import { PathoraPageHeader } from '@/components/pathora-page-header';
+import { PathoraProfileState } from '@/components/pathora-profile-state';
 import { PathoraSectionHeading } from '@/components/pathora-section-heading';
 import { PathoraColors as C, PathoraFonts as F } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
@@ -109,25 +108,18 @@ export default function CompanyProfileRoute() {
     router.replace('/welcome');
   };
 
-  if (loading) {
+  if (loading || error || !profile) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={C.teal600} />
-          <Text style={styles.centerCaption}>Loading company details…</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (error || !profile) {
-    return (
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <View style={styles.center}>
-          <Icon name={{ ios: 'wifi.exclamationmark', android: 'wifi_off', web: 'wifi_off' }} size={28} />
-          <Text style={styles.errorText}>{error ?? 'Unable to load your company profile.'}</Text>
-          <PathoraButton label="Try again" onPress={() => void load()} style={styles.retry} />
-        </View>
+        <PathoraProfileState
+          eyebrow="COMPANY WORKSPACE"
+          title="Company profile"
+          subtitle="Your team is present on Path."
+          loading={loading}
+          loadingLabel="Loading company details…"
+          errorMessage={error ?? 'Unable to load your company profile.'}
+          onRetry={() => void load()}
+        />
       </SafeAreaView>
     );
   }
@@ -232,10 +224,6 @@ export default function CompanyProfileRoute() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: C.teal700 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 144, gap: 18 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 26, gap: 16 },
-  centerCaption: { fontFamily: F.en.medium, color: C.textSecondary, fontSize: 13 },
-  errorText: { color: C.error, fontFamily: F.en.medium, textAlign: 'center', fontSize: 14 },
-  retry: { maxWidth: 220 },
   pressed: { opacity: 0.76, transform: [{ scale: 0.99 }] },
   identityCard: { backgroundColor: C.surface, borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 18, gap: 17 },
   identityTop: { flexDirection: 'row', gap: 14, alignItems: 'center' },

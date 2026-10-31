@@ -15,6 +15,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AuthBackButton } from '@/components/auth-back-button';
 import { PathoraDetailHeader } from '@/components/pathora-detail-header';
+import { PathoraFormSection } from '@/components/pathora-form-section';
+import { PathoraInlineNotice } from '@/components/pathora-inline-notice';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
 import { OnboardingStepHeader } from '@/components/onboarding/onboarding-step-header';
 import { PathoraButton } from '@/components/pathora-button';
@@ -317,72 +319,74 @@ function ApplyScreen({ internshipId }: { internshipId: string }) {
             <>
               <OnboardingStepHeader step={1} heading="CV & cover letter" />
 
-              <View style={styles.fields}>
-                <View>
-                  <Text style={styles.label}>CV</Text>
-                  {hasCv ? (
-                    <View style={styles.cvBox}>
-                      <SymbolView
-                        name={{ ios: 'doc.text.fill', android: 'description', web: 'description' }}
-                        size={20}
-                        tintColor={PathoraColors.teal600}
-                      />
-                      <Text style={styles.cvFileName} numberOfLines={1}>
-                        {profile?.cvFileName}
-                      </Text>
-                    </View>
-                  ) : (
-                    <View style={styles.cvMissingBox}>
-                      <Text style={styles.cvMissingText}>A CV is required to apply through Pathora.</Text>
-                      <PathoraButton
-                        label="Go to Profile"
-                        variant="secondary"
-                        onPress={handleGoToProfile}
-                        style={styles.cvMissingButton}
-                      />
-                    </View>
-                  )}
-                </View>
+              <PathoraFormSection index={1} title="Your application details" description="Review your CV and introduce yourself to the company." style={styles.formStepCard}>
+                <View style={styles.fields}>
+                  <View>
+                    <Text style={styles.label}>CV</Text>
+                    {hasCv ? (
+                      <View style={styles.cvBox}>
+                        <SymbolView
+                          name={{ ios: 'doc.text.fill', android: 'description', web: 'description' }}
+                          size={20}
+                          tintColor={PathoraColors.teal600}
+                        />
+                        <Text style={styles.cvFileName} numberOfLines={1}>
+                          {profile?.cvFileName}
+                        </Text>
+                      </View>
+                    ) : (
+                      <View style={styles.cvMissingBox}>
+                        <Text style={styles.cvMissingText}>A CV is required to apply through Pathora.</Text>
+                        <PathoraButton
+                          label="Go to Profile"
+                          variant="secondary"
+                          onPress={handleGoToProfile}
+                          style={styles.cvMissingButton}
+                        />
+                      </View>
+                    )}
+                  </View>
 
-                <PathoraInput
-                  label="Cover letter (optional)"
-                  value={coverLetter}
-                  onChangeText={(text) => setCoverLetter(text.slice(0, 5000))}
-                  placeholder="Tell the company why you're a great fit."
-                  multiline
-                  numberOfLines={6}
-                />
-
-                <View>
                   <PathoraInput
-                    label="LinkedIn (optional)"
-                    value={linkedinUrl}
-                    onChangeText={(text) => {
-                      setLinkedinUrl(text);
-                      setLinkedinError(null);
-                    }}
-                    placeholder="linkedin.com/in/..."
-                    autoCapitalize="none"
-                    keyboardType="url"
+                    label="Cover letter (optional)"
+                    value={coverLetter}
+                    onChangeText={(text) => setCoverLetter(text.slice(0, 5000))}
+                    placeholder="Tell the company why you're a great fit."
+                    multiline
+                    numberOfLines={6}
                   />
-                  {(linkedinError) ? (<Text style={styles.fieldError}>{linkedinError}</Text>) : null}
-                </View>
 
-                <View>
-                  <PathoraInput
-                    label="Portfolio (optional)"
-                    value={portfolioUrl}
-                    onChangeText={(text) => {
-                      setPortfolioUrl(text);
-                      setPortfolioError(null);
-                    }}
-                    placeholder="https://your-portfolio.com"
-                    autoCapitalize="none"
-                    keyboardType="url"
-                  />
-                  {(portfolioError) ? (<Text style={styles.fieldError}>{portfolioError}</Text>) : null}
+                  <View>
+                    <PathoraInput
+                      label="LinkedIn (optional)"
+                      value={linkedinUrl}
+                      onChangeText={(text) => {
+                        setLinkedinUrl(text);
+                        setLinkedinError(null);
+                      }}
+                      placeholder="linkedin.com/in/..."
+                      autoCapitalize="none"
+                      keyboardType="url"
+                    />
+                    {linkedinError ? <PathoraInlineNotice message={linkedinError} /> : null}
+                  </View>
+
+                  <View>
+                    <PathoraInput
+                      label="Portfolio (optional)"
+                      value={portfolioUrl}
+                      onChangeText={(text) => {
+                        setPortfolioUrl(text);
+                        setPortfolioError(null);
+                      }}
+                      placeholder="https://your-portfolio.com"
+                      autoCapitalize="none"
+                      keyboardType="url"
+                    />
+                    {portfolioError ? <PathoraInlineNotice message={portfolioError} /> : null}
+                  </View>
                 </View>
-              </View>
+              </PathoraFormSection>
 
               <PathoraButton
                 label="Continue"
@@ -406,34 +410,36 @@ function ApplyScreen({ internshipId }: { internshipId: string }) {
                   </Text>
                 </View>
               ) : (
-                <View style={styles.fields}>
-                  {questions.map((question) => {
-                    const maxLength =
-                      question.questionType === 'SHORT_TEXT' ? MAX_SHORT_TEXT_LENGTH : MAX_LONG_TEXT_LENGTH;
-                    const isLong = question.questionType === 'LONG_TEXT';
-                    return (
-                      <View key={question.id}>
-                        <View style={styles.questionHeaderRow}>
-                          <Text style={styles.questionText}>{question.questionText}</Text>
-                          <RequiredBadge required={question.required} />
+                <PathoraFormSection index={2} title="Questions from the company" description="Answer in your own words. Required questions must be completed." style={styles.formStepCard}>
+                  <View style={styles.fields}>
+                    {questions.map((question) => {
+                      const maxLength =
+                        question.questionType === 'SHORT_TEXT' ? MAX_SHORT_TEXT_LENGTH : MAX_LONG_TEXT_LENGTH;
+                      const isLong = question.questionType === 'LONG_TEXT';
+                      return (
+                        <View key={question.id}>
+                          <View style={styles.questionHeaderRow}>
+                            <Text style={styles.questionText}>{question.questionText}</Text>
+                            <RequiredBadge required={question.required} />
+                          </View>
+                          <PathoraInput
+                            label=""
+                            value={answers[question.id] ?? ''}
+                            onChangeText={(text) =>
+                              setAnswers((current) => ({ ...current, [question.id]: text.slice(0, maxLength) }))
+                            }
+                            multiline={isLong}
+                            numberOfLines={isLong ? 5 : undefined}
+                            placeholder="Your answer"
+                          />
                         </View>
-                        <PathoraInput
-                          label=""
-                          value={answers[question.id] ?? ''}
-                          onChangeText={(text) =>
-                            setAnswers((current) => ({ ...current, [question.id]: text.slice(0, maxLength) }))
-                          }
-                          multiline={isLong}
-                          numberOfLines={isLong ? 5 : undefined}
-                          placeholder="Your answer"
-                        />
-                      </View>
-                    );
-                  })}
-                </View>
+                      );
+                    })}
+                  </View>
+                </PathoraFormSection>
               )}
 
-              {(step2Error) ? (<Text style={styles.submitError}>{step2Error}</Text>) : null}
+              {step2Error ? <PathoraInlineNotice message={step2Error} /> : null}
 
               <PathoraButton
                 label="Continue"
@@ -500,7 +506,7 @@ function ApplyScreen({ internshipId }: { internshipId: string }) {
                 <Text style={styles.confirmText}>I confirm the information above is accurate.</Text>
               </Pressable>
 
-              {(submitError) ? (<Text style={styles.submitError}>{submitError}</Text>) : null}
+              {submitError ? <PathoraInlineNotice message={submitError} /> : null}
 
               <PathoraButton
                 label={isSubmitting ? 'Submitting…' : 'Submit application'}
@@ -556,7 +562,9 @@ const styles = StyleSheet.create({
   },
   fields: {
     gap: PathoraSpacing[20],
-    marginBottom: PathoraSpacing[24],
+  },
+  formStepCard: {
+    marginBottom: PathoraSpacing[20],
   },
   label: {
     fontFamily: PathoraFonts.en.bold,
@@ -599,12 +607,6 @@ const styles = StyleSheet.create({
   cvMissingButton: {
     alignSelf: 'flex-start',
     minWidth: 140,
-  },
-  fieldError: {
-    fontFamily: PathoraFonts.en.medium,
-    fontSize: 12,
-    color: PathoraColors.error,
-    marginTop: 8,
   },
   continueButton: {
     marginBottom: PathoraSpacing[24],
@@ -672,14 +674,8 @@ const styles = StyleSheet.create({
   requiredBadgeTextOff: {
     color: PathoraColors.textTertiary,
   },
-  submitError: {
-    fontFamily: PathoraFonts.en.medium,
-    fontSize: 13,
-    color: PathoraColors.error,
-    marginBottom: PathoraSpacing[16],
-  },
   reviewCard: {
-    borderRadius: PathoraRadius[14],
+    borderRadius: 18,
     backgroundColor: PathoraColors.surface,
     borderWidth: 1,
     borderColor: PathoraColors.border,
@@ -722,6 +718,8 @@ const styles = StyleSheet.create({
     color: PathoraColors.textSecondary,
   },
   confirmRow: {
+    borderWidth: 1, borderColor: PathoraColors.border, borderRadius: 14,
+    backgroundColor: PathoraColors.surface, padding: PathoraSpacing[16],
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,

@@ -1,15 +1,17 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
 import { OnboardingOptionGroup } from '@/components/onboarding/onboarding-option-group';
 import { OnboardingStepHeader } from '@/components/onboarding/onboarding-step-header';
+import { PathoraOnboardingCard } from '@/components/pathora-onboarding-card';
+import { PathoraInlineNotice } from '@/components/pathora-inline-notice';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraInput } from '@/components/pathora-input';
-import { PathoraColors, PathoraFonts, PathoraSpacing } from '@/constants/pathora-theme';
+import { PathoraColors, PathoraSpacing } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
 import { getInternProfileOrNull, updateInternProfile, type AcademicLevel } from '@/lib/api';
 import { describeOnboardingError } from '@/lib/onboarding';
@@ -108,60 +110,63 @@ function EducationScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.bottomSafeArea} edges={['bottom']}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
           style={{ backgroundColor: PathoraColors.paper }}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          <PathoraDetailHeader bottomGap={24} topInset={0} eyebrow="STUDENT SETUP" title="Your profile" subtitle="Step 2 of 3" onBack={handleBack} />
+          <PathoraDetailHeader bottomGap={20} topInset={0} eyebrow="STUDENT SETUP" title="Your profile" subtitle="Complete your student profile" onBack={handleBack} />
 
           <OnboardingStepHeader step={2} heading="Your education" />
 
-          <View style={styles.fields}>
-            <PathoraInput
-              label="Educational institution"
-              value={institutionName}
-              onChangeText={setInstitutionName}
-              placeholder="Cairo University"
-              autoCapitalize="words"
-            />
-
-            <OnboardingOptionGroup
-              label="Academic level"
-              options={ACADEMIC_LEVEL_OPTIONS}
-              value={academicLevel}
-              onChange={handleChangeAcademicLevel}
-            />
-
-            {academicLevel === 'UNIVERSITY' && (
-              <OnboardingOptionGroup
-                label="Academic year"
-                options={ACADEMIC_YEAR_OPTIONS}
-                value={academicYear}
-                onChange={setAcademicYear}
+          <PathoraOnboardingCard>
+            <View style={styles.fields}>
+              <PathoraInput
+                label="Educational institution"
+                value={institutionName}
+                onChangeText={setInstitutionName}
+                placeholder="Cairo University"
+                autoCapitalize="words"
               />
-            )}
 
-            <PathoraInput
-              label="Major / study track"
-              value={major}
-              onChangeText={setMajor}
-              placeholder="Computer Science"
-              autoCapitalize="words"
-            />
+              <OnboardingOptionGroup
+                label="Academic level"
+                options={ACADEMIC_LEVEL_OPTIONS}
+                value={academicLevel}
+                onChange={handleChangeAcademicLevel}
+              />
 
-            <PathoraInput
-              label="Expected graduation year"
-              value={expectedGraduationYear}
-              onChangeText={(text) => setExpectedGraduationYear(text.replace(/\D/g, '').slice(0, 4))}
-              placeholder="2027"
-              keyboardType="number-pad"
-            />
-          </View>
+              {academicLevel === 'UNIVERSITY' && (
+                <OnboardingOptionGroup
+                  label="Academic year"
+                  options={ACADEMIC_YEAR_OPTIONS}
+                  value={academicYear}
+                  onChange={setAcademicYear}
+                />
+              )}
 
-          {(submitError) ? (<Text style={styles.submitError}>{submitError}</Text>) : null}
+              <PathoraInput
+                label="Major / study track"
+                value={major}
+                onChangeText={setMajor}
+                placeholder="Computer Science"
+                autoCapitalize="words"
+              />
+
+              <PathoraInput
+                label="Expected graduation year"
+                value={expectedGraduationYear}
+                onChangeText={(text) => setExpectedGraduationYear(text.replace(/\D/g, '').slice(0, 4))}
+                placeholder="2027"
+                keyboardType="number-pad"
+              />
+            </View>
+          </PathoraOnboardingCard>
+
+          <PathoraInlineNotice message={submitError ?? ''} />
 
           <PathoraButton
             label={isSubmitting ? 'Saving…' : 'Continue'}
@@ -172,6 +177,7 @@ function EducationScreen() {
           />
         </ScrollView>
       </KeyboardAvoidingView>
+      </SafeAreaView>
     </SafeAreaView>
   );
 }
@@ -185,26 +191,26 @@ export default function EducationRoute() {
 }
 
 const styles = StyleSheet.create({
+  // The outer inset matches the light form surface; only the top inset stays teal.
+  bottomSafeArea: {
+    flex: 1,
+    backgroundColor: PathoraColors.paper,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: PathoraColors.teal700,
   },
   flex: {
     flex: 1,
+    backgroundColor: PathoraColors.paper,
   },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: PathoraSpacing[24],
+    paddingBottom: PathoraSpacing[40],
   },
   fields: {
     gap: PathoraSpacing[20],
-    marginBottom: PathoraSpacing[24],
-  },
-  submitError: {
-    fontFamily: PathoraFonts.en.medium,
-    fontSize: 13,
-    color: PathoraColors.error,
-    marginBottom: PathoraSpacing[16],
   },
   continueButton: {
     marginBottom: PathoraSpacing[24],

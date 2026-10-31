@@ -1,12 +1,12 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { PathoraLogo } from '@/components/pathora-logo';
 import { PathoraColors, PathoraFonts, PathoraRadius, PathoraSpacing } from '@/constants/pathora-theme';
 
 export type DashboardWelcomeHeaderProps = {
   workspaceLabel: string;
   name: string;
-  subtitle: string;
+  // Kept optional for compatibility with dashboard call sites. Not displayed.
+  subtitle?: string;
   avatarInitials: string;
   onAvatarPress: () => void;
   avatarAccessibilityLabel: string;
@@ -20,13 +20,12 @@ function greetingForHour(hour: number): string {
 
 /**
  * Shared student/company dashboard header.
- * Only the brand/workspace/avatar row uses the teal background; the greeting
- * remains on the paper surface with dark text, matching the rest of the page.
+ * Show the personalized greeting in the teal heading above the workspace label.
+ * No secondary tagline is rendered beneath the teal header.
  */
 export function DashboardWelcomeHeader({
   workspaceLabel,
   name,
-  subtitle,
   avatarInitials,
   onAvatarPress,
   avatarAccessibilityLabel,
@@ -38,7 +37,9 @@ export function DashboardWelcomeHeader({
       <View style={styles.brandPanel}>
         <View style={styles.topRow}>
           <View style={styles.brandBlock}>
-            <PathoraLogo size={26} wordmarkSize={18} onDark />
+            <Text style={styles.greeting} numberOfLines={2} accessibilityLabel={`${greeting}, ${name}`}>
+              {greeting}, {name}
+            </Text>
             <Text style={styles.workspaceLabel}>{workspaceLabel}</Text>
           </View>
           <Pressable
@@ -52,18 +53,12 @@ export function DashboardWelcomeHeader({
         </View>
       </View>
 
-      <View style={styles.welcomeBlock}>
-        <Text style={styles.title}>{greeting}, {name}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
-      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    gap: PathoraSpacing[24],
-  },
+  container: {},
   brandPanel: {
     backgroundColor: PathoraColors.teal700,
     marginHorizontal: -PathoraSpacing[24],
@@ -80,7 +75,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: PathoraSpacing[12],
   },
-  brandBlock: { flex: 1, gap: 2 },
+  brandBlock: { flex: 1, minWidth: 0, gap: PathoraSpacing[4] },
+  greeting: {
+    fontFamily: PathoraFonts.en.extraBold,
+    fontSize: 25,
+    lineHeight: 32,
+    letterSpacing: -0.5,
+    color: PathoraColors.surface,
+  },
   workspaceLabel: {
     marginLeft: 2,
     fontFamily: PathoraFonts.en.bold,
@@ -103,19 +105,5 @@ const styles = StyleSheet.create({
     fontFamily: PathoraFonts.en.extraBold,
     fontSize: 16,
     color: PathoraColors.surface,
-  },
-  welcomeBlock: { gap: PathoraSpacing[8] },
-  title: {
-    fontFamily: PathoraFonts.en.extraBold,
-    fontSize: 26,
-    lineHeight: 34,
-    letterSpacing: -0.6,
-    color: PathoraColors.ink900,
-  },
-  subtitle: {
-    fontFamily: PathoraFonts.en.regular,
-    fontSize: 14,
-    lineHeight: 21,
-    color: PathoraColors.textSecondary,
   },
 });

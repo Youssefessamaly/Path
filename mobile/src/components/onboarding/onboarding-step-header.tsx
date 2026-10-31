@@ -9,60 +9,38 @@ export type OnboardingStepHeaderProps = {
 
 const TOTAL_STEPS = 3;
 
+/** The same progress treatment is used when setting up or editing either account type. */
 export function OnboardingStepHeader({ step, heading }: OnboardingStepHeaderProps) {
   return (
     <View style={styles.wrapper}>
-      <View style={styles.progressRow}>
+      <View style={styles.metaRow}>
+        <Text style={styles.stepLabel}>{`STEP ${String(step).padStart(2, '0')} / 03`}</Text>
+        <Text style={styles.stepHelper}>{step === 3 ? 'Final step' : 'Your progress'}</Text>
+      </View>
+      <View style={styles.progressRow} accessibilityLabel={`Step ${step} of ${TOTAL_STEPS}`}>
         {Array.from({ length: TOTAL_STEPS }, (_, index) => {
-          const stepNumber = index + 1;
-          const isCompleted = stepNumber < step;
-          const isCurrent = stepNumber === step;
+          const number = index + 1;
           return (
             <View
-              key={stepNumber}
-              style={[styles.bar, isCompleted && styles.barCompleted, isCurrent && styles.barCurrent]}
+              key={number}
+              style={[styles.bar, number < step && styles.barCompleted, number === step && styles.barCurrent]}
             />
           );
         })}
       </View>
-      <Text style={styles.stepLabel}>{`Step ${step} of ${TOTAL_STEPS}`}</Text>
       <Text style={styles.heading}>{heading}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    marginBottom: PathoraSpacing[32],
-  },
-  progressRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: PathoraSpacing[16],
-  },
-  bar: {
-    flex: 1,
-    height: 4,
-    borderRadius: PathoraRadius[999],
-    backgroundColor: PathoraColors.border,
-  },
-  barCompleted: {
-    backgroundColor: PathoraColors.teal400,
-  },
-  barCurrent: {
-    backgroundColor: PathoraColors.teal600,
-  },
-  stepLabel: {
-    fontFamily: PathoraFonts.en.bold,
-    fontSize: 12,
-    color: PathoraColors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 10,
-  },
-  heading: {
-    fontFamily: PathoraFonts.en.extraBold,
-    fontSize: 24,
-    color: PathoraColors.ink900,
-  },
+  wrapper: { marginBottom: PathoraSpacing[16], gap: PathoraSpacing[12] },
+  metaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: PathoraSpacing[12] },
+  stepLabel: { fontFamily: PathoraFonts.en.bold, fontSize: 11, color: PathoraColors.teal700, letterSpacing: 1.1 },
+  stepHelper: { fontFamily: PathoraFonts.en.medium, fontSize: 12, color: PathoraColors.textSecondary },
+  progressRow: { flexDirection: 'row', gap: 8 },
+  bar: { flex: 1, height: 5, borderRadius: PathoraRadius[999], backgroundColor: PathoraColors.border },
+  barCompleted: { backgroundColor: PathoraColors.teal400 },
+  barCurrent: { backgroundColor: PathoraColors.teal700 },
+  heading: { fontFamily: PathoraFonts.en.extraBold, fontSize: 22, lineHeight: 30, color: PathoraColors.ink900 },
 });

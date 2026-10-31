@@ -14,6 +14,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PathoraDetailHeader } from '@/components/pathora-detail-header';
+import { PathoraFormSection } from '@/components/pathora-form-section';
+import { PathoraInlineNotice } from '@/components/pathora-inline-notice';
+import { pathoraCardSurface } from '@/components/pathora-card-styles';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
 import { OnboardingOptionGroup } from '@/components/onboarding/onboarding-option-group';
 import { PathoraButton } from '@/components/pathora-button';
@@ -160,7 +163,7 @@ function QuestionCard({
           />
         </View>
 
-        {(error) ? (<Text style={styles.cardError}>{error}</Text>) : null}
+        {error ? <PathoraInlineNotice message={error} /> : null}
 
         <View style={styles.editActions}>
           <PathoraButton
@@ -380,7 +383,6 @@ function ApplicationQuestionsScreen({ internshipId }: { internshipId: string }) 
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
           <PathoraDetailHeader topInset={0} onBack={() => router.back()} eyebrow="COMPANY WORKSPACE" title="Application questions" subtitle="Customize what candidates answer." />
-          <Text style={styles.subtitle}>Add questions applicants will answer when applying through Pathora.</Text>
 
           {isLocked && (
             <View style={styles.lockedBanner}>
@@ -424,8 +426,7 @@ function ApplicationQuestionsScreen({ internshipId }: { internshipId: string }) 
                 </View>
               )}
 
-              <View style={styles.addForm}>
-                <Text style={styles.addFormTitle}>Add question</Text>
+              <PathoraFormSection title="Add a question" description="Make your screening questions clear and relevant." style={styles.addFormSpacing}>
 
                 <View style={styles.cardFields}>
                   <PathoraInput
@@ -454,7 +455,7 @@ function ApplicationQuestionsScreen({ internshipId }: { internshipId: string }) 
                   />
                 </View>
 
-                {(addError) ? (<Text style={styles.cardError}>{addError}</Text>) : null}
+                {addError ? <PathoraInlineNotice message={addError} /> : null}
 
                 <PathoraButton
                   label={isAddingQuestion ? 'Adding…' : 'Add question'}
@@ -463,7 +464,7 @@ function ApplicationQuestionsScreen({ internshipId }: { internshipId: string }) 
                   disabled={!canAddQuestion || isAddingQuestion || isLocked}
                   style={styles.addButton}
                 />
-              </View>
+              </PathoraFormSection>
             </>
           )}
 
@@ -501,13 +502,6 @@ const styles = StyleSheet.create({
     // of its own here (behavior is undefined on that platform), so the ScrollView itself must
     // provide enough room to scroll the buttons into view.
     paddingBottom: PathoraSpacing[64] * 3,
-  },
-  subtitle: {
-    fontFamily: PathoraFonts.en.regular,
-    fontSize: 14,
-    lineHeight: 20,
-    color: PathoraColors.textSecondary,
-    marginBottom: PathoraSpacing[20],
   },
   lockedBanner: {
     borderRadius: PathoraRadius[12],
@@ -565,14 +559,7 @@ const styles = StyleSheet.create({
     gap: PathoraSpacing[12],
     marginBottom: PathoraSpacing[20],
   },
-  card: {
-    borderRadius: PathoraRadius[14],
-    backgroundColor: PathoraColors.surface,
-    borderWidth: 1,
-    borderColor: PathoraColors.border,
-    padding: PathoraSpacing[16],
-    gap: PathoraSpacing[12],
-  },
+  card: { ...pathoraCardSurface, padding: PathoraSpacing[16], gap: PathoraSpacing[12] },
   cardFields: {
     gap: PathoraSpacing[16],
   },
@@ -651,11 +638,6 @@ const styles = StyleSheet.create({
   cardActionTextDisabled: {
     color: PathoraColors.textTertiary,
   },
-  cardError: {
-    fontFamily: PathoraFonts.en.medium,
-    fontSize: 12.5,
-    color: PathoraColors.error,
-  },
   editActions: {
     flexDirection: 'row',
     gap: PathoraSpacing[12],
@@ -673,20 +655,7 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     color: PathoraColors.ink900,
   },
-  addForm: {
-    borderRadius: PathoraRadius[14],
-    backgroundColor: PathoraColors.surface,
-    borderWidth: 1,
-    borderColor: PathoraColors.border,
-    padding: PathoraSpacing[16],
-    gap: PathoraSpacing[16],
-    marginBottom: PathoraSpacing[24],
-  },
-  addFormTitle: {
-    fontFamily: PathoraFonts.en.extraBold,
-    fontSize: 15.5,
-    color: PathoraColors.ink900,
-  },
+  addFormSpacing: { marginBottom: PathoraSpacing[24] },
   addButton: {
     marginTop: 4,
   },

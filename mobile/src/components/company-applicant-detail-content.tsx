@@ -127,7 +127,7 @@ export function CompanyApplicantDetailContent({ internshipId, applicationId }: {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView
         style={{ backgroundColor: PathoraColors.paper }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <PathoraDetailHeader horizontalInset={20} onBack={() => router.back()} eyebrow="CANDIDATE REVIEW" title="Application details" subtitle="Review the candidate and their submission." />
+        <PathoraDetailHeader horizontalInset={24} onBack={() => router.back()} eyebrow="CANDIDATE REVIEW" title="Application details" subtitle="Review the candidate and their submission." />
 
         <View style={styles.profileCard}>
           <View style={styles.profileTop}>
@@ -224,7 +224,7 @@ export function CompanyApplicantDetailContent({ internshipId, applicationId }: {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: PathoraColors.teal700 },
-  content: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 158, gap: 14 },
+  content: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 158, gap: 16 },
   backButton: { alignSelf: 'flex-start', marginLeft: -5 },
   center: { flex: 1, paddingHorizontal: 26, justifyContent: 'center', alignItems: 'center', gap: 14 },
   stateTitle: { fontFamily: PathoraFonts.en.extraBold, color: PathoraColors.ink900, fontSize: 18, textAlign: 'center' },

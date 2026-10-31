@@ -2,11 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PathoraColors, PathoraFonts, PathoraRadius } from '@/constants/pathora-theme';
 
-export type OnboardingOption = {
-  label: string;
-  value: string;
-};
-
+export type OnboardingOption = { label: string; value: string };
 export type OnboardingOptionGroupProps = {
   label: string;
   options: OnboardingOption[];
@@ -26,8 +22,9 @@ export function OnboardingOptionGroup({ label, options, value, onChange }: Onboa
               key={option.value}
               onPress={() => onChange(option.value)}
               accessibilityRole="button"
+              accessibilityLabel={`${label}: ${option.label}`}
               accessibilityState={{ selected }}
-              style={[styles.pill, selected && styles.pillSelected]}>
+              style={({ pressed }) => [styles.pill, selected && styles.pillSelected, pressed && styles.pillPressed]}>
               <Text style={[styles.pillLabel, selected && styles.pillLabelSelected]}>{option.label}</Text>
             </Pressable>
           );
@@ -38,37 +35,16 @@ export function OnboardingOptionGroup({ label, options, value, onChange }: Onboa
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    gap: 8,
-  },
-  label: {
-    fontFamily: PathoraFonts.en.bold,
-    fontSize: 13,
-    color: PathoraColors.ink900,
-  },
-  row: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
+  wrapper: { gap: 8 },
+  label: { fontFamily: PathoraFonts.en.bold, fontSize: 13, color: PathoraColors.ink900 },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   pill: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: PathoraRadius[12],
-    borderWidth: 1.5,
-    borderColor: PathoraColors.borderStrong,
-    backgroundColor: PathoraColors.surface,
+    minHeight: 44, paddingHorizontal: 16, paddingVertical: 10,
+    justifyContent: 'center', borderRadius: PathoraRadius[12], borderWidth: 1,
+    borderColor: PathoraColors.borderStrong, backgroundColor: PathoraColors.surface,
   },
-  pillSelected: {
-    borderColor: PathoraColors.teal600,
-    backgroundColor: PathoraColors.teal100,
-  },
-  pillLabel: {
-    fontFamily: PathoraFonts.en.semiBold,
-    fontSize: 13.5,
-    color: PathoraColors.ink900,
-  },
-  pillLabelSelected: {
-    color: PathoraColors.teal700,
-  },
+  pillSelected: { borderColor: PathoraColors.teal600, backgroundColor: PathoraColors.teal100 },
+  pillPressed: { opacity: 0.75 },
+  pillLabel: { fontFamily: PathoraFonts.en.semiBold, fontSize: 13.5, color: PathoraColors.ink900 },
+  pillLabelSelected: { color: PathoraColors.teal700 },
 });

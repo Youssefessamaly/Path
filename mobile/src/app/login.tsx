@@ -101,7 +101,8 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.bottomSafeArea} edges={['bottom']}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView
           style={{ backgroundColor: PathoraColors.paper }} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATHORA" title="Welcome back" subtitle="Log in to keep tracking your applications." onBack={() => router.replace('/welcome')} />
@@ -157,11 +158,17 @@ export default function LoginScreen() {
           </Pressable>
         </View>
       </ScrollView>
+      </SafeAreaView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  // The bottom inset uses the paper color, while the top status bar stays teal.
+  bottomSafeArea: {
+    flex: 1,
+    backgroundColor: PathoraColors.paper,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: PathoraColors.teal700,

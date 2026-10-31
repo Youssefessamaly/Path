@@ -1,15 +1,17 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
 import { OnboardingOptionGroup } from '@/components/onboarding/onboarding-option-group';
 import { OnboardingStepHeader } from '@/components/onboarding/onboarding-step-header';
+import { PathoraOnboardingCard } from '@/components/pathora-onboarding-card';
+import { PathoraInlineNotice } from '@/components/pathora-inline-notice';
 import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraInput } from '@/components/pathora-input';
-import { PathoraColors, PathoraFonts, PathoraSpacing } from '@/constants/pathora-theme';
+import { PathoraColors, PathoraSpacing } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
 import { getCompanyProfileOrNull, updateCompanyProfile } from '@/lib/api';
 import { describeOnboardingError } from '@/lib/onboarding';
@@ -54,6 +56,16 @@ function CompanyBasicsScreen() {
     };
   }, [token]);
 
+  // Return to the screen that opened step 1 (Profile when editing).
+  // First-time onboarding may have no previous screen in the navigation stack.
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/welcome');
+    }
+  };
+
   const canContinue =
     companyName.trim().length > 0 && industry.trim().length > 0 && companySize !== null;
 
@@ -80,43 +92,45 @@ function CompanyBasicsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
           style={{ backgroundColor: PathoraColors.paper }}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          <PathoraDetailHeader bottomGap={24} topInset={24} eyebrow="COMPANY SETUP" title="Company profile" subtitle="Step 1 of 3" />
+          <PathoraDetailHeader bottomGap={20} topInset={0} eyebrow="COMPANY SETUP" title="Company profile" subtitle="Set up your company workspace" onBack={handleBack} />
 
           <OnboardingStepHeader step={1} heading="Tell us about your company" />
 
-          <View style={styles.fields}>
-            <PathoraInput
-              label="Company name"
-              value={companyName}
-              onChangeText={setCompanyName}
-              placeholder="Pathora Technologies"
-              autoCapitalize="words"
-            />
+          <PathoraOnboardingCard>
+            <View style={styles.fields}>
+              <PathoraInput
+                label="Company name"
+                value={companyName}
+                onChangeText={setCompanyName}
+                placeholder="Pathora Technologies"
+                autoCapitalize="words"
+              />
 
-            <PathoraInput
-              label="Industry"
-              value={industry}
-              onChangeText={setIndustry}
-              placeholder="Software"
-              autoCapitalize="words"
-            />
+              <PathoraInput
+                label="Industry"
+                value={industry}
+                onChangeText={setIndustry}
+                placeholder="Software"
+                autoCapitalize="words"
+              />
 
-            <OnboardingOptionGroup
-              label="Company size"
-              options={COMPANY_SIZE_OPTIONS}
-              value={companySize}
-              onChange={setCompanySize}
-            />
-          </View>
+              <OnboardingOptionGroup
+                label="Company size"
+                options={COMPANY_SIZE_OPTIONS}
+                value={companySize}
+                onChange={setCompanySize}
+              />
+            </View>
+          </PathoraOnboardingCard>
 
-          {(submitError) ? (<Text style={styles.submitError}>{submitError}</Text>) : null}
+          <PathoraInlineNotice message={submitError ?? ''} />
 
           <PathoraButton
             label={isSubmitting ? 'Saving…' : 'Continue'}
@@ -146,21 +160,15 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1,
+    backgroundColor: PathoraColors.paper,
   },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: PathoraSpacing[24],
-    paddingTop: PathoraSpacing[24],
+    paddingBottom: PathoraSpacing[40],
   },
   fields: {
     gap: PathoraSpacing[20],
-    marginBottom: PathoraSpacing[24],
-  },
-  submitError: {
-    fontFamily: PathoraFonts.en.medium,
-    fontSize: 13,
-    color: PathoraColors.error,
-    marginBottom: PathoraSpacing[16],
   },
   continueButton: {
     marginBottom: PathoraSpacing[24],

@@ -60,7 +60,7 @@ function ApplicationDetailsScreen({ applicationId }: { applicationId: string }) 
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView
         style={{ backgroundColor: PathoraColors.paper }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <PathoraDetailHeader horizontalInset={20} onBack={() => router.back()} eyebrow="APPLICATION HISTORY" title="Application details" subtitle="A record of what you submitted through Path." />
+        <PathoraDetailHeader horizontalInset={24} onBack={() => router.back()} eyebrow="APPLICATION HISTORY" title="Application details" subtitle="A record of what you submitted through Path." />
 
         <View style={styles.profileCard}>
           <View style={styles.profileTop}>
@@ -137,7 +137,7 @@ export default function ApplicationDetailsRoute() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: PathoraColors.teal700 },
-  content: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 158, gap: 14 },
+  content: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 158, gap: 16 },
   backButton: { alignSelf: 'flex-start', marginLeft: -5 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24, gap: 14 },
   stateTitle: { color: PathoraColors.ink900, fontFamily: PathoraFonts.en.extraBold, fontSize: 18, textAlign: 'center' },
