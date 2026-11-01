@@ -1,4 +1,4 @@
-import { Tabs, useFocusEffect, useRouter } from 'expo-router';
+import { Tabs, useFocusEffect, usePathname, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
@@ -98,10 +98,15 @@ function CompanyTabsGuard({ children }: { children: ReactNode }) {
 }
 
 export default function CompanyTabsLayout() {
+  const pathname = usePathname();
+  // Nested internship forms are a dedicated workflow, not a tab destination.
+  const hideTabBar = /\/internships\/new\/?$/.test(pathname)
+    || /\/internships\/[^/]+\/(edit|application-questions)\/?$/.test(pathname);
+
   return (
     <CompanyTabsGuard>
       <Tabs
-        tabBar={(props) => <CompanyLiquidTabBar {...props} />}
+        tabBar={(props) => hideTabBar ? null : <CompanyLiquidTabBar {...props} />}
         screenOptions={{ headerShown: false }}>
         <Tabs.Screen name="index" options={{ title: 'Home' }} />
         <Tabs.Screen name="internships" options={{ title: 'Internships' }} />

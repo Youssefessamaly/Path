@@ -1,22 +1,19 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { SymbolView } from 'expo-symbols';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ApplicationMethodField } from '@/components/application-method-field';
-import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { PathoraFormSection } from '@/components/pathora-form-section';
-import { PathoraInlineNotice } from '@/components/pathora-inline-notice';
+import { InternshipReviewRow, PathoraInternshipWizardShell, type InternshipWizardStep } from '@/components/pathora-internship-wizard-shell';
 import { DateInputGroup } from '@/components/date-input-group';
 import { MajorTagInput } from '@/components/major-tag-input';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
 import { OnboardingOptionGroup } from '@/components/onboarding/onboarding-option-group';
 import { SkillChip } from '@/components/onboarding/skill-chip';
 import { SkillPickerModal } from '@/components/onboarding/skill-picker-modal';
-import { PathoraButton } from '@/components/pathora-button';
 import { PathoraInput } from '@/components/pathora-input';
-import { PathoraColors, PathoraFonts, PathoraRadius, PathoraSpacing } from '@/constants/pathora-theme';
+import { PathoraColors, PathoraFonts, PathoraRadius } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
 import {
   createCompanyInternship,
@@ -66,6 +63,8 @@ function NewInternshipScreen() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [step, setStep] = useState<InternshipWizardStep>(1);
+  const [stepError, setStepError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -187,18 +186,90 @@ function NewInternshipScreen() {
     }
   };
 
-  return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-        style={{ backgroundColor: PathoraColors.paper }}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled">
-          <PathoraDetailHeader topInset={0} onBack={() => router.back()} eyebrow="COMPANY WORKSPACE" title="Post an internship" subtitle="Fill in the details Pathora interns will see." />
+  // Validate one section at a time; no entered values are lost when stepping back.
+  const validationMessage = (currentStep: InternshipWizardStep): string | null => {
+    if (currentStep === 1) {
+      if (!title.trim() || !description.trim() || !location.trim()) {
+        return 'Enter the title, description and location before continuing.';
+      }
+    }
+    if (currentStep === 2) {
+      if (!workMode) return 'Choose a work mode.';
+      if (!deadlineDay || !deadlineMonth || deadlineYear.length !== 4) {
+        return 'Enter the application deadline (day, month and year).';
+      }
+      const deadline = parseLocalDateParts(deadlineDay, deadlineMonth, deadlineYear, { notInPast: true });
+      if (!deadline.iso) return deadline.error ?? 'Enter a valid application deadline.';
+      if (hasStartDateInput) {
+        const start = parseLocalDateParts(startDay, startMonth, startYear);
+        if (!start.iso) return start.error ?? 'Enter a valid start date.';
+      }
+    }
+    if (currentStep === 3 && selectedSkillIds.length === 0) {
+      return 'Add at least one required skill.';
+    }
+    if (currentStep === 4) {
+      if (!applicationMethod) return 'Choose where applicants should apply.';
+      if (applicationMethod === 'EXTERNAL' && !isValidExternalApplicationUrl(externalUrl.trim())) {
+        return 'Enter a valid http:// or https:// application URL.';
+      }
+    }
+    return null;
+  };
 
-          <View style={styles.fields}>
-            <PathoraFormSection index={1} title="The opportunity" description="Introduce the internship and describe the work.">
+  const goToStep = (next: InternshipWizardStep) => {
+    setStep(next);
+    setStepError(null);
+    setSubmitError(null);
+    setUrlError(null);
+  };
+
+  const handleWizardBack = () => {
+    if (step > 1) {
+      goToStep((step - 1) as InternshipWizardStep);
+    } else {
+      router.back();
+    }
+  };
+
+  const handleContinue = () => {
+    const message = validationMessage(step);
+    if (message) {
+      setStepError(message);
+      return;
+    }
+    if (step < 4) goToStep((step + 1) as InternshipWizardStep);
+  };
+
+  const finishWizard = () => {
+    // Re-check all sections in case a previously completed field was changed.
+    for (const currentStep of [1, 2, 3, 4] as const) {
+      const message = validationMessage(currentStep);
+      if (message) {
+        goToStep(currentStep);
+        setStepError(message);
+        return;
+      }
+    }
+    if (!canSubmit) {
+      setStepError('Complete the required fields before saving.');
+      return;
+    }
+    void handleSubmit();
+  };
+
+  return (
+    <>
+      <PathoraInternshipWizardShell
+        mode="create"
+        step={step}
+        onBack={handleWizardBack}
+        onContinue={handleContinue}
+        onFinish={finishWizard}
+        isSubmitting={isSubmitting}
+        error={stepError ?? submitError}>
+        {step === 1 ? (
+          <PathoraFormSection title="The opportunity" description="Introduce the internship and describe the work.">
               <PathoraInput
                 label="Title"
                 value={title}
@@ -225,8 +296,8 @@ function NewInternshipScreen() {
               />
 
             </PathoraFormSection>
-
-            <PathoraFormSection index={2} title="Schedule & format" description="Help interns understand when and where the role takes place.">
+        ) : step === 2 ? (
+          <PathoraFormSection title="Schedule & format" description="Help interns understand when and where the role takes place.">
               <OnboardingOptionGroup
                 label="Work mode"
                 options={WORK_MODE_OPTIONS}
@@ -263,8 +334,8 @@ function NewInternshipScreen() {
               />
 
             </PathoraFormSection>
-
-            <PathoraFormSection index={3} title="Candidate requirements" description="Describe the skills and academic background that fit this role.">
+        ) : step === 3 ? (
+          <PathoraFormSection title="Candidate requirements" description="Describe the skills and academic background that fit this role.">
               <View>
                 <Text style={styles.label}>Required skills</Text>
                 <View style={styles.chipsWrap}>
@@ -306,8 +377,9 @@ function NewInternshipScreen() {
               </View>
 
             </PathoraFormSection>
-
-            <PathoraFormSection index={4} title="Application method" description="Choose where students should submit their applications.">
+        ) : (
+          <>
+            <PathoraFormSection title="Application method" description="Choose where students should submit their applications.">
               <ApplicationMethodField
                 value={applicationMethod}
                 onChange={handleApplicationMethodChange}
@@ -319,20 +391,24 @@ function NewInternshipScreen() {
                 urlError={urlError}
               />
             </PathoraFormSection>
-          </View>
 
-          {submitError ? <PathoraInlineNotice message={submitError} /> : null}
-
-          <PathoraButton
-            label={isSubmitting ? 'Posting…' : 'Post internship'}
-            variant="primary"
-            onPress={handleSubmit}
-            disabled={!canSubmit || isSubmitting}
-            style={styles.submitButton}
-          />
-        </ScrollView>
-      </KeyboardAvoidingView>
-
+            <PathoraFormSection title="Review the internship" description="Double-check your details before publishing.">
+            <InternshipReviewRow label="Title" value={title.trim()} />
+            <InternshipReviewRow label="Description" value={description.trim()} />
+            <InternshipReviewRow label="Location" value={location.trim()} />
+            <InternshipReviewRow label="Work mode" value={WORK_MODE_OPTIONS.find((option) => option.value === workMode)?.label ?? ''} />
+            <InternshipReviewRow label="Application deadline" value={[deadlineDay, deadlineMonth, deadlineYear].filter(Boolean).join('/')} />
+            <InternshipReviewRow label="Start date" value={[startDay, startMonth, startYear].filter(Boolean).join('/') || 'Not specified'} />
+            <InternshipReviewRow label="Duration" value={durationMonths ? `${durationMonths} month(s)` : 'Not specified'} />
+            <InternshipReviewRow label="Required skills" value={selectedSkills.map((skill) => skill.name).join(', ')} />
+            <InternshipReviewRow label="Target majors" value={targetMajors.join(', ') || 'No preference'} />
+            <InternshipReviewRow label="Minimum academic year" value={MINIMUM_ACADEMIC_YEAR_OPTIONS.find((option) => option.value === minimumAcademicYear)?.label ?? 'No restriction'} />
+            <InternshipReviewRow label="Application method" value={applicationMethod === 'INTERNAL' ? 'Apply through Pathora' : applicationMethod === 'EXTERNAL' ? 'Apply on company website' : 'Not selected'} />
+            {applicationMethod === 'EXTERNAL' ? <InternshipReviewRow label="Application website" value={externalUrl.trim()} /> : null}
+          </PathoraFormSection>
+          </>
+        )}
+      </PathoraInternshipWizardShell>
       <SkillPickerModal
         visible={isPickerVisible}
         skills={catalog}
@@ -340,7 +416,7 @@ function NewInternshipScreen() {
         onToggleSkill={handleToggleSkill}
         onClose={() => setIsPickerVisible(false)}
       />
-    </SafeAreaView>
+    </>
   );
 }
 
@@ -353,42 +429,17 @@ export default function NewInternshipRoute() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: PathoraColors.teal700,
-  },
-  flex: {
-    flex: 1,
-    backgroundColor: PathoraColors.paper,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: PathoraSpacing[24],
-  },
-  fields: {
-    gap: PathoraSpacing[20],
-    marginTop: PathoraSpacing[16],
-    marginBottom: PathoraSpacing[24],
-  },
   label: {
     fontFamily: PathoraFonts.en.bold,
     fontSize: 13,
     color: PathoraColors.ink900,
     marginBottom: 8,
   },
-  chipsWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
+  chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   addSkillButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: PathoraRadius[999],
-    borderWidth: 1.5,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 12, paddingVertical: 7,
+    borderRadius: PathoraRadius[999], borderWidth: 1.5,
     borderColor: PathoraColors.teal600,
     backgroundColor: PathoraColors.surface,
   },
@@ -402,8 +453,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: PathoraColors.textTertiary,
     marginTop: 8,
-  },
-  submitButton: {
-    marginBottom: PathoraSpacing[24],
   },
 });

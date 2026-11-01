@@ -16,7 +16,6 @@ import { PathoraFilterChip } from '@/components/pathora-filter-chip';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraSearchInput } from '@/components/pathora-search-input';
 import { PathoraPageHeader } from '@/components/pathora-page-header';
-import { PathoraSectionHeading } from '@/components/pathora-section-heading';
 import { PathoraColors, PathoraFonts, PathoraSpacing } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
@@ -161,10 +160,11 @@ function InternshipsListScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={PathoraColors.teal600} />}>
-        <PathoraPageHeader eyebrow="STUDENT WORKSPACE" title="Discover" subtitle="Your next opportunity starts here." />
+        <PathoraPageHeader eyebrow="STUDENT WORKSPACE" title="Explore internships" subtitle="Your next opportunity starts here." />
 
         <View style={styles.searchSection}>
-          <PathoraSectionHeading eyebrow="YOUR SEARCH" title="Explore internships" />
+          <Text style={styles.filterLabelHeading}>YOUR SEARCH</Text>
+
           <PathoraSearchInput
             value={query}
             onChangeText={setQuery}
@@ -259,7 +259,7 @@ export default function InternshipsListRoute() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: PathoraColors.teal700 },
   // Preserves the latest full-bleed change: content scrolls behind the floating bottom bar.
-  scrollContent: { paddingHorizontal: PathoraSpacing[24], paddingTop: 12, paddingBottom: 150, gap: 24 },
+  scrollContent: { paddingHorizontal: PathoraSpacing[24], paddingTop: 12, paddingBottom: 150, gap: 20 },
   searchSection: { gap: 12 },
   filterLabelHeading: { marginTop: 2, color: PathoraColors.textSecondary, fontFamily: PathoraFonts.en.bold, fontSize: 10, letterSpacing: 1.1 },
   filtersRow: { gap: 8, paddingRight: 1 },

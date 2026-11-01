@@ -33,6 +33,11 @@ const LEVELS: Record<NonNullable<InternProfile['academicLevel']>, string> = {
 
 type SymbolName = SymbolViewProps['name'];
 
+/** Hide generated upload timestamp prefixes in the UI only. */
+function displayCvFileName(fileName: string): string {
+  return fileName.replace(/^\d{10,}-/, '');
+}
+
 function Icon({ name, size = 19, color = C.teal700 }: {
   name: SymbolName; size?: number; color?: string;
 }) {
@@ -212,7 +217,7 @@ export default function InternProfileRoute() {
             <View style={styles.documentText}>
               <Text style={styles.documentTitle}>{profile.cvFileName ? 'CV uploaded' : 'No CV uploaded yet'}</Text>
               <Text style={styles.documentFileName} numberOfLines={2}>
-                {profile.cvFileName ?? 'Add a CV through Edit profile to share with employers.'}
+                {profile.cvFileName ? displayCvFileName(profile.cvFileName) : 'Add a CV through Edit profile to share with employers.'}
               </Text>
             </View>
           </View>
