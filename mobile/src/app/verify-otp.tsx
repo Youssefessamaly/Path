@@ -10,11 +10,11 @@ import {
   Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraInput } from '@/components/pathora-input';
+import { PathoraSplitSafeArea } from '@/components/pathora-split-safe-area';
 import { PathoraColors, PathoraFonts, PathoraSpacing } from '@/constants/pathora-theme';
 import { ApiError, forgotPassword, NetworkError, verifyOtp } from '@/lib/api';
 
@@ -116,7 +116,7 @@ export default function VerifyOtpScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <PathoraSplitSafeArea>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -163,15 +163,11 @@ export default function VerifyOtpScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </PathoraSplitSafeArea>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: PathoraColors.teal700,
-  },
   flex: {
     flex: 1,
   },

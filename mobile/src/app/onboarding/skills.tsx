@@ -178,10 +178,8 @@ function SkillsAndInterestsScreen() {
 
       const completedProfile = await completeInternOnboarding(token);
       setIsCompleted(completedProfile.onboardingCompleted);
-      // Pop the entire stack (onboarding steps, register/login, etc.) back to its root,
-      // then replace that root with /intern — so nothing from before onboarding completed
-      // remains in history and Android Back can't expose Step 1/2/3.
-      router.dismissAll();
+      // A direct route replacement avoids an unhandled POP_TO_TOP when there is no
+      // dismissible stack (e.g. onboarding resumed from a restored session).
       router.replace('/intern');
       return;
     } catch (error) {

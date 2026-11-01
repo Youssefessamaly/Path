@@ -2,12 +2,12 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CompanyApprovalBadge } from '@/components/company-approval-badge';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
 import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { PathoraButton } from '@/components/pathora-button';
+import { PathoraSplitSafeArea } from '@/components/pathora-split-safe-area';
 import { PathoraColors, PathoraFonts, PathoraRadius, PathoraSpacing } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
 import { getCompanyApprovalStatus, type CompanyApprovalStatus } from '@/lib/api';
@@ -75,7 +75,7 @@ function ApprovalRejectedScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <PathoraSplitSafeArea>
       <PathoraDetailHeader standalone eyebrow="COMPANY WORKSPACE" title="Review status" />
       <View style={styles.content}>
         <View style={styles.card}>
@@ -122,7 +122,7 @@ function ApprovalRejectedScreen() {
           />
         </View>
       </View>
-    </SafeAreaView>
+    </PathoraSplitSafeArea>
   );
 }
 
@@ -135,10 +135,6 @@ export default function ApprovalRejectedRoute() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: PathoraColors.teal700,
-  },
   content: {
     flex: 1, backgroundColor: PathoraColors.paper,
     justifyContent: 'center',

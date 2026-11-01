@@ -11,7 +11,6 @@ import {
   Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { PathoraFormSection } from '@/components/pathora-form-section';
@@ -22,6 +21,7 @@ import { OnboardingOptionGroup } from '@/components/onboarding/onboarding-option
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraCheckbox } from '@/components/pathora-checkbox';
 import { PathoraInput } from '@/components/pathora-input';
+import { PathoraSplitSafeArea } from '@/components/pathora-split-safe-area';
 import { PathoraColors, PathoraFonts, PathoraRadius, PathoraSpacing } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
 import {
@@ -375,7 +375,7 @@ function ApplicationQuestionsScreen({ internshipId }: { internshipId: string }) 
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <PathoraSplitSafeArea>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
         style={{ backgroundColor: PathoraColors.paper }}
@@ -471,7 +471,7 @@ function ApplicationQuestionsScreen({ internshipId }: { internshipId: string }) 
           <PathoraButton label="Done" variant="secondary" onPress={handleDone} style={styles.doneButton} />
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </PathoraSplitSafeArea>
   );
 }
 
@@ -486,10 +486,6 @@ export default function ApplicationQuestionsRoute() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: PathoraColors.teal700,
-  },
   flex: {
     flex: 1,
   },

@@ -111,7 +111,7 @@ export default function CompanyTabsLayout() {
         <Tabs.Screen name="index" options={{ title: 'Home' }} />
         <Tabs.Screen name="internships" options={{ title: 'Internships' }} />
         <Tabs.Screen name="applicants" options={{ title: 'Applicants' }} />
-        <Tabs.Screen name="profile" options={{ title: 'Company' }} />
+        <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
       </Tabs>
     </CompanyTabsGuard>
   );
