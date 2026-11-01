@@ -8,7 +8,6 @@ import { InternshipFeedCard } from '@/components/internship-feed-card';
 import { PathoraMetricCard } from '@/components/pathora-metric-card';
 import { PathoraSectionHeading } from '@/components/pathora-section-heading';
 import { PathoraButton } from '@/components/pathora-button';
-import { PathoraSearchBar } from '@/components/pathora-search-bar';
 import { ProfileStrengthCard } from '@/components/profile-strength-card';
 import { PathoraColors, PathoraFonts, PathoraRadius, PathoraSpacing } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
@@ -85,9 +84,7 @@ function InternHomeScreen() {
     setRefreshing(false);
   };
 
-  const handleSearchPress = () => {
-    router.push('/intern/internships');
-  };
+
 
   const handleSeeAllPress = () => {
     router.push('/intern/internships');
@@ -159,12 +156,6 @@ function InternHomeScreen() {
             avatarInitials={initialsFor(profile?.firstName ?? null, profile?.lastName ?? null, user?.email)}
             avatarAccessibilityLabel="Open your profile"
             onAvatarPress={() => router.push('/intern/profile')}
-          />
-
-          <PathoraSearchBar
-            placeholder="Search internships"
-            onPress={handleSearchPress}
-            style={styles.searchBar}
           />
 
           {strength && strength.percentage < 100 && (

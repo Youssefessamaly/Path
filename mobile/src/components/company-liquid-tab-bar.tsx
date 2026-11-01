@@ -49,8 +49,8 @@ const TAB_DEFINITIONS: Record<string, TabDefinition> = {
     icon: { ios: 'list.clipboard.fill', android: 'assignment', web: 'assignment' },
   },
   profile: {
-    label: 'Company',
-    icon: { ios: 'building.2.fill', android: 'apartment', web: 'apartment' },
+    label: 'Profile',
+    icon: { ios: 'person.crop.circle.fill', android: 'account_circle', web: 'account_circle' },
   },
 };
 

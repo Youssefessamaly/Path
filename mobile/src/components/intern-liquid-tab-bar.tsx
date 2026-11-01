@@ -33,27 +33,33 @@ type InternTabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tab
 type TabDefinition = {
   label: string;
   icon: SymbolViewProps['name'];
+  widthWeight: number;
 };
 
 const TAB_DEFINITIONS: Record<string, TabDefinition> = {
   index: {
     label: 'Home',
+    widthWeight: 0.90,
     icon: { ios: 'house.fill', android: 'home', web: 'home' },
   },
   internships: {
     label: 'Internships',
+    widthWeight: 1.28,
     icon: { ios: 'briefcase.fill', android: 'work', web: 'work' },
   },
   favorites: {
     label: 'Favorites',
+    widthWeight: 1.05,
     icon: { ios: 'bookmark.fill', android: 'bookmark', web: 'bookmark' },
   },
   applications: {
     label: 'Applications',
+    widthWeight: 1.57,
     icon: { ios: 'doc.text.fill', android: 'description', web: 'description' },
   },
   profile: {
     label: 'Profile',
+    widthWeight: 0.90,
     icon: { ios: 'person.crop.circle.fill', android: 'account_circle', web: 'account_circle' },
   },
 };
@@ -61,13 +67,14 @@ const TAB_DEFINITIONS: Record<string, TabDefinition> = {
 const ACTIVE_ICON = '#FFFFFF';
 const INACTIVE_ICON = PathoraColors.textSecondary;
 const TRACK_HEIGHT = 70;
-const CAPSULE_INSET = 5;
+const CAPSULE_INSET = 3;
 
 function LiquidTabButton({
   index,
   progress,
   label,
   icon,
+  width,
   selected,
   onPress,
   onLongPress,
@@ -76,6 +83,7 @@ function LiquidTabButton({
   progress: SharedValue<number>;
   label: string;
   icon: SymbolViewProps['name'];
+  width: number;
   selected: boolean;
   onPress: () => void;
   onLongPress: () => void;
@@ -108,7 +116,7 @@ function LiquidTabButton({
       accessibilityState={{ selected }}
       onPress={onPress}
       onLongPress={onLongPress}
-      style={({ pressed }) => [styles.tabButton, pressed && styles.tabButtonPressed]}
+      style={({ pressed }) => [styles.tabButton, { width }, pressed && styles.tabButtonPressed]}
       testID={`intern-tab-${label.toLowerCase()}`}>
       <View style={styles.tabContent}>
         <View style={styles.iconFrame}>
@@ -122,7 +130,7 @@ function LiquidTabButton({
         <Animated.Text
           numberOfLines={1}
           adjustsFontSizeToFit
-          minimumFontScale={0.78}
+          minimumFontScale={0.75}
           style={[styles.tabLabel, labelStyle]}>
           {label}
         </Animated.Text>
@@ -142,8 +150,19 @@ export function InternLiquidTabBar({ state, emitter, navigateToTab }: InternTabB
   const visibleRoutes = state.routes.filter((route) => Boolean(TAB_DEFINITIONS[route.name]));
   const activeRoute = state.routes[state.index];
   const activeVisibleIndex = visibleRoutes.findIndex((route) => route.key === activeRoute?.key);
+  // Allocate more room to longer labels. Equal-width slots make the selected
+  // Applications label wider than its green capsule on smaller screens.
   const count = visibleRoutes.length;
-  const tabWidth = count > 0 ? trackWidth / count : 0;
+  const totalWeight = visibleRoutes.reduce(
+    (sum, route) => sum + TAB_DEFINITIONS[route.name].widthWeight, 0,
+  );
+  const tabWidths = visibleRoutes.map(
+    (route) => totalWeight > 0 ? trackWidth * TAB_DEFINITIONS[route.name].widthWeight / totalWeight : 0,
+  );
+  const tabOffsets = tabWidths.map((_, index) =>
+    tabWidths.slice(0, index).reduce((sum, width) => sum + width, 0),
+  );
+  const inputRange = visibleRoutes.map((_, index) => index);
 
   const nativeGlass =
     Platform.OS === 'ios' && isGlassEffectAPIAvailable() && isLiquidGlassAvailable();
@@ -173,10 +192,9 @@ export function InternLiquidTabBar({ state, emitter, navigateToTab }: InternTabB
   }, [progress, reducedMotion, activeVisibleIndex, stretch]);
 
   const capsuleStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: progress.value * tabWidth },
-      { scaleX: stretch.value },
-    ],
+    left: count > 0 ? interpolate(progress.value, inputRange, tabOffsets) + CAPSULE_INSET : 0,
+    width: count > 0 ? Math.max(0, interpolate(progress.value, inputRange, tabWidths) - CAPSULE_INSET * 2) : 0,
+    transform: [{ scaleX: stretch.value }],
   }));
 
   const measureTrack = (event: LayoutChangeEvent) => {
@@ -207,12 +225,11 @@ export function InternLiquidTabBar({ state, emitter, navigateToTab }: InternTabB
         )}
 
         <View style={styles.tabTrack} onLayout={measureTrack}>
-          {tabWidth > 0 && (
+          {trackWidth > 0 && count > 0 && (
             <Animated.View
               pointerEvents="none"
               style={[
                 styles.selectedCapsule,
-                { width: Math.max(0, tabWidth - CAPSULE_INSET * 2) },
                 capsuleStyle,
               ]}>
               <LinearGradient
@@ -237,6 +254,7 @@ export function InternLiquidTabBar({ state, emitter, navigateToTab }: InternTabB
                 progress={progress}
                 label={definition.label}
                 icon={definition.icon}
+                width={tabWidths[index]}
                 selected={focused}
                 onPress={() => {
                   const event = emitter.emit({
@@ -299,7 +317,6 @@ const styles = StyleSheet.create({
   },
   selectedCapsule: {
     position: 'absolute',
-    left: CAPSULE_INSET,
     top: CAPSULE_INSET,
     height: TRACK_HEIGHT - CAPSULE_INSET * 2,
     borderRadius: 23,
@@ -316,7 +333,6 @@ const styles = StyleSheet.create({
     borderRadius: 23,
   },
   tabButton: {
-    flex: 1,
     height: '100%',
     minWidth: 0,
     zIndex: 1,
@@ -346,7 +362,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tabLabel: {
-    maxWidth: '100%',
+    width: '100%',
+    textAlign: 'center',
     fontFamily: PathoraFonts.en.semiBold,
     fontSize: 10.5,
     letterSpacing: -0.1,
