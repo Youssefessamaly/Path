@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
   },
   copy: { flex: 1, minWidth: 0, gap: PathoraSpacing[8] },
   eyebrow: {
-    fontFamily: PathoraFonts.en.bold, fontSize: 11, letterSpacing: 1.35,
+    fontFamily: PathoraFonts.en.bold, fontSize: 12, letterSpacing: 1.1,
     color: 'rgba(255,255,255,0.78)',
   },
   title: {
@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.65, color: PathoraColors.surface,
   },
   subtitle: {
-    fontFamily: PathoraFonts.en.medium, fontSize: 13.5, lineHeight: 21,
+    fontFamily: PathoraFonts.en.medium, fontSize: 14, lineHeight: 22,
     color: 'rgba(255,255,255,0.80)',
   },
   action: { flexShrink: 0, alignSelf: 'center' },

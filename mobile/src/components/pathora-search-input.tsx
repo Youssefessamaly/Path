@@ -29,6 +29,7 @@ export function PathoraSearchInput({ value, onChangeText, placeholder, style }: 
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
+        accessibilityLabel={placeholder ?? 'Search'}
         placeholderTextColor={PathoraColors.textTertiary}
         autoCapitalize="none"
         autoCorrect={false}
@@ -39,7 +40,7 @@ export function PathoraSearchInput({ value, onChangeText, placeholder, style }: 
       {value.length > 0 && (
         <Pressable
           onPress={() => onChangeText('')}
-          hitSlop={8}
+          hitSlop={13}
           accessibilityRole="button"
           accessibilityLabel="Clear search">
           <SymbolView
@@ -59,7 +60,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 0,
     fontFamily: PathoraFonts.en.regular,
-    fontSize: 14,
+    fontSize: 15,
     color: PathoraColors.ink900,
   },
 });

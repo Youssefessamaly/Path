@@ -56,14 +56,14 @@ const styles = StyleSheet.create({
   standalone: { marginHorizontal: 0, marginTop: 0 },
   row: { flexDirection: 'row', alignItems: 'center', gap: PathoraSpacing[12] },
   back: {
-    width: 40, height: 40, borderRadius: 20,
+    width: 44, height: 44, borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.12)', borderColor: 'rgba(255,255,255,0.25)', borderWidth: 1,
     alignItems: 'center', justifyContent: 'center',
   },
   pressed: { opacity: 0.7 },
   textGroup: { flex: 1, minWidth: 0, gap: 3 },
-  eyebrow: { color: 'rgba(255,255,255,0.75)', fontFamily: PathoraFonts.en.bold, fontSize: 10, letterSpacing: 1.1 },
+  eyebrow: { color: 'rgba(255,255,255,0.75)', fontFamily: PathoraFonts.en.bold, fontSize: 12, letterSpacing: 1.0 },
   title: { color: PathoraColors.surface, fontFamily: PathoraFonts.en.extraBold, fontSize: 21, lineHeight: 29, letterSpacing: -0.4 },
-  subtitle: { color: 'rgba(255,255,255,0.8)', fontFamily: PathoraFonts.en.medium, fontSize: 12.5, lineHeight: 19 },
+  subtitle: { color: 'rgba(255,255,255,0.8)', fontFamily: PathoraFonts.en.medium, fontSize: 13, lineHeight: 20 },
   action: { flexShrink: 0 },
 });

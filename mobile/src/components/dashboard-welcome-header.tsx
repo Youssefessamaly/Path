@@ -86,8 +86,8 @@ const styles = StyleSheet.create({
   workspaceLabel: {
     marginLeft: 2,
     fontFamily: PathoraFonts.en.bold,
-    fontSize: 10,
-    letterSpacing: 1.3,
+    fontSize: 11.5,
+    letterSpacing: 1.1,
     color: 'rgba(255,255,255,0.8)',
   },
   avatar: {

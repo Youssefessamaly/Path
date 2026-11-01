@@ -21,8 +21,10 @@ export const PathoraColors = {
   border: '#E6E2D8',
   borderStrong: '#D6D1C3',
   textSecondary: '#5B6472',
-  textTertiary: '#8D93A0',
-  success: '#2E9E6D',
+  /** Meets 4.5:1 text contrast on paper and white surfaces; use for placeholders and supporting copy. */
+  textTertiary: '#687384',
+  /** Readable as both text on white and a filled-button color behind white text. */
+  success: '#217A53',
   warning: '#B4530A',
   error: '#C1443A',
   info: '#3672A8',

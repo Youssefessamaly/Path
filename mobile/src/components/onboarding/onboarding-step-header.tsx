@@ -36,7 +36,7 @@ export function OnboardingStepHeader({ step, heading }: OnboardingStepHeaderProp
 const styles = StyleSheet.create({
   wrapper: { marginBottom: PathoraSpacing[16], gap: PathoraSpacing[12] },
   metaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: PathoraSpacing[12] },
-  stepLabel: { fontFamily: PathoraFonts.en.bold, fontSize: 11, color: PathoraColors.teal700, letterSpacing: 1.1 },
+  stepLabel: { fontFamily: PathoraFonts.en.bold, fontSize: 12, color: PathoraColors.teal700, letterSpacing: 1.1 },
   stepHelper: { fontFamily: PathoraFonts.en.medium, fontSize: 12, color: PathoraColors.textSecondary },
   progressRow: { flexDirection: 'row', gap: 8 },
   bar: { flex: 1, height: 5, borderRadius: PathoraRadius[999], backgroundColor: PathoraColors.border },

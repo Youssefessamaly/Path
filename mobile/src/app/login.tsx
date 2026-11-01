@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PathoraDetailHeader } from '@/components/pathora-detail-header';
@@ -103,8 +103,13 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.bottomSafeArea} edges={['bottom']}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView
-          style={{ backgroundColor: PathoraColors.paper }} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <ScrollView
+            style={{ backgroundColor: PathoraColors.paper }}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag">
         <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATHORA" title="Welcome back" subtitle="Log in to keep tracking your applications." onBack={() => router.replace('/welcome')} />
 
         {(registrationMessage) ? (<Text style={styles.successMessage}>{registrationMessage}</Text>) : null}
@@ -157,7 +162,8 @@ export default function LoginScreen() {
             <Text style={styles.footerLink}>Sign up</Text>
           </Pressable>
         </View>
-      </ScrollView>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </SafeAreaView>
   );
@@ -173,6 +179,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: PathoraColors.teal700,
   },
+  flex: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: PathoraSpacing[24],

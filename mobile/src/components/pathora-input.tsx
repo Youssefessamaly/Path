@@ -59,6 +59,7 @@ export function PathoraInput({
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
+          accessibilityLabel={label || placeholder || 'Text field'}
           placeholderTextColor={PathoraColors.textTertiary}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
@@ -74,9 +75,10 @@ export function PathoraInput({
         {secureTextEntry && (
           <Pressable
             onPress={() => setVisible((current) => !current)}
-            hitSlop={8}
+            hitSlop={13}
             accessibilityRole="button"
-            accessibilityLabel={visible ? 'Hide password' : 'Show password'}>
+            accessibilityLabel={visible ? 'Hide password' : 'Show password'}
+            accessibilityHint={visible ? 'Password is currently shown' : 'Password is currently hidden'}>
             <SymbolView
               name={{
                 ios: visible ? 'eye.slash' : 'eye',

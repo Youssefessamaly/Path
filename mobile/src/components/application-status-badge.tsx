@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontFamily: PathoraFonts.en.bold,
-    fontSize: 11.5,
+    fontSize: 12.5,
   },
 });
 
