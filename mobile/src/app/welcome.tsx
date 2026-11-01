@@ -6,6 +6,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraLogo } from '@/components/pathora-logo';
+import { PathoraTopOverscrollFill } from '@/components/pathora-top-overscroll-fill';
 import { PathoraColors as C, PathoraFonts as F, PathoraRadius as R, PathoraSpacing as S } from '@/constants/pathora-theme';
 
 type Benefit = {
@@ -59,6 +60,7 @@ export default function WelcomeScreen() {
         contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom, S[16]) + S[16] }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
+        <PathoraTopOverscrollFill />
         <View style={styles.hero}>
           <View pointerEvents="none" style={styles.heroCircle} />
           <View pointerEvents="none" style={styles.heroCircleSmall} />

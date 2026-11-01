@@ -3,6 +3,7 @@ import { I18nManager, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 
 import { PathoraColors, PathoraFonts, PathoraSpacing } from '@/constants/pathora-theme';
+import { PathoraTopOverscrollFill } from '@/components/pathora-top-overscroll-fill';
 
 type Props = {
   title: string;
@@ -24,6 +25,7 @@ type Props = {
 export function PathoraDetailHeader({ title, onBack, eyebrow, subtitle, action, standalone = false, horizontalInset = 24, topInset = 12, bottomGap = 0 }: Props) {
   return (
     <View style={[styles.panel, !standalone && { marginHorizontal: -horizontalInset, marginTop: -topInset }, standalone && styles.standalone, bottomGap > 0 && { marginBottom: bottomGap }]}>
+      <PathoraTopOverscrollFill />
       <View style={styles.row}>
         {onBack ? (
           <Pressable

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { PathoraColors, PathoraFonts, PathoraSpacing } from '@/constants/pathora-theme';
+import { PathoraTopOverscrollFill } from '@/components/pathora-top-overscroll-fill';
 
 export type PathoraPageHeaderProps = {
   eyebrow: string;
@@ -16,6 +17,7 @@ export type PathoraPageHeaderProps = {
 export function PathoraPageHeader({ eyebrow, title, subtitle, action }: PathoraPageHeaderProps) {
   return (
     <View style={styles.panel}>
+      <PathoraTopOverscrollFill />
       <View style={styles.copy}>
         <Text style={styles.eyebrow}>{eyebrow}</Text>
         <Text style={styles.title}>{title}</Text>

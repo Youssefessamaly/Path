@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PathoraColors, PathoraFonts, PathoraRadius, PathoraSpacing } from '@/constants/pathora-theme';
+import { PathoraTopOverscrollFill } from '@/components/pathora-top-overscroll-fill';
 
 export type DashboardWelcomeHeaderProps = {
   workspaceLabel: string;
@@ -35,6 +36,7 @@ export function DashboardWelcomeHeader({
   return (
     <View style={styles.container}>
       <View style={styles.brandPanel}>
+        <PathoraTopOverscrollFill />
         <View style={styles.topRow}>
           <View style={styles.brandBlock}>
             <Text style={styles.greeting} numberOfLines={2} accessibilityLabel={`${greeting}, ${name}`}>
