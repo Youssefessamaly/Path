@@ -1,5 +1,9 @@
 package com.internplatform.auth;
 
+import com.internplatform.ats.access.AtsMemberRole;
+import com.internplatform.ats.access.CompanyMember;
+import com.internplatform.ats.access.CompanyMemberRepository;
+import com.internplatform.ats.access.MemberStatus;
 import com.internplatform.companyprofile.CompanyProfile;
 import com.internplatform.companyprofile.CompanyProfileRepository;
 import com.internplatform.security.JwtService;
@@ -20,17 +24,20 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final CompanyProfileRepository companyProfileRepository;
+    private final CompanyMemberRepository companyMemberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
     public AuthService(
             UserRepository userRepository,
             CompanyProfileRepository companyProfileRepository,
+            CompanyMemberRepository companyMemberRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService
     ) {
         this.userRepository = userRepository;
         this.companyProfileRepository = companyProfileRepository;
+        this.companyMemberRepository = companyMemberRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
     }
@@ -45,13 +52,20 @@ public class AuthService {
      * it, as CompanyProfileService.upsertProfile otherwise would. This closes the only window
      * where a company could exist without an approval record: the approval status must be
      * checkable (and the company blocked from marketplace features) from the moment the
-     * account exists, not only once it gets around to onboarding. Wrapped in one transaction
-     * so a company user is never persisted without its profile, or vice versa.
+     * account exists, not only once it gets around to onboarding. Also creates the matching
+     * ats_company_members OWNER/ACTIVE row (see CompanyAccessResolver) so this company has a
+     * complete membership record from day one, same as every pre-existing company got via the
+     * V17 backfill — CompanyAccessResolver does not actually depend on this row for owner
+     * resolution (company_profiles.user_id is always authoritative), but future team-management
+     * features (listing a company's members) do. Wrapped in one transaction so a company user
+     * is never persisted without its profile and membership row, or vice versa.
      */
     @Transactional
     public RegisterResponse registerCompany(RegisterRequest request) {
         RegisterResponse response = register(request, Role.COMPANY);
-        companyProfileRepository.save(new CompanyProfile(response.id()));
+        CompanyProfile profile = companyProfileRepository.save(new CompanyProfile(response.id()));
+        companyMemberRepository.save(
+                new CompanyMember(profile.getId(), response.id(), AtsMemberRole.OWNER, MemberStatus.ACTIVE));
         return response;
     }
 

@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:${POSTGRES_PORT:5433}/intern_platform_test
+    url: jdbc:postgresql://localhost:${POSTGRES_PORT:5433}/intern_platform_test_ats
     username: ${POSTGRES_USER:intern_platform}
     password: ${POSTGRES_PASSWORD}
 

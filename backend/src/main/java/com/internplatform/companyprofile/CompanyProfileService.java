@@ -1,5 +1,6 @@
 package com.internplatform.companyprofile;
 
+import com.internplatform.ats.access.CompanyAccessResolver;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,27 +20,54 @@ public class CompanyProfileService {
     private static final Pattern INTERNATIONAL_EGYPT_PHONE = Pattern.compile("^\\+201[0125]\\d{8}$");
 
     private final CompanyProfileRepository companyProfileRepository;
+    private final CompanyAccessResolver companyAccessResolver;
 
-    public CompanyProfileService(CompanyProfileRepository companyProfileRepository) {
+    public CompanyProfileService(
+            CompanyProfileRepository companyProfileRepository,
+            CompanyAccessResolver companyAccessResolver
+    ) {
         this.companyProfileRepository = companyProfileRepository;
+        this.companyAccessResolver = companyAccessResolver;
     }
 
+    /** Any ACTIVE company member (owner or team member) may view the shared company profile —
+     *  not gated by CompanyApprovalGuard, matching this service's pre-existing behavior of
+     *  never checking approval for profile reads. */
     @Transactional(readOnly = true)
     public CompanyProfileResponse getProfile(UUID userId) {
-        CompanyProfile profile = findProfileOrThrow(userId);
+        CompanyProfile profile = companyAccessResolver.findActiveMember(userId)
+                .flatMap(companyAccessResolver::findCompanyProfile)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company profile not found"));
         return toResponse(profile);
     }
 
     /** Deliberately NOT gated by CompanyApprovalGuard — a PENDING or REJECTED company must be
-     *  able to check its own status (that is the whole point of the status existing). */
+     *  able to check its own status (that is the whole point of the status existing). Any
+     *  ACTIVE company member may check it, same as getProfile above. */
     @Transactional(readOnly = true)
     public CompanyApprovalStatusResponse getApprovalStatus(UUID userId) {
-        CompanyProfile profile = findProfileOrThrow(userId);
+        CompanyProfile profile = companyAccessResolver.findActiveMember(userId)
+                .flatMap(companyAccessResolver::findCompanyProfile)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company profile not found"));
         return new CompanyApprovalStatusResponse(profile.getApprovalStatus(), profile.getApprovalReviewedAt());
     }
 
+    /**
+     * OWNER-only mutation. A non-owner ACTIVE member (a recruiter) is rejected with 403 before
+     * touching anything. A user who is not yet a member of ANY company at all (the normal
+     * brand-new-company case — findActiveMember returns empty) falls through untouched to the
+     * pre-existing self-creating lookup below, exactly as before this resolver existed: the
+     * very first PATCH for a new company is what brings its profile into existence.
+     */
     @Transactional
     public CompanyProfileResponse upsertProfile(UUID userId, CompanyProfileRequest request) {
+        companyAccessResolver.findActiveMember(userId).ifPresent(context -> {
+            if (!context.isOwner()) {
+                throw new ResponseStatusException(
+                        HttpStatus.FORBIDDEN, "Only the company owner can perform this action");
+            }
+        });
+
         CompanyProfile profile = companyProfileRepository.findByUserId(userId)
                 .orElseGet(() -> new CompanyProfile(userId));
 
@@ -79,8 +107,18 @@ public class CompanyProfileService {
         return toResponse(saved);
     }
 
+    /** OWNER-only, same reasoning as upsertProfile above. Unlike upsertProfile this never
+     *  self-creates — findProfileOrThrow still 404s for a user with no profile at all, exactly
+     *  as before. */
     @Transactional
     public CompletionResult completeOnboarding(UUID userId) {
+        companyAccessResolver.findActiveMember(userId).ifPresent(context -> {
+            if (!context.isOwner()) {
+                throw new ResponseStatusException(
+                        HttpStatus.FORBIDDEN, "Only the company owner can perform this action");
+            }
+        });
+
         CompanyProfile profile = findProfileOrThrow(userId);
 
         if (profile.isOnboardingCompleted()) {

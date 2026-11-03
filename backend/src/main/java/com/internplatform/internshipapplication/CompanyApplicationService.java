@@ -1,8 +1,8 @@
 package com.internplatform.internshipapplication;
 
-import com.internplatform.companyprofile.CompanyApprovalGuard;
+import com.internplatform.ats.access.CompanyAccessResolver;
+import com.internplatform.ats.access.CompanyContext;
 import com.internplatform.companyprofile.CompanyProfile;
-import com.internplatform.companyprofile.CompanyProfileRepository;
 import com.internplatform.internprofile.CvStorageService;
 import com.internplatform.internprofile.InternProfile;
 import com.internplatform.internprofile.InternProfileRepository;
@@ -35,27 +35,24 @@ public class CompanyApplicationService {
     private final InternshipApplicationRepository applicationRepository;
     private final InternshipApplicationAnswerRepository answerRepository;
     private final InternshipRepository internshipRepository;
-    private final CompanyProfileRepository companyProfileRepository;
+    private final CompanyAccessResolver companyAccessResolver;
     private final InternProfileRepository internProfileRepository;
     private final CvStorageService cvStorageService;
-    private final CompanyApprovalGuard companyApprovalGuard;
 
     public CompanyApplicationService(
             InternshipApplicationRepository applicationRepository,
             InternshipApplicationAnswerRepository answerRepository,
             InternshipRepository internshipRepository,
-            CompanyProfileRepository companyProfileRepository,
+            CompanyAccessResolver companyAccessResolver,
             InternProfileRepository internProfileRepository,
-            CvStorageService cvStorageService,
-            CompanyApprovalGuard companyApprovalGuard
+            CvStorageService cvStorageService
     ) {
         this.applicationRepository = applicationRepository;
         this.answerRepository = answerRepository;
         this.internshipRepository = internshipRepository;
-        this.companyProfileRepository = companyProfileRepository;
+        this.companyAccessResolver = companyAccessResolver;
         this.internProfileRepository = internProfileRepository;
         this.cvStorageService = cvStorageService;
-        this.companyApprovalGuard = companyApprovalGuard;
     }
 
     @Transactional(readOnly = true)
@@ -113,15 +110,14 @@ public class CompanyApplicationService {
     }
 
     /**
-     * Resolves the company profile for reading/deciding an application. A missing profile
+     * Resolves the company profile for reading/deciding an application. A missing membership
      * cannot own any internship, so it collapses to the same 404 as an internship that simply
-     * doesn't exist — avoids leaking whether the internship id belongs to another company.
+     * doesn't exist — avoids leaking whether the internship id belongs to another company. Any
+     * ACTIVE member (owner or recruiter) of an approved company may use this endpoint.
      */
     private CompanyProfile findCompanyProfileOrNotFound(UUID userId) {
-        CompanyProfile profile = companyProfileRepository.findByUserId(userId)
-                .orElseThrow(this::internshipNotFound);
-        companyApprovalGuard.requireApproved(profile);
-        return profile;
+        CompanyContext context = companyAccessResolver.requireActiveMember(userId);
+        return companyAccessResolver.findCompanyProfile(context).orElseThrow(this::internshipNotFound);
     }
 
     private Internship findOwnedInternshipOrThrow(UUID internshipId, CompanyProfile profile) {

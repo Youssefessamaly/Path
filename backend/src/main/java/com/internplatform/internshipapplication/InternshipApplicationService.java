@@ -1,5 +1,6 @@
 package com.internplatform.internshipapplication;
 
+import com.internplatform.ats.candidate.ApplicationSubmittedEvent;
 import com.internplatform.companyprofile.CompanyProfile;
 import com.internplatform.companyprofile.CompanyProfileRepository;
 import com.internplatform.internprofile.CvStorageService;
@@ -10,6 +11,7 @@ import com.internplatform.internship.ApplicationMethod;
 import com.internplatform.internship.Internship;
 import com.internplatform.internship.InternshipRepository;
 import com.internplatform.internship.InternshipStatus;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -43,6 +45,7 @@ public class InternshipApplicationService {
     private final InternshipRepository internshipRepository;
     private final CompanyProfileRepository companyProfileRepository;
     private final CvStorageService cvStorageService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public InternshipApplicationService(
             InternshipApplicationRepository applicationRepository,
@@ -51,7 +54,8 @@ public class InternshipApplicationService {
             InternProfileRepository internProfileRepository,
             InternshipRepository internshipRepository,
             CompanyProfileRepository companyProfileRepository,
-            CvStorageService cvStorageService
+            CvStorageService cvStorageService,
+            ApplicationEventPublisher eventPublisher
     ) {
         this.applicationRepository = applicationRepository;
         this.questionRepository = questionRepository;
@@ -60,6 +64,7 @@ public class InternshipApplicationService {
         this.internshipRepository = internshipRepository;
         this.companyProfileRepository = companyProfileRepository;
         this.cvStorageService = cvStorageService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -125,6 +130,11 @@ public class InternshipApplicationService {
                 .map(answer -> toAnswerEntity(saved.getId(), answer))
                 .toList();
         answerRepository.saveAll(answerEntities);
+
+        // 6. Notify the ATS to place this application in its internship's pipeline, if one is
+        // assigned — handled strictly after this transaction commits (see
+        // AtsApplicationIntakeService), so nothing about that can ever affect this submission.
+        eventPublisher.publishEvent(new ApplicationSubmittedEvent(saved.getId(), internship.getId()));
 
         return toResponse(saved, internship.getTitle(), companyNameFor(internship), toAnswerResponses(answerEntities));
     }

@@ -1,8 +1,8 @@
 package com.internplatform.internshipapplication;
 
-import com.internplatform.companyprofile.CompanyApprovalGuard;
+import com.internplatform.ats.access.CompanyAccessResolver;
+import com.internplatform.ats.access.CompanyContext;
 import com.internplatform.companyprofile.CompanyProfile;
-import com.internplatform.companyprofile.CompanyProfileRepository;
 import com.internplatform.internship.ApplicationMethod;
 import com.internplatform.internship.Internship;
 import com.internplatform.internship.InternshipRepository;
@@ -25,22 +25,19 @@ public class InternshipApplicationQuestionService {
 
     private final InternshipApplicationQuestionRepository questionRepository;
     private final InternshipRepository internshipRepository;
-    private final CompanyProfileRepository companyProfileRepository;
+    private final CompanyAccessResolver companyAccessResolver;
     private final InternshipApplicationRepository applicationRepository;
-    private final CompanyApprovalGuard companyApprovalGuard;
 
     public InternshipApplicationQuestionService(
             InternshipApplicationQuestionRepository questionRepository,
             InternshipRepository internshipRepository,
-            CompanyProfileRepository companyProfileRepository,
-            InternshipApplicationRepository applicationRepository,
-            CompanyApprovalGuard companyApprovalGuard
+            CompanyAccessResolver companyAccessResolver,
+            InternshipApplicationRepository applicationRepository
     ) {
         this.questionRepository = questionRepository;
         this.internshipRepository = internshipRepository;
-        this.companyProfileRepository = companyProfileRepository;
+        this.companyAccessResolver = companyAccessResolver;
         this.applicationRepository = applicationRepository;
-        this.companyApprovalGuard = companyApprovalGuard;
     }
 
     @Transactional
@@ -141,10 +138,8 @@ public class InternshipApplicationQuestionService {
     }
 
     private CompanyProfile findCompanyProfileOrInternshipNotFound(UUID userId) {
-        CompanyProfile profile = companyProfileRepository.findByUserId(userId)
-                .orElseThrow(this::internshipNotFound);
-        companyApprovalGuard.requireApproved(profile);
-        return profile;
+        CompanyContext context = companyAccessResolver.requireActiveMember(userId);
+        return companyAccessResolver.findCompanyProfile(context).orElseThrow(this::internshipNotFound);
     }
 
     private Internship findOwnedInternshipOrThrow(UUID internshipId, CompanyProfile profile) {

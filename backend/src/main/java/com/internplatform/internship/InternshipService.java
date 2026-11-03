@@ -1,8 +1,8 @@
 package com.internplatform.internship;
 
+import com.internplatform.ats.access.CompanyAccessResolver;
 import com.internplatform.companyprofile.CompanyApprovalGuard;
 import com.internplatform.companyprofile.CompanyProfile;
-import com.internplatform.companyprofile.CompanyProfileRepository;
 import com.internplatform.internprofile.Skill;
 import com.internplatform.internprofile.SkillRepository;
 import org.springframework.http.HttpStatus;
@@ -35,18 +35,18 @@ public class InternshipService {
             Pattern.compile("(?i)^https?://[\\w.-]+\\.[a-z]{2,}(:\\d{1,5})?(/\\S*)?$");
 
     private final InternshipRepository internshipRepository;
-    private final CompanyProfileRepository companyProfileRepository;
+    private final CompanyAccessResolver companyAccessResolver;
     private final SkillRepository skillRepository;
     private final CompanyApprovalGuard companyApprovalGuard;
 
     public InternshipService(
             InternshipRepository internshipRepository,
-            CompanyProfileRepository companyProfileRepository,
+            CompanyAccessResolver companyAccessResolver,
             SkillRepository skillRepository,
             CompanyApprovalGuard companyApprovalGuard
     ) {
         this.internshipRepository = internshipRepository;
-        this.companyProfileRepository = companyProfileRepository;
+        this.companyAccessResolver = companyAccessResolver;
         this.skillRepository = skillRepository;
         this.companyApprovalGuard = companyApprovalGuard;
     }
@@ -79,7 +79,9 @@ public class InternshipService {
 
     @Transactional(readOnly = true)
     public List<InternshipResponse> listOwnInternships(UUID userId) {
-        CompanyProfile profile = companyProfileRepository.findByUserId(userId).orElse(null);
+        CompanyProfile profile = companyAccessResolver.findActiveMember(userId)
+                .flatMap(companyAccessResolver::findCompanyProfile)
+                .orElse(null);
 
         if (profile == null) {
             return List.of();
@@ -166,8 +168,17 @@ public class InternshipService {
         return toResponse(internship, profile);
     }
 
+    /**
+     * Resolved via findActiveMember (not the throwing resolveActiveMember/requireActiveMember)
+     * so a user with no company access at all keeps getting this method's own 403 message,
+     * exactly as before this resolver existed — not the resolver's generic 404 "Company not
+     * found". Any ACTIVE member (owner or recruiter) of a completed, approved company may
+     * create an internship on its behalf.
+     */
     private CompanyProfile requireCompletedCompanyProfile(UUID userId) {
-        CompanyProfile profile = companyProfileRepository.findByUserId(userId).orElse(null);
+        CompanyProfile profile = companyAccessResolver.findActiveMember(userId)
+                .flatMap(companyAccessResolver::findCompanyProfile)
+                .orElse(null);
 
         if (profile == null || !profile.isOnboardingCompleted()) {
             throw new ResponseStatusException(
@@ -182,12 +193,16 @@ public class InternshipService {
     }
 
     /**
-     * Resolves the company profile for reading/modifying an internship. A missing profile
-     * cannot own any internship, so it collapses to the same 404 as an internship that
-     * simply doesn't exist — this avoids leaking whether the ID belongs to another company.
+     * Resolves the company profile for reading/modifying an internship. A missing profile/
+     * membership cannot own any internship, so it collapses to the same 404 as an internship
+     * that simply doesn't exist — this avoids leaking whether the ID belongs to another
+     * company. No approval check here (matching this method's pre-existing behavior) — callers
+     * that mutate (updateInternship, closeInternship) check approval explicitly afterward,
+     * only once they've also confirmed the internship is actually owned by this company.
      */
     private CompanyProfile findCompanyProfileOrInternshipNotFound(UUID userId) {
-        return companyProfileRepository.findByUserId(userId)
+        return companyAccessResolver.findActiveMember(userId)
+                .flatMap(companyAccessResolver::findCompanyProfile)
                 .orElseThrow(this::internshipNotFound);
     }
 
