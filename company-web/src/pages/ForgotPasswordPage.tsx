@@ -1,3 +1,4 @@
+import { AuthScaffold } from '../components/AuthScaffold'
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ApiError, NetworkError, forgotPassword } from '../lib/api'
@@ -45,10 +46,9 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <div className="login-page">
-      <div className="login-card card">
+    <AuthScaffold>
         <div className="login-logo">
-          <strong>PATHORA</strong>
+          <strong>PATH</strong>
           <span>Reset your password</span>
         </div>
 
@@ -85,7 +85,6 @@ export function ForgotPasswordPage() {
         <div style={{ textAlign: 'center', fontSize: 13.5 }} className="text-secondary">
           <Link to="/login">← Back to login</Link>
         </div>
-      </div>
-    </div>
+    </AuthScaffold>
   )
 }

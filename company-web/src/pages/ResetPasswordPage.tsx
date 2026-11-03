@@ -1,3 +1,4 @@
+import { AuthScaffold } from '../components/AuthScaffold'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ApiError, NetworkError, resetPassword } from '../lib/api'
@@ -60,10 +61,9 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <div className="login-page">
-      <div className="login-card card">
+    <AuthScaffold>
         <div className="login-logo">
-          <strong>PATHORA</strong>
+          <strong>PATH</strong>
           <span>Create new password</span>
         </div>
 
@@ -114,7 +114,6 @@ export function ResetPasswordPage() {
             {isSubmitting ? 'Resetting…' : 'Reset password'}
           </button>
         </form>
-      </div>
-    </div>
+    </AuthScaffold>
   )
 }

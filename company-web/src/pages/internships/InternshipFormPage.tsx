@@ -449,7 +449,7 @@ export function InternshipFormPage({ mode }: { mode: 'create' | 'edit' }) {
                 checked={applicationMethod === 'INTERNAL'}
                 onChange={() => handleApplicationMethodChange('INTERNAL')}
               />
-              Apply through Pathora
+              Apply through PATH
             </label>
             <label className="checkbox-field">
               <input

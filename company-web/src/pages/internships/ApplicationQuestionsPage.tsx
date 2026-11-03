@@ -297,7 +297,7 @@ export function ApplicationQuestionsPage() {
 
       {isExternal ? (
         <div className="banner banner-warning" role="status">
-          This internship uses an external application page — Pathora-hosted application questions don't apply to it.
+          This internship uses an external application page — PATH-hosted application questions don't apply to it.
         </div>
       ) : (
         <>

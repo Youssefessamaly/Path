@@ -1,3 +1,4 @@
+import { AuthScaffold } from '../components/AuthScaffold'
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ApiError, NetworkError, forgotPassword, verifyOtp } from '../lib/api'
@@ -104,10 +105,9 @@ export function VerifyOtpPage() {
   }
 
   return (
-    <div className="login-page">
-      <div className="login-card card">
+    <AuthScaffold>
         <div className="login-logo">
-          <strong>PATHORA</strong>
+          <strong>PATH</strong>
           <span>Enter verification code</span>
         </div>
 
@@ -169,7 +169,6 @@ export function VerifyOtpPage() {
         <div style={{ textAlign: 'center', fontSize: 13.5 }} className="text-secondary">
           <Link to="/login">← Back to login</Link>
         </div>
-      </div>
-    </div>
+    </AuthScaffold>
   )
 }

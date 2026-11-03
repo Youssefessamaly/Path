@@ -8,6 +8,7 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { VerifyOtpPage } from './pages/VerifyOtpPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { CompanyProfilePage } from './pages/CompanyProfilePage'
 import { InternshipsListPage } from './pages/internships/InternshipsListPage'
 import { InternshipDetailPage } from './pages/internships/InternshipDetailPage'
 import { InternshipFormPage } from './pages/internships/InternshipFormPage'
@@ -23,6 +24,7 @@ import { PipelineTemplateEditorPage } from './pages/pipeline-templates/PipelineT
  *   /verify-otp                         public — step 2 (requires router state from step 1)
  *   /reset-password                     public — step 3 (requires router state from step 2)
  *   /dashboard                          protected
+ *   /company-profile                    protected
  *   /internships                        protected
  *   /internships/new                    protected
  *   /internships/:internshipId          protected (hosts the Recruitment Pipeline section)
@@ -52,6 +54,7 @@ function App() {
           }
         >
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/company-profile" element={<CompanyProfilePage />} />
           <Route path="/internships" element={<InternshipsListPage />} />
           <Route path="/internships/new" element={<InternshipFormPage mode="create" />} />
           <Route path="/internships/:internshipId" element={<InternshipDetailPage />} />

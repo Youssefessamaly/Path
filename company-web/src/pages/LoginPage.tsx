@@ -1,3 +1,4 @@
+import { AuthScaffold } from '../components/AuthScaffold'
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
@@ -63,10 +64,9 @@ export function LoginPage() {
   }
 
   return (
-    <div className="login-page">
-      <div className="login-card card">
+    <AuthScaffold>
         <div className="login-logo">
-          <strong>PATHORA</strong>
+          <strong>PATH</strong>
           <span>Company Portal</span>
         </div>
 
@@ -126,7 +126,6 @@ export function LoginPage() {
             Create Company Account
           </Link>
         </div>
-      </div>
-    </div>
+    </AuthScaffold>
   )
 }

@@ -1,3 +1,4 @@
+import { AuthScaffold } from '../components/AuthScaffold'
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
@@ -81,10 +82,9 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="login-page">
-      <div className="login-card card">
+    <AuthScaffold>
         <div className="login-logo">
-          <strong>PATHORA</strong>
+          <strong>PATH</strong>
           <span>Create your company account</span>
         </div>
 
@@ -142,7 +142,7 @@ export function RegisterPage() {
               onChange={() => setAgreedToTerms((current) => !current)}
               disabled={isSubmitting}
             />
-            I agree to Pathora's Terms of Service and Privacy Policy.
+            I agree to PATH's Terms of Service and Privacy Policy.
           </label>
 
           {submitError && (
@@ -159,7 +159,6 @@ export function RegisterPage() {
         <div style={{ textAlign: 'center', fontSize: 13.5 }} className="text-secondary">
           Already have a company account? <Link to="/login" style={{ fontWeight: 700 }}>Log in</Link>
         </div>
-      </div>
-    </div>
+    </AuthScaffold>
   )
 }
