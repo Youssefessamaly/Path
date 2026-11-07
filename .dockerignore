@@ -1,0 +1,16 @@
+# This Docker build only requires backend/pom.xml and backend/src.
+.git
+**/.git
+**/.DS_Store
+**/node_modules
+**/dist
+**/build
+**/target
+**/.env
+**/.env.*
+**/*.log
+admin-web
+company-web
+mobile
+infrastructure
+backend.zip
