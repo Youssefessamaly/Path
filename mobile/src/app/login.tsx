@@ -87,7 +87,7 @@ export default function LoginScreen() {
       if (error instanceof ApiError) {
         setSubmitError(error.status === 401 ? 'Invalid email or password.' : error.message);
       } else if (error instanceof NetworkError) {
-        setSubmitError('Unable to reach Pathora. Please try again.');
+        setSubmitError('Unable to reach Path. Please try again.');
       } else {
         setSubmitError('Something went wrong. Please try again.');
       }
@@ -110,7 +110,7 @@ export default function LoginScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag">
-        <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATHORA" title="Welcome back" subtitle="Log in to keep tracking your applications." onBack={() => router.replace('/welcome')} />
+        <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATH" title="Welcome back" subtitle="Log in to keep tracking your applications." onBack={() => router.replace('/welcome')} />
 
         {(registrationMessage) ? (<Text style={styles.successMessage}>{registrationMessage}</Text>) : null}
 

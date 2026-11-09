@@ -68,7 +68,7 @@ export default function StudentRegistrationScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATHORA" title="Create your student account" subtitle="Just the basics for now — you'll add your name, education and skills next." onBack={handleBack} />
+          <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATH" title="Create your student account" subtitle="Just the basics for now — you'll add your name, education and skills next." onBack={handleBack} />
 
           <View style={styles.fields}>
             <PathoraInput
@@ -122,7 +122,7 @@ export default function StudentRegistrationScreen() {
               onToggle={() => setAgreedToTerms((current) => !current)}
             />
             <Text style={styles.termsText}>
-              I agree to Pathora&apos;s Terms of Service and Privacy Policy.
+              I agree to Path&apos;s Terms of Service and Privacy Policy.
             </Text>
           </Pressable>
 

@@ -19,7 +19,7 @@ const BENEFITS: Benefit[] = [
   {
     icon: { ios: 'checkmark.shield.fill', android: 'verified_user', web: 'verified_user' },
     title: 'Reviewed companies',
-    description: 'Explore internships from companies reviewed by Pathora.',
+    description: 'Explore internships from companies reviewed by Path.',
   },
   {
     icon: { ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' },

@@ -49,7 +49,7 @@ export default function ResetPasswordScreen() {
       if (error instanceof ApiError) {
         setSubmitError('This reset link has expired or is invalid. Please start again.');
       } else if (error instanceof NetworkError) {
-        setSubmitError('Unable to reach Pathora. Please try again.');
+        setSubmitError('Unable to reach Path. Please try again.');
       } else {
         setSubmitError('Something went wrong. Please try again.');
       }
@@ -68,7 +68,7 @@ export default function ResetPasswordScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATHORA" title="Create new password" subtitle="Use a password you haven't used before." onBack={handleBack} />
+          <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATH" title="Create new password" subtitle="Use a password you haven't used before." onBack={handleBack} />
 
           <View style={styles.fields}>
             <View>

@@ -138,7 +138,7 @@ export default function CvPreviewScreen() {
           <View style={styles.centerContent}>
             <Text style={styles.statusText}>
               Your CV opens in the device PDF viewer. Use the Back button there
-              to return to Pathora.
+              to return to Path.
             </Text>
 
             <PathoraButton

@@ -70,7 +70,7 @@ export default function CompanyRegistrationScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATHORA" title="Create your company account" subtitle="You'll add your company details and verification documents next." onBack={handleBack} />
+          <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATH" title="Create your company account" subtitle="You'll add your company details and verification documents next." onBack={handleBack} />
 
           <View style={styles.fields}>
             <PathoraInput
@@ -124,7 +124,7 @@ export default function CompanyRegistrationScreen() {
               onToggle={() => setAgreedToTerms((current) => !current)}
             />
             <Text style={styles.termsText}>
-              I agree to Pathora&apos;s Terms of Service and Privacy Policy.
+              I agree to Path&apos;s Terms of Service and Privacy Policy.
             </Text>
           </Pressable>
 

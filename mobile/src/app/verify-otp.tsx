@@ -80,7 +80,7 @@ export default function VerifyOtpScreen() {
       if (error instanceof ApiError) {
         setSubmitError('That code is invalid or has expired. Please try again or resend the code.');
       } else if (error instanceof NetworkError) {
-        setSubmitError('Unable to reach Pathora. Please try again.');
+        setSubmitError('Unable to reach Path. Please try again.');
       } else {
         setSubmitError('Something went wrong. Please try again.');
       }
@@ -106,7 +106,7 @@ export default function VerifyOtpScreen() {
       if (error instanceof ApiError) {
         setSubmitError(error.message);
       } else if (error instanceof NetworkError) {
-        setSubmitError('Unable to reach Pathora. Please try again.');
+        setSubmitError('Unable to reach Path. Please try again.');
       } else {
         setSubmitError('Something went wrong. Please try again.');
       }
@@ -125,7 +125,7 @@ export default function VerifyOtpScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATHORA" title="Enter verification code" subtitle={`A 6-digit code was sent to ${email ?? 'your email'} and is valid for 5 minutes.`} onBack={handleBack} />
+          <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATH" title="Enter verification code" subtitle={`A 6-digit code was sent to ${email ?? 'your email'} and is valid for 5 minutes.`} onBack={handleBack} />
 
           <View style={styles.fields}>
             <PathoraInput

@@ -24,7 +24,7 @@ export default function AccountTypeScreen() {
           style={{ backgroundColor: PathoraColors.paper }}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}>
-          <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATHORA" title="How will you use Pathora?" subtitle="Choose the account that fits what you'll do on Pathora." onBack={() => router.replace('/welcome')} />
+          <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATH" title="How will you use Path?" subtitle="Choose the account that fits what you'll do on Path." onBack={() => router.replace('/welcome')} />
 
           <AccountTypeCard
             title="I'm a student"

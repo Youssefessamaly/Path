@@ -40,7 +40,7 @@ export default function ForgotPasswordScreen() {
       if (error instanceof ApiError) {
         setSubmitError(error.status === 400 ? 'Please enter a valid email address.' : error.message);
       } else if (error instanceof NetworkError) {
-        setSubmitError('Unable to reach Pathora. Please try again.');
+        setSubmitError('Unable to reach Path. Please try again.');
       } else {
         setSubmitError('Something went wrong. Please try again.');
       }
@@ -59,7 +59,7 @@ export default function ForgotPasswordScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATHORA" title="Reset your password" subtitle="Enter your email address and we'll send you a 6-digit code to reset your password." onBack={handleBack} />
+          <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATH" title="Reset your password" subtitle="Enter your email address and we'll send you a 6-digit code to reset your password." onBack={handleBack} />
 
           <View style={styles.fields}>
             <PathoraInput
