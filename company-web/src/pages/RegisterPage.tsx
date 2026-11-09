@@ -142,7 +142,9 @@ export function RegisterPage() {
               onChange={() => setAgreedToTerms((current) => !current)}
               disabled={isSubmitting}
             />
-            I agree to PATH's Terms of Service and Privacy Policy.
+            <span>
+              I agree to PATH's <a href="/terms.html" target="_blank" rel="noopener noreferrer" onClick={(event) => event.stopPropagation()}>Terms of Service</a> and acknowledge its <a href="/privacy.html" target="_blank" rel="noopener noreferrer" onClick={(event) => event.stopPropagation()}>Privacy Policy</a>.
+            </span>
           </label>
 
           {submitError && (

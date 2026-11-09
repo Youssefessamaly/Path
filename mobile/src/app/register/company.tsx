@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { PathoraButton } from '@/components/pathora-button';
-import { PathoraCheckbox } from '@/components/pathora-checkbox';
+import { LegalAgreement } from '@/components/legal-agreement';
 import { PathoraInput } from '@/components/pathora-input';
 import { PathoraColors, PathoraFonts, PathoraSpacing } from '@/constants/pathora-theme';
 import { ApiError, NetworkError, registerCompany } from '@/lib/api';
@@ -115,18 +115,10 @@ export default function CompanyRegistrationScreen() {
             </View>
           </View>
 
-          <Pressable
-            onPress={() => setAgreedToTerms((current) => !current)}
-            hitSlop={4}
-            style={styles.termsRow}>
-            <PathoraCheckbox
-              checked={agreedToTerms}
-              onToggle={() => setAgreedToTerms((current) => !current)}
-            />
-            <Text style={styles.termsText}>
-              I agree to Path&apos;s Terms of Service and Privacy Policy.
-            </Text>
-          </Pressable>
+          <LegalAgreement
+            checked={agreedToTerms}
+            onToggle={() => setAgreedToTerms((current) => !current)}
+          />
 
           {(submitError) ? (<Text style={styles.submitError}>{submitError}</Text>) : null}
 
@@ -190,19 +182,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: PathoraColors.error,
     marginBottom: PathoraSpacing[16],
-  },
-  termsRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    marginBottom: PathoraSpacing[24],
-  },
-  termsText: {
-    flex: 1,
-    fontFamily: PathoraFonts.en.regular,
-    fontSize: 13,
-    lineHeight: 19,
-    color: PathoraColors.textSecondary,
   },
   continueButton: {
     marginBottom: PathoraSpacing[24],
