@@ -8,6 +8,9 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.FileVisitResult;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.UUID;
 
 /**
@@ -75,6 +78,49 @@ public class CvStorageService {
             Files.deleteIfExists(resolveWithinBaseDirectory(storageKey));
         } catch (IOException ignored) {
             // A stray orphaned file is not worth failing the request over.
+        }
+    }
+
+    /**
+     * Strict, retryable cleanup for committed account deletions. A task is generated ONLY
+     * server-side. Unlike the legacy best-effort delete(), IO failures propagate so the
+     * durable SQL queue entry stays pending and can be retried.
+     */
+    public void deleteAccountCleanupTask(String task) throws IOException {
+        if (task.startsWith("profile:")) {
+            UUID profileId = UUID.fromString(task.substring("profile:".length()));
+            Path directory = resolveWithinBaseDirectory(profileId.toString());
+            if (!Files.exists(directory)) {
+                return;
+            }
+            // No FOLLOW_LINKS: a symlink inside the profile folder is deleted, never traversed.
+            Files.walkFileTree(directory, new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.deleteIfExists(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException error) throws IOException {
+                    if (error != null) {
+                        throw error;
+                    }
+                    Files.deleteIfExists(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } else if (task.startsWith("file:")) {
+            String storageKey = task.substring("file:".length());
+            String[] parts = storageKey.split("/", -1);
+            if (parts.length != 2 || !parts[1].endsWith(".pdf")) {
+                throw new IllegalArgumentException("Invalid CV deletion task");
+            }
+            UUID.fromString(parts[0]);
+            UUID.fromString(parts[1].substring(0, parts[1].length() - 4));
+            Files.deleteIfExists(resolveWithinBaseDirectory(storageKey));
+        } else {
+            throw new IllegalArgumentException("Invalid CV deletion task");
         }
     }
 

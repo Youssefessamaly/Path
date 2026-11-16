@@ -57,6 +57,7 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
     pathname.startsWith('/intern') ||
     pathname.startsWith('/company') ||
     pathname.startsWith('/onboarding') ||
+    pathname.startsWith('/account') ||
     pathname.startsWith('/register') ||
     ['/account-type', '/login', '/forgot-password', '/verify-otp', '/reset-password'].includes(pathname);
   const isReady = fontsReady && !isInitializing;

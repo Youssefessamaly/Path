@@ -9,11 +9,14 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
-import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
+import com.internplatform.user.User;
+import com.internplatform.user.UserRepository;
+import java.util.UUID;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
@@ -81,7 +84,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+    public JwtAuthenticationConverter jwtAuthenticationConverter(UserRepository users) {
 
         JwtGrantedAuthoritiesConverter authoritiesConverter =
                 new JwtGrantedAuthoritiesConverter();
@@ -92,9 +95,22 @@ public class SecurityConfig {
         JwtAuthenticationConverter authenticationConverter =
                 new JwtAuthenticationConverter();
 
-        authenticationConverter.setJwtGrantedAuthoritiesConverter(
-                authoritiesConverter
-        );
+        authenticationConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            UUID id;
+            try {
+                id = UUID.fromString(jwt.getSubject());
+            } catch (RuntimeException error) {
+                throw new InvalidBearerTokenException("Invalid session");
+            }
+            User user = users.findById(id)
+                    .orElseThrow(() -> new InvalidBearerTokenException("Invalid session"));
+            if (!user.isEnabled()
+                    || !user.getRole().name().equals(jwt.getClaimAsString("role"))
+                    || !user.getEmail().equalsIgnoreCase(jwt.getClaimAsString("email"))) {
+                throw new InvalidBearerTokenException("Invalid session");
+            }
+            return authoritiesConverter.convert(jwt);
+        });
 
         return authenticationConverter;
     }

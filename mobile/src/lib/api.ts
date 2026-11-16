@@ -208,6 +208,11 @@ export function getCurrentUser(token: string): Promise<CurrentUserResponse> {
   return apiGet<CurrentUserResponse>('/auth/me', { token });
 }
 
+/** Permanently remove the signed-in account after checking the current password. */
+export function deleteMyAccount(token: string, password: string): Promise<void> {
+  return request<void>('DELETE', '/auth/me', { password }, { token });
+}
+
 export type ForgotPasswordPayload = {
   email: string;
 };

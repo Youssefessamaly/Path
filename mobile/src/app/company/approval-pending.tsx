@@ -118,6 +118,13 @@ function ApprovalPendingScreen() {
             style={styles.actionButton}
           />
           <PathoraButton
+            label="Delete account"
+            variant="secondary"
+            onPress={() => router.push('/account/delete')}
+            disabled={isChecking}
+            style={styles.actionButton}
+          />
+          <PathoraButton
             label="Log out"
             variant="secondary"
             onPress={handleSignOut}

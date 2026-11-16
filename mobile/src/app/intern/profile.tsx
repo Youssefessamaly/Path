@@ -17,6 +17,7 @@ import {
 import Animated, { FadeInDown, ReduceMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AccountManagementActions } from '@/components/account-management-actions';
 import { PathoraPageHeader } from '@/components/pathora-page-header';
 import { PathoraProfileState } from '@/components/pathora-profile-state';
 import { PathoraSectionHeading } from '@/components/pathora-section-heading';
@@ -253,14 +254,13 @@ export default function InternProfileRoute() {
           </SectionCard>
         )}
 
-        <Pressable
-          onPress={() => void logOut()}
-          accessibilityRole="button"
-          accessibilityLabel="Log out of your account"
-          style={({ pressed }) => [styles.logoutAction, pressed && styles.pressed]}>
-          <Icon name={{ ios: 'rectangle.portrait.and.arrow.right', android: 'logout', web: 'logout' }} color={C.error} size={19} />
-          <Text style={styles.logoutText}>Log out</Text>
-        </Pressable>
+        <SectionCard title="Account settings" icon={{ ios: 'gearshape.fill', android: 'settings', web: 'settings' }}>
+          <AccountManagementActions
+            accountType="student"
+            onLogOut={() => void logOut()}
+            onDelete={() => router.push('/account/delete')}
+          />
+        </SectionCard>
       </ScrollView>
     </SafeAreaView>
   );
@@ -314,6 +314,4 @@ const styles = StyleSheet.create({
   detailBlock: { gap: 7 },
   description: { fontFamily: F.en.regular, fontSize: 13, lineHeight: 21, color: C.textSecondary },
   linkText: { fontFamily: F.en.medium, fontSize: 12.5, lineHeight: 20, color: C.teal700 },
-  logoutAction: { height: 51, backgroundColor: C.surface, borderRadius: 15, borderColor: C.border, borderWidth: 1, alignItems: 'center', justifyContent: 'center', gap: 9, flexDirection: 'row' },
-  logoutText: { color: C.error, fontFamily: F.en.bold, fontSize: 13.5 },
 });

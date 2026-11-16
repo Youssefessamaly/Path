@@ -89,7 +89,7 @@ function ApprovalRejectedScreen() {
 
           <Text style={styles.title}>Your company registration was not approved</Text>
           <Text style={styles.body}>
-            Your company account cannot access Pathora&apos;s employer features at this time.
+            Your company account cannot access PATH&apos;s employer features at this time.
           </Text>
 
           {status && <CompanyApprovalBadge status={status} />}
@@ -110,6 +110,13 @@ function ApprovalRejectedScreen() {
             label={isChecking ? 'Checking…' : 'Check status'}
             variant="primary"
             onPress={handleCheckStatus}
+            disabled={isChecking}
+            style={styles.actionButton}
+          />
+          <PathoraButton
+            label="Delete account"
+            variant="secondary"
+            onPress={() => router.push('/account/delete')}
             disabled={isChecking}
             style={styles.actionButton}
           />

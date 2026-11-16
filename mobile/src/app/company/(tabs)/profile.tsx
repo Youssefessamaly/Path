@@ -18,6 +18,7 @@ import Animated, { FadeInDown, ReduceMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CompanyApprovalBadge } from '@/components/company-approval-badge';
+import { AccountManagementActions } from '@/components/account-management-actions';
 import { PathoraPageHeader } from '@/components/pathora-page-header';
 import { PathoraProfileState } from '@/components/pathora-profile-state';
 import { PathoraSectionHeading } from '@/components/pathora-section-heading';
@@ -207,14 +208,13 @@ export default function CompanyProfileRoute() {
           )}
         </SectionCard>
 
-        <Pressable
-          onPress={() => void logOut()}
-          accessibilityRole="button"
-          accessibilityLabel="Log out of your company account"
-          style={({ pressed }) => [styles.logoutAction, pressed && styles.pressed]}>
-          <Icon name={{ ios: 'rectangle.portrait.and.arrow.right', android: 'logout', web: 'logout' }} size={19} color={C.error} />
-          <Text style={styles.logoutText}>Log out</Text>
-        </Pressable>
+        <SectionCard title="Account settings" icon={{ ios: 'gearshape.fill', android: 'settings', web: 'settings' }}>
+          <AccountManagementActions
+            accountType="company"
+            onLogOut={() => void logOut()}
+            onDelete={() => router.push('/account/delete')}
+          />
+        </SectionCard>
       </ScrollView>
     </SafeAreaView>
   );
@@ -253,6 +253,4 @@ const styles = StyleSheet.create({
   websiteBlock: { borderTopWidth: 1, borderTopColor: C.border, paddingTop: 12, gap: 6 },
   microLabel: { fontFamily: F.en.bold, color: C.teal600, fontSize: 12, letterSpacing: 1.05 },
   websiteValue: { fontFamily: F.en.medium, color: C.teal700, fontSize: 12.5, lineHeight: 20 },
-  logoutAction: { backgroundColor: C.surface, borderRadius: 15, borderColor: C.border, borderWidth: 1, height: 51, flexDirection: 'row', gap: 9, justifyContent: 'center', alignItems: 'center' },
-  logoutText: { color: C.error, fontFamily: F.en.bold, fontSize: 13.5 },
 });
