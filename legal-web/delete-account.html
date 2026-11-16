@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Securely delete your PATH internship platform account online, or contact PATH support for help.">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src https://path-backend.hostless.app; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta name="robots" content="index,follow">
+  <title>Delete your account | PATH</title>
+  <link rel="stylesheet" href="delete-account.css">
+  <script src="delete-account.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="wordmark" href="/" aria-label="PATH homepage"><span class="brand-mark" aria-hidden="true">P</span><span>PATH</span></a>
+      <nav class="top-nav" aria-label="Legal and support links">
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <a href="mailto:path.app.support@gmail.com?subject=PATH%20account%20deletion%20help">Support</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="page">
+    <div class="intro">
+      <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> ACCOUNT &amp; PRIVACY</div>
+      <h1>Delete your <span>PATH account.</span></h1>
+      <p>You're in control of your information. You can permanently delete your PATH account here without installing the app.</p>
+    </div>
+
+    <div class="main-layout">
+      <div class="main-column">
+        <div class="progress" aria-label="Deletion steps">
+          <span class="progress-item" id="progressSignIn"><span class="progress-number">1</span> Sign in</span>
+          <span class="progress-connector" aria-hidden="true"></span>
+          <span class="progress-item" id="progressConfirm"><span class="progress-number">2</span> Confirm deletion</span>
+        </div>
+
+        <section id="signInStep" class="panel" aria-labelledby="signInTitle">
+          <div class="panel-heading">
+            <span class="panel-icon" aria-hidden="true">01</span>
+            <div>
+              <h2 id="signInTitle" tabindex="-1">Verify your identity</h2>
+              <p>Sign in using the same PATH account credentials you use in the app.</p>
+            </div>
+          </div>
+          <div id="loginError" class="notice notice-error" role="alert" hidden></div>
+          <form id="loginForm" autocomplete="on">
+            <label for="email">Email address</label>
+            <input id="email" name="email" type="email" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" maxlength="254" placeholder="you@example.com" required>
+            <label for="loginPassword">Password</label>
+            <input id="loginPassword" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+            <button id="loginButton" class="button button-primary" type="submit">Continue securely <span aria-hidden="true">→</span></button>
+          </form>
+          <p class="form-footnote">Your credentials are sent only to PATH's secure backend. This page does not save them or your login token in browser storage.</p>
+        </section>
+
+        <section id="confirmStep" class="panel" aria-labelledby="confirmTitle" hidden>
+          <div class="panel-heading">
+            <span class="panel-icon panel-icon-warn" aria-hidden="true">02</span>
+            <div>
+              <h2 id="confirmTitle" tabindex="-1">Confirm permanent deletion</h2>
+              <p>Review the consequences before continuing.</p>
+            </div>
+          </div>
+          <div class="signed-in">
+            <span class="signed-in-label">Signed in as</span>
+            <strong id="signedInEmail"></strong>
+            <button id="signOutButton" class="text-button" type="button">Use a different account</button>
+          </div>
+          <div class="notice notice-warning">
+            <strong>This cannot be undone.</strong>
+            <p>Your PATH account and its associated information will be removed. This may include your profile, applications, saved internships, CVs, and — for company accounts — your company's listings and recruitment records.</p>
+            <p>CV-file cleanup may finish shortly after the account is deleted. Some records, backups, or information previously provided to employers may be retained where required or independently controlled, as described in our <a href="privacy.html">Privacy Policy</a>.</p>
+          </div>
+          <div id="deleteError" class="notice notice-error" role="alert" hidden></div>
+          <form id="deleteForm">
+            <label for="confirmText">Type <strong>DELETE</strong> to confirm</label>
+            <input id="confirmText" name="confirmText" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="DELETE" aria-describedby="confirmHint" required>
+            <p class="field-hint" id="confirmHint">This action permanently deletes the account shown above.</p>
+            <label for="deletePassword">Enter your current password again</label>
+            <input id="deletePassword" name="password" type="password" autocomplete="current-password" placeholder="Current password" required>
+            <button id="deleteButton" class="button button-danger" type="submit" disabled>Delete my account permanently</button>
+            <button id="cancelButton" class="button button-secondary" type="button">Cancel and sign out</button>
+          </form>
+        </section>
+
+        <section id="successStep" class="panel success-panel" aria-labelledby="successTitle" hidden>
+          <div class="success-icon" aria-hidden="true">✓</div>
+          <h2 id="successTitle" tabindex="-1">Your account has been deleted</h2>
+          <p>PATH has confirmed the deletion of your account. You can no longer sign in with the deleted credentials.</p>
+          <p>Any pending CV-file cleanup is handled by the backend. Please contact support if you have questions.</p>
+          <a class="button button-primary" href="mailto:path.app.support@gmail.com?subject=PATH%20account%20deletion%20question">Contact support</a>
+        </section>
+      </div>
+
+      <aside class="help-column" aria-labelledby="helpTitle">
+        <div class="help-card">
+          <div class="help-symbol" aria-hidden="true">?</div>
+          <h2 id="helpTitle">Need help?</h2>
+          <p>Can't sign in, forgot your password, or no longer have access to your account?</p>
+          <p>You can still request account deletion by emailing PATH Support. We'll help verify that the account belongs to you. <strong>Never email your password.</strong></p>
+          <a class="help-link" href="mailto:path.app.support@gmail.com?subject=PATH%20account%20deletion%20request">Email PATH Support <span aria-hidden="true">↗</span></a>
+          <span class="support-address">path.app.support@gmail.com</span>
+        </div>
+        <div class="aside-note">
+          <strong>Prefer to use the mobile app?</strong>
+          <p>Open PATH → Settings → Delete Account. Both methods use the same secure deletion process.</p>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span>© PATH. Account &amp; privacy.</span>
+      <span><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="mailto:path.app.support@gmail.com">Contact</a></span>
+    </div>
+  </footer>
+</body>
+</html>
