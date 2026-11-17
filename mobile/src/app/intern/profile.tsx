@@ -5,9 +5,9 @@
  */
 import { useCallback, useState, type ReactNode } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,12 +18,14 @@ import Animated, { FadeInDown, ReduceMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AccountManagementActions } from '@/components/account-management-actions';
+import { ProfilePhotoEditor } from '@/components/profile-photo-editor';
 import { PathoraPageHeader } from '@/components/pathora-page-header';
 import { PathoraProfileState } from '@/components/pathora-profile-state';
 import { PathoraSectionHeading } from '@/components/pathora-section-heading';
 import { PathoraColors as C, PathoraFonts as F } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
 import { getInternProfileOrNull, type InternProfile } from '@/lib/api';
+import { CvSelectionError, pickAndUploadInternCv } from '@/lib/cv-upload';
 import { initialsFor } from '@/lib/initials';
 import { describeOnboardingError } from '@/lib/onboarding';
 
@@ -85,6 +87,9 @@ export default function InternProfileRoute() {
   const [profile, setProfile] = useState<InternProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cvUploading, setCvUploading] = useState(false);
+  const [cvError, setCvError] = useState<string | null>(null);
+  const [cvSuccess, setCvSuccess] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -100,6 +105,29 @@ export default function InternProfileRoute() {
   }, [token]);
 
   useFocusEffect(useCallback(() => { void load(); }, [load]));
+
+  const handleUploadCv = async () => {
+    if (!token || cvUploading) return;
+    setCvError(null);
+    setCvSuccess(null);
+    setCvUploading(true);
+    try {
+      const uploaded = await pickAndUploadInternCv(token);
+      if (!uploaded) return; // Cancel doesn't alter the previous CV.
+      setProfile((current) => current ? {
+        ...current,
+        cvFileName: uploaded.fileName,
+        cvUploadedAt: uploaded.uploadedAt,
+        cvDetectedSkills: uploaded.detectedSkills,
+      } : current);
+      setCvSuccess('Your CV has been saved.');
+    } catch (uploadError) {
+      setCvError(uploadError instanceof CvSelectionError
+        ? uploadError.message : describeOnboardingError(uploadError));
+    } finally {
+      setCvUploading(false);
+    }
+  };
 
   const editProfile = () => router.push('/onboarding/personal');
   const viewCv = () => {
@@ -149,12 +177,9 @@ export default function InternProfileRoute() {
 
         <Animated.View entering={FadeInDown.duration(300).reduceMotion(ReduceMotion.System)} style={styles.identityCard}>
           <View style={styles.identityTop}>
-            <LinearGradient
-              colors={[C.teal500, C.teal700]}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-              style={styles.avatar}>
-              <Text style={styles.avatarText}>{initialsFor(profile.firstName, profile.lastName, user?.email)}</Text>
-            </LinearGradient>
+            {token ? <ProfilePhotoEditor role="INTERN" token={token} size={122} showAction={false}
+              initials={initialsFor(profile.firstName, profile.lastName, user?.email)}
+              photoUrl={profile.photoUrl} onSaved={load} /> : null}
             <View style={styles.identityContent}>
               <Text style={styles.identityEyebrow}>STUDENT PROFILE</Text>
               <Text style={styles.identityName}>{fullName}</Text>
@@ -218,20 +243,46 @@ export default function InternProfileRoute() {
             <View style={styles.documentText}>
               <Text style={styles.documentTitle}>{profile.cvFileName ? 'CV uploaded' : 'No CV uploaded yet'}</Text>
               <Text style={styles.documentFileName} numberOfLines={2}>
-                {profile.cvFileName ? displayCvFileName(profile.cvFileName) : 'Add a CV through Edit profile to share with employers.'}
+                {profile.cvFileName ? displayCvFileName(profile.cvFileName) : 'Upload a PDF CV to share with companies when you apply.'}
               </Text>
             </View>
           </View>
-          {Boolean(profile.cvFileName) && (
+          <View style={styles.cvActionRow}>
+            {profile.cvFileName ? (
+              <Pressable
+                onPress={viewCv}
+                accessibilityRole="button"
+                accessibilityLabel="View your uploaded CV"
+                style={({ pressed }) => [styles.outlineAction, styles.cvActionFlex, pressed && styles.pressed]}>
+                <Icon name={{ ios: 'eye', android: 'visibility', web: 'visibility' }} size={17} />
+                <Text style={styles.outlineActionText}>View my CV</Text>
+              </Pressable>
+            ) : null}
             <Pressable
-              onPress={viewCv}
+              onPress={() => void handleUploadCv()}
+              disabled={cvUploading}
               accessibilityRole="button"
-              accessibilityLabel="View your uploaded CV"
-              style={({ pressed }) => [styles.outlineAction, pressed && styles.pressed]}>
-              <Icon name={{ ios: 'eye', android: 'visibility', web: 'visibility' }} size={17} />
-              <Text style={styles.outlineActionText}>View my CV</Text>
+              accessibilityLabel={profile.cvFileName ? 'Replace your CV' : 'Upload your CV'}
+              accessibilityState={{ disabled: cvUploading, busy: cvUploading }}
+              style={({ pressed }) => [
+                styles.cvUploadAction,
+                profile.cvFileName && styles.cvActionFlex,
+                (pressed && !cvUploading) && styles.pressed,
+                cvUploading && styles.cvActionDisabled,
+              ]}>
+              {cvUploading ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Icon name={{ ios: 'arrow.up.doc', android: 'upload_file', web: 'upload_file' }} size={17} color="#FFFFFF" />
+              )}
+              <Text style={styles.cvUploadText}>
+                {cvUploading ? 'Uploading…' : profile.cvFileName ? 'Replace CV' : 'Upload CV'}
+              </Text>
             </Pressable>
-          )}
+          </View>
+          
+          {cvError ? <Text accessibilityRole="alert" style={styles.cvErrorText}>{cvError}</Text> : null}
+          {cvSuccess ? <Text style={styles.cvSuccessText}>{cvSuccess}</Text> : null}
         </SectionCard>
 
         {Boolean(profile.careerInterests || profile.phoneNumber || profile.linkedinUrl) && (
@@ -309,6 +360,15 @@ const styles = StyleSheet.create({
   documentText: { flex: 1, minWidth: 0, gap: 3 },
   documentTitle: { fontFamily: F.en.bold, color: C.ink900, fontSize: 14 },
   documentFileName: { fontFamily: F.en.medium, color: C.textSecondary, fontSize: 12, lineHeight: 18 },
+  cvActionRow: { flexDirection: 'row', gap: 9, alignItems: 'stretch' },
+  cvActionFlex: { flex: 1 },
+  cvUploadAction: { backgroundColor: C.teal700, borderRadius: 12, minHeight: 46,
+    paddingHorizontal: 12, justifyContent: 'center', alignItems: 'center', gap: 7, flexDirection: 'row' },
+  cvUploadText: { fontFamily: F.en.bold, fontSize: 13, color: '#FFFFFF' },
+  cvActionDisabled: { opacity: 0.65 },
+  cvHelpText: { fontFamily: F.en.medium, fontSize: 11.5, lineHeight: 18, color: C.textSecondary },
+  cvErrorText: { fontFamily: F.en.medium, fontSize: 12.5, lineHeight: 19, color: '#B23B3B' },
+  cvSuccessText: { fontFamily: F.en.medium, fontSize: 12.5, lineHeight: 19, color: C.teal700 },
   outlineAction: { borderWidth: 1, borderColor: C.borderStrong, backgroundColor: C.surface, borderRadius: 12, height: 44, alignItems: 'center', justifyContent: 'center', gap: 8, flexDirection: 'row' },
   outlineActionText: { fontFamily: F.en.bold, color: C.teal700, fontSize: 13 },
   detailBlock: { gap: 7 },

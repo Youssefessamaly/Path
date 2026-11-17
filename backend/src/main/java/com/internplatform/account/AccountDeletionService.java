@@ -60,12 +60,17 @@ public class AccountDeletionService {
         if (user.getRole() == Role.INTERN) {
             // All profile CVs and application-time copies for this intern live under this
             // single server-generated profile directory, including any past orphan files.
-            interns.findByUserId(userId).ifPresent(profile -> jdbc.update(
-                    "INSERT INTO pending_cv_deletions(task_key) VALUES (?) ON CONFLICT DO NOTHING",
-                    "profile:" + profile.getId()));
+            interns.findByUserId(userId).ifPresent(profile -> {
+                jdbc.update("INSERT INTO pending_cv_deletions(task_key) VALUES (?) ON CONFLICT DO NOTHING",
+                        "profile:" + profile.getId());
+                jdbc.update("INSERT INTO pending_cv_deletions(task_key) VALUES (?) ON CONFLICT DO NOTHING",
+                        "photo-profile:" + profile.getId());
+            });
         } else if (user.getRole() == Role.COMPANY) {
             companies.findByUserId(userId).ifPresent(company -> {
                 UUID companyId = company.getId();
+                jdbc.update("INSERT INTO pending_cv_deletions(task_key) VALUES (?) ON CONFLICT DO NOTHING",
+                        "photo-profile:" + companyId);
                 // Snapshot files belong to OTHER users' profile directories; remove ONLY the
                 // copies submitted to this company's postings, never those users' own CVs.
                 jdbc.update("""

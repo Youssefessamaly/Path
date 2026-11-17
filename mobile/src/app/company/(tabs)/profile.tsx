@@ -5,7 +5,6 @@
  */
 import { useCallback, useState, type ReactNode } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import {
   Pressable,
@@ -19,6 +18,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CompanyApprovalBadge } from '@/components/company-approval-badge';
 import { AccountManagementActions } from '@/components/account-management-actions';
+import { ProfileAvatar } from '@/components/profile-avatar';
+import { ProfilePhotoEditor } from '@/components/profile-photo-editor';
 import { PathoraPageHeader } from '@/components/pathora-page-header';
 import { PathoraProfileState } from '@/components/pathora-profile-state';
 import { PathoraSectionHeading } from '@/components/pathora-section-heading';
@@ -143,12 +144,12 @@ export default function CompanyProfileRoute() {
 
         <Animated.View entering={FadeInDown.duration(300).reduceMotion(ReduceMotion.System)} style={styles.identityCard}>
           <View style={styles.identityTop}>
-            <LinearGradient
-              colors={[C.teal500, C.teal700]}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-              style={styles.avatar}>
-              <Text style={styles.avatarText}>{companyInitials(profile.companyName, user?.email)}</Text>
-            </LinearGradient>
+            {token && profile.userId === user?.userId ? (
+              <ProfilePhotoEditor role="COMPANY" token={token} size={122} showAction={false}
+                initials={companyInitials(profile.companyName, user?.email)} photoUrl={profile.logoUrl}
+                onSaved={load} />
+            ) : <ProfileAvatar size={122} company initials={companyInitials(profile.companyName, user?.email)}
+                photoUrl={profile.logoUrl} />}
             <View style={styles.identityContent}>
               <Text style={styles.identityEyebrow}>COMPANY ACCOUNT</Text>
               <Text style={styles.identityName}>{name}</Text>

@@ -66,6 +66,9 @@ public class InternProfile {
     @Column(name = "onboarding_completed_at")
     private OffsetDateTime onboardingCompletedAt;
 
+    @Column(name = "photo_storage_key", length = 255)
+    private String photoStorageKey;
+
     @Column(name = "cv_original_filename", length = 255)
     private String cvOriginalFilename;
 
@@ -275,6 +278,14 @@ public class InternProfile {
 
     public void setCvUploadedAt(OffsetDateTime cvUploadedAt) {
         this.cvUploadedAt = cvUploadedAt;
+    }
+
+    public String getPhotoStorageKey() {
+        return photoStorageKey;
+    }
+
+    public void setPhotoStorageKey(String photoStorageKey) {
+        this.photoStorageKey = photoStorageKey;
     }
 
     public OffsetDateTime getCreatedAt() {

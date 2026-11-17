@@ -3,6 +3,7 @@ package com.internplatform.internshipapplication;
 import com.internplatform.ats.access.CompanyAccessResolver;
 import com.internplatform.ats.access.CompanyContext;
 import com.internplatform.companyprofile.CompanyProfile;
+import com.internplatform.profilephoto.ProfilePhotoUrls;
 import com.internplatform.internprofile.CvStorageService;
 import com.internplatform.internprofile.InternProfile;
 import com.internplatform.internprofile.InternProfileRepository;
@@ -141,6 +142,7 @@ public class CompanyApplicationService {
                 application.getId(),
                 application.getInternshipId(),
                 applicantName(profile),
+                ProfilePhotoUrls.intern(profile),
                 application.getStatus(),
                 application.getAppliedAt(),
                 profile != null ? profile.getInstitutionName() : null,
@@ -193,6 +195,7 @@ public class CompanyApplicationService {
 
         return new CompanyApplicationDetailResponse.Applicant(
                 profile.getId(),
+                ProfilePhotoUrls.intern(profile),
                 profile.getFirstName(),
                 profile.getLastName(),
                 profile.getInstitutionName(),

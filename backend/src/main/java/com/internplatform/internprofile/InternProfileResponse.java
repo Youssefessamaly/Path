@@ -24,6 +24,7 @@ public record InternProfileResponse(
         String cvFileName,
         OffsetDateTime cvUploadedAt,
         List<SkillResponse> cvDetectedSkills,
+        String photoUrl,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt
 ) {

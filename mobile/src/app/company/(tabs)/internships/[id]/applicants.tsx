@@ -7,6 +7,7 @@ import Animated, { FadeInDown, ReduceMotion } from 'react-native-reanimated';
 
 import { ApplicationFilter, ApplicationMetric } from '@/components/application-polish';
 import { ApplicationStatusBadge } from '@/components/application-status-badge';
+import { ProfileAvatar } from '@/components/profile-avatar';
 import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
 import { PathoraButton } from '@/components/pathora-button';
@@ -29,13 +30,15 @@ function educationSummary(item: CompanyApplicationListItem) {
     .filter((value): value is string => Boolean(value)).join(' · ');
 }
 
-function CandidateCard({ applicant, index, onPress }: { applicant: CompanyApplicationListItem; index: number; onPress: () => void }) {
+function CandidateCard({ applicant, index, onPress, token }: {
+  applicant: CompanyApplicationListItem; index: number; onPress: () => void; token: string | null;
+}) {
   const meta = educationSummary(applicant);
   return (
     <Animated.View entering={FadeInDown.duration(300).delay(Math.min(index, 7) * 35).reduceMotion(ReduceMotion.System)}>
       <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
         <View style={styles.cardTop}>
-          <View style={styles.avatar}><Text style={styles.avatarText}>{initialsForName(applicant.applicantName)}</Text></View>
+          <ProfileAvatar size={46} initials={initialsForName(applicant.applicantName)} photoUrl={applicant.applicantPhotoUrl} token={token} />
           <View style={styles.cardIdentity}>
             <Text numberOfLines={1} style={styles.name}>{applicant.applicantName ?? 'Unknown applicant'}</Text>
             {meta ? <Text numberOfLines={2} style={styles.education}>{meta}</Text> : null}
@@ -89,10 +92,17 @@ function RoleApplicants({ internshipId }: { internshipId: string }) {
     REJECTED: all.filter((a) => a.status === 'REJECTED').length,
   };
   const visible = useMemo(() => {
-    const search = query.trim().toLowerCase();
-    return all.filter((a) => (filter === 'ALL' || a.status === filter) &&
-      (!search || [a.applicantName, a.institutionName, a.major].some((val) => val?.toLowerCase().includes(search))));
-  }, [applications, filter, query]);
+  const search = query.trim().toLowerCase();
+
+  return (applications ?? []).filter(
+    (a) =>
+      (filter === 'ALL' || a.status === filter) &&
+      (!search ||
+        [a.applicantName, a.institutionName, a.major].some(
+          (val) => val?.toLowerCase().includes(search)
+        ))
+  );
+}, [applications, filter, query]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -138,7 +148,7 @@ function RoleApplicants({ internshipId }: { internshipId: string }) {
                 <Text style={styles.stateBody}>{all.length ? 'Try a different status or search term.' : 'Students who apply through Path will appear here.'}</Text>
                 {all.length > 0 && <Pressable onPress={() => { setQuery(''); setFilter('ALL'); }}><Text style={styles.clearText}>Clear filters →</Text></Pressable>}
               </View>
-            ) : visible.map((applicant, index) => <CandidateCard key={applicant.applicationId} applicant={applicant} index={index}
+            ) : visible.map((applicant, index) => <CandidateCard key={applicant.applicationId} applicant={applicant} index={index} token={token}
               onPress={() => router.push({ pathname: '/company/internships/[id]/applicants/[applicationId]',
                 params: { id: internshipId, applicationId: applicant.applicationId } })} />)}
           </>

@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ProfileAvatar } from '@/components/profile-avatar';
 
 import { PathoraColors, PathoraFonts, PathoraRadius, PathoraSpacing } from '@/constants/pathora-theme';
 import { PathoraTopOverscrollFill } from '@/components/pathora-top-overscroll-fill';
@@ -9,6 +10,9 @@ export type DashboardWelcomeHeaderProps = {
   // Kept optional for compatibility with dashboard call sites. Not displayed.
   subtitle?: string;
   avatarInitials: string;
+  avatarPhotoUrl?: string | null;
+  avatarToken?: string | null;
+  companyAvatar?: boolean;
   onAvatarPress: () => void;
   avatarAccessibilityLabel: string;
 };
@@ -28,6 +32,9 @@ export function DashboardWelcomeHeader({
   workspaceLabel,
   name,
   avatarInitials,
+  avatarPhotoUrl,
+  avatarToken,
+  companyAvatar = false,
   onAvatarPress,
   avatarAccessibilityLabel,
 }: DashboardWelcomeHeaderProps) {
@@ -49,8 +56,11 @@ export function DashboardWelcomeHeader({
             accessibilityRole="button"
             accessibilityLabel={avatarAccessibilityLabel}
             hitSlop={8}
-            style={({ pressed }) => [styles.avatar, pressed && styles.avatarPressed]}>
-            <Text style={styles.avatarText}>{avatarInitials}</Text>
+            style={({ pressed }) => [styles.avatar, companyAvatar && styles.avatarCompany, pressed && styles.avatarPressed]}>
+            {avatarPhotoUrl ? (
+              <ProfileAvatar initials={avatarInitials} photoUrl={avatarPhotoUrl} token={avatarToken}
+                company={companyAvatar} size={46} />
+            ) : <Text style={styles.avatarText}>{avatarInitials}</Text>}
           </Pressable>
         </View>
       </View>
@@ -103,6 +113,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarPressed: { opacity: 0.75 },
+  avatarCompany: { borderRadius: 13, overflow: 'hidden' },
   avatarText: {
     fontFamily: PathoraFonts.en.extraBold,
     fontSize: 16,

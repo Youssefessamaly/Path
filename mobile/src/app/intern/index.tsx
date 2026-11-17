@@ -154,6 +154,8 @@ function InternHomeScreen() {
             name={firstName || 'there'}
             subtitle="Let's find your next opportunity."
             avatarInitials={initialsFor(profile?.firstName ?? null, profile?.lastName ?? null, user?.email)}
+            avatarPhotoUrl={profile?.photoUrl}
+            avatarToken={token}
             avatarAccessibilityLabel="Open your profile"
             onAvatarPress={() => router.push('/intern/profile')}
           />

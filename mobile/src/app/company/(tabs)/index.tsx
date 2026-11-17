@@ -47,6 +47,7 @@ function companyInitials(companyName: string | null | undefined, email: string |
 }
 
 function ApplicantPreview({
+  token,
   applications,
   isLoading,
   isUnavailable,
@@ -54,6 +55,7 @@ function ApplicantPreview({
   emptyTitle,
   emptyDescription,
 }: {
+  token: string | null;
   applications: CompanyApplicantEntry[];
   isLoading: boolean;
   isUnavailable: boolean;
@@ -103,6 +105,8 @@ function ApplicantPreview({
           style={index !== 0 ? styles.applicantDivider : undefined}>
           <ApplicantPreviewRow
             applicantName={application.applicantName}
+            applicantPhotoUrl={application.applicantPhotoUrl}
+            token={token}
             internshipTitle={application.internshipTitle}
             appliedAt={application.appliedAt}
             status={application.status}
@@ -258,6 +262,8 @@ function CompanyHomeScreen() {
           name={companyName}
           subtitle="Here's what's happening with your hiring."
           avatarInitials={companyInitials(companyProfile?.companyName, user?.email)}
+          avatarPhotoUrl={companyProfile?.logoUrl}
+          companyAvatar
           avatarAccessibilityLabel="Open company profile"
           onAvatarPress={handleAvatarPress}
         />
@@ -285,6 +291,7 @@ function CompanyHomeScreen() {
             onAction={() => router.push({ pathname: '/company/applicants', params: { status: 'APPLIED' } })}
           />
           <ApplicantPreview
+            token={token}
             applications={reviewApplications}
             isLoading={applications === null && !applicantsUnavailable}
             isUnavailable={applicantsUnavailable}

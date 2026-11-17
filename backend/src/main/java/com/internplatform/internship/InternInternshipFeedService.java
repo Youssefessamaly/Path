@@ -3,6 +3,7 @@ package com.internplatform.internship;
 import com.internplatform.companyprofile.ApprovalStatus;
 import com.internplatform.companyprofile.CompanyProfile;
 import com.internplatform.companyprofile.CompanyProfileRepository;
+import com.internplatform.profilephoto.ProfilePhotoUrls;
 import com.internplatform.internprofile.InternProfile;
 import com.internplatform.internprofile.InternProfileRepository;
 import com.internplatform.internprofile.Skill;
@@ -87,7 +88,7 @@ public class InternInternshipFeedService {
                 .sorted(FEED_ORDER)
                 .map(scored -> toResponse(
                         scored,
-                        companyNameOf(scored.internship(), companyProfiles),
+                        companyProfiles.get(scored.internship().getCompanyProfileId()),
                         favoriteInternshipIds.contains(scored.internship().getId())
                 ))
                 .toList();
@@ -112,7 +113,7 @@ public class InternInternshipFeedService {
         }
 
         boolean favorited = favoriteRepository.existsByInternProfileIdAndInternshipId(profile.getId(), internship.getId());
-        return toResponse(score(internship, profile), companyProfile.getCompanyName(), favorited);
+        return toResponse(score(internship, profile), companyProfile, favorited);
     }
 
     /**
@@ -145,7 +146,7 @@ public class InternInternshipFeedService {
                 .filter(internship -> AcademicYearEligibility.satisfies(internship, profile))
                 .filter(internship -> isCompanyApproved(internship, companyProfiles))
                 .map(internship -> score(internship, profile))
-                .map(scored -> toResponse(scored, companyNameOf(scored.internship(), companyProfiles), true))
+                .map(scored -> toResponse(scored, companyProfiles.get(scored.internship().getCompanyProfileId()), true))
                 .toList();
     }
 
@@ -300,7 +301,7 @@ public class InternInternshipFeedService {
         return Math.max(0, Math.min(100, value));
     }
 
-    private InternInternshipResponse toResponse(ScoredInternship scored, String companyName, boolean favorited) {
+    private InternInternshipResponse toResponse(ScoredInternship scored, CompanyProfile company, boolean favorited) {
         Internship internship = scored.internship();
 
         List<InternshipSkillResponse> skills = internship.getSkills().stream()
@@ -318,7 +319,8 @@ public class InternInternshipFeedService {
 
         return new InternInternshipResponse(
                 internship.getId(),
-                companyName,
+                company != null ? company.getCompanyName() : null,
+                ProfilePhotoUrls.company(company),
                 internship.getTitle(),
                 internship.getDescription(),
                 internship.getLocation(),

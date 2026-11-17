@@ -1,6 +1,8 @@
 package com.internplatform.account;
 
 import com.internplatform.internprofile.CvStorageService;
+import com.internplatform.profilephoto.ProfilePhotoStorageService;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -26,12 +28,14 @@ public class PendingCvDeletionWorker {
 
     private final JdbcTemplate jdbc;
     private final CvStorageService storage;
+    private final ProfilePhotoStorageService photos;
     private final TransactionTemplate newTransaction;
 
     public PendingCvDeletionWorker(JdbcTemplate jdbc, CvStorageService storage,
-                                   PlatformTransactionManager transactionManager) {
+                                   ProfilePhotoStorageService photos, PlatformTransactionManager transactionManager) {
         this.jdbc = jdbc;
         this.storage = storage;
+        this.photos = photos;
         this.newTransaction = new TransactionTemplate(transactionManager);
         // AFTER_COMMIT still has the just-committed resources bound to the thread.
         // Queue operations therefore need their own REAL committed transaction.
@@ -58,13 +62,17 @@ public class PendingCvDeletionWorker {
         }
         for (String task : tasks) {
             try {
-                storage.deleteAccountCleanupTask(task);
+                if (task.startsWith("photo-profile:")) {
+                    photos.deleteProfileDirectory(UUID.fromString(task.substring("photo-profile:".length())));
+                } else {
+                    storage.deleteAccountCleanupTask(task);
+                }
                 newTransaction.executeWithoutResult(status ->
                         jdbc.update("DELETE FROM pending_cv_deletions WHERE task_key = ?", task));
             } catch (Exception error) {
                 // Leave the task in the DB for the next scheduled attempt; never log CV data.
                 log.warn("A pending CV deletion failed and will be retried (task type: {})",
-                        task.startsWith("profile:") ? "profile" : "file");
+                        task.startsWith("photo-profile:") ? "photo-profile" : task.startsWith("profile:") ? "profile" : "file");
             }
         }
     }

@@ -3,6 +3,7 @@ package com.internplatform.internshipapplication;
 import com.internplatform.ats.candidate.ApplicationSubmittedEvent;
 import com.internplatform.companyprofile.CompanyProfile;
 import com.internplatform.companyprofile.CompanyProfileRepository;
+import com.internplatform.profilephoto.ProfilePhotoUrls;
 import com.internplatform.internprofile.CvStorageService;
 import com.internplatform.internprofile.InternProfile;
 import com.internplatform.internprofile.InternProfileRepository;
@@ -359,6 +360,9 @@ public class InternshipApplicationService {
                 application.getInternshipId(),
                 internshipTitle,
                 companyName,
+                internshipRepository.findById(application.getInternshipId())
+                        .flatMap(internship -> companyProfileRepository.findById(internship.getCompanyProfileId()))
+                        .map(ProfilePhotoUrls::company).orElse(null),
                 application.getStatus(),
                 application.getCoverLetter(),
                 application.getLinkedinUrl(),

@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ApplicationDetailCard, ApplicationDetailText } from '@/components/application-polish';
 import { ApplicationStatusBadge } from '@/components/application-status-badge';
+import { ProfileAvatar } from '@/components/profile-avatar';
 import { AuthBackButton } from '@/components/auth-back-button';
 import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
@@ -64,7 +65,7 @@ function ApplicationDetailsScreen({ applicationId }: { applicationId: string }) 
 
         <View style={styles.profileCard}>
           <View style={styles.profileTop}>
-            <View style={styles.avatar}><Text style={styles.avatarText}>{initialsForName(companyName)}</Text></View>
+            <ProfileAvatar company size={56} initials={initialsForName(companyName)} photoUrl={application.companyLogoUrl} />
             <View style={styles.profileIdentity}>
               <Text style={styles.roleTitle}>{application.internshipTitle ?? 'Internship no longer available'}</Text>
               <Text style={styles.companyName}>{companyName}</Text>

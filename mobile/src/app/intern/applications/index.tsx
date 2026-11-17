@@ -7,6 +7,7 @@ import Animated, { FadeInDown, ReduceMotion } from 'react-native-reanimated';
 
 import { ApplicationFilter, ApplicationMetric } from '@/components/application-polish';
 import { ApplicationStatusBadge } from '@/components/application-status-badge';
+import { ProfileAvatar } from '@/components/profile-avatar';
 import { PathoraButton } from '@/components/pathora-button';
 import { pathoraCardSurface, pathoraCardPressed } from '@/components/pathora-card-styles';
 import { PathoraSearchInput } from '@/components/pathora-search-input';
@@ -37,7 +38,7 @@ function ApplicationCard({ application, index, onPress }: { application: InternA
         onPress={onPress}
         style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
         <View style={styles.cardTop}>
-          <View style={styles.avatar}><Text style={styles.avatarText}>{initialsForName(company)}</Text></View>
+          <ProfileAvatar company size={46} initials={initialsForName(company)} photoUrl={application.companyLogoUrl} />
           <View style={styles.cardIdentity}>
             <Text numberOfLines={2} style={styles.roleTitle}>{application.internshipTitle ?? 'Internship no longer available'}</Text>
             <Text numberOfLines={1} style={styles.companyName}>{company}</Text>

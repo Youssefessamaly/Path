@@ -1,6 +1,8 @@
 package com.internplatform.internshipapplication;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -9,6 +11,12 @@ import java.util.UUID;
 public interface InternshipApplicationRepository extends JpaRepository<InternshipApplication, UUID> {
 
     boolean existsByInternshipIdAndInternProfileId(UUID internshipId, UUID internProfileId);
+
+    @Query("select case when count(a) > 0 then true else false end "
+            + "from InternshipApplication a, Internship i "
+            + "where a.internshipId = i.id and i.companyProfileId = :companyId "
+            + "and a.internProfileId = :internId")
+    boolean existsForCompanyAndIntern(@Param("companyId") UUID companyId, @Param("internId") UUID internId);
 
     /** Used to freeze an internship's application questions once it has received any
      *  application at all — see InternshipApplicationQuestionService. */

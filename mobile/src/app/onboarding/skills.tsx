@@ -1,4 +1,3 @@
-import * as DocumentPicker from 'expo-document-picker';
 import { useRouter } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useEffect, useState } from 'react';
@@ -26,16 +25,13 @@ import { PathoraInput } from '@/components/pathora-input';
 import { PathoraColors, PathoraFonts, PathoraRadius, PathoraSpacing } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
 import {
-  completeInternOnboarding,
   getInternProfileOrNull,
   getInternSkills,
   updateInternProfile,
-  uploadInternCv,
   type InternProfileSkill,
 } from '@/lib/api';
 import { describeOnboardingError, getOnboardingMissingFields } from '@/lib/onboarding';
-
-const MAX_CV_SIZE_BYTES = 5 * 1024 * 1024;
+import { CvSelectionError, pickAndUploadInternCv } from '@/lib/cv-upload';
 
 function SkillsAndInterestsScreen() {
   const router = useRouter();
@@ -97,65 +93,28 @@ function SkillsAndInterestsScreen() {
   };
 
   const handlePickCv = async () => {
-    if (isUploadingCv || !token) {
-      return;
-    }
-
-    let result: DocumentPicker.DocumentPickerResult;
-    try {
-      result = await DocumentPicker.getDocumentAsync({
-        type: 'application/pdf',
-        multiple: false,
-        copyToCacheDirectory: Platform.OS !== 'android',
-      });
-    } catch {
-      setCvError('Could not open the file picker. Please try again.');
-      return;
-    }
-
-    if (result.canceled || !result.assets || result.assets.length === 0) {
-      // User cancelled — do nothing, no error.
-      return;
-    }
-
-    const asset = result.assets[0];
-    const looksLikePdf =
-      asset.mimeType != null
-        ? asset.mimeType.toLowerCase() === 'application/pdf'
-        : asset.name.toLowerCase().endsWith('.pdf');
-
-    if (!looksLikePdf) {
-      setCvError('Please choose a PDF file.');
-      return;
-    }
-
-    if (typeof asset.size === 'number' && asset.size > MAX_CV_SIZE_BYTES) {
-      setCvError('CV file must be 5 MB or smaller.');
-      return;
-    }
+    if (isUploadingCv || !token) return;
 
     setCvError(null);
     setIsUploadingCv(true);
-
     try {
-      const uploaded = await uploadInternCv(token, {
-        uri: asset.uri,
-        name: asset.name,
-        mimeType: asset.mimeType ?? 'application/pdf',
-      });
-      setCvFileName(uploaded.fileName);
-      // Replace, never merge — a re-uploaded CV's detected skills fully supersede the
-      // previous CV's, exactly as the backend itself replaces them.
-      setCvDetectedSkills(uploaded.detectedSkills);
+      const uploaded = await pickAndUploadInternCv(token);
+      if (uploaded) {
+        setCvFileName(uploaded.fileName);
+        // Replacements supersede (never merge) previous CV-detected skills.
+        setCvDetectedSkills(uploaded.detectedSkills);
+      }
     } catch (error) {
-      // Leave cvFileName/cvDetectedSkills untouched on failure — nothing changed server-side.
-      setCvError(describeOnboardingError(error));
+      setCvError(error instanceof CvSelectionError ? error.message : describeOnboardingError(error));
     } finally {
       setIsUploadingCv(false);
     }
   };
 
-  const canFinish = selectedSkillIds.length > 0 && careerInterests.trim().length > 0;
+  // Skills, interests AND an uploaded PDF CV are required for new intern onboarding.
+  const canFinish = selectedSkillIds.length > 0 && careerInterests.trim().length > 0 &&
+    // Previously completed users can still edit even if they predate the CV requirement.
+    (isCompleted || Boolean(cvFileName)) && !isUploadingCv;
 
   const handleBack = () => {
     router.replace('/onboarding/education');
@@ -176,11 +135,8 @@ function SkillsAndInterestsScreen() {
         ...(linkedinUrl.trim() ? { linkedinUrl: linkedinUrl.trim() } : {}),
       });
 
-      const completedProfile = await completeInternOnboarding(token);
-      setIsCompleted(completedProfile.onboardingCompleted);
-      // A direct route replacement avoids an unhandled POP_TO_TOP when there is no
-      // dismissible stack (e.g. onboarding resumed from a restored session).
-      router.replace('/intern');
+      // Saved required details. The optional photo step now owns final completion.
+      router.replace('/onboarding/photo');
       return;
     } catch (error) {
       const missingFields = getOnboardingMissingFields(error);
@@ -231,7 +187,7 @@ function SkillsAndInterestsScreen() {
                     <Text style={styles.addSkillText}>Add skill</Text>
                   </Pressable>
                 </View>
-                <Text style={styles.hint}>Choose from Pathora&apos;s skill list</Text>
+                <Text style={styles.hint}>Choose from PATH&apos;s skill list</Text>
               </View>
 
               <PathoraInput
@@ -253,7 +209,7 @@ function SkillsAndInterestsScreen() {
               />
 
               <View>
-                <Text style={styles.label}>CV</Text>
+                <Text style={styles.label}>{isCompleted ? 'CV' : 'CV (required)'}</Text>
                 <Pressable
                   onPress={handlePickCv}
                   disabled={isUploadingCv}
@@ -269,15 +225,18 @@ function SkillsAndInterestsScreen() {
                     />
                   )}
                   <Text style={styles.cvTitle}>
-                    {isUploadingCv ? 'Uploading…' : 'Upload your CV'}
+                    {isUploadingCv ? 'Uploading…' : cvFileName ? 'Replace your CV' : 'Upload your CV'}
                   </Text>
-                  <Text style={styles.cvSubtitle}>PDF, up to 5MB</Text>
+                  <Text style={styles.cvSubtitle}>PDF only · Maximum 5 MB</Text>
                   {(cvFileName && !isUploadingCv) ? (
                     <Text style={styles.cvFileName} numberOfLines={1}>
                       {cvFileName}
                     </Text>
                   ) : null}
                 </Pressable>
+                {!cvFileName && !isCompleted && !isUploadingCv ? (
+                  <Text style={styles.cvRequiredHint}>A CV is required to continue your student setup.</Text>
+                ) : null}
                 <PathoraInlineNotice message={cvError ?? ''} />
               </View>
 
@@ -293,7 +252,7 @@ function SkillsAndInterestsScreen() {
                       ))}
                     </View>
                   ) : (
-                    <Text style={styles.hint}>No Pathora skills were detected from this CV.</Text>
+                    <Text style={styles.hint}>No PATH skills were detected from this CV.</Text>
                   )}
                 </View>
               ) : null}
@@ -303,14 +262,14 @@ function SkillsAndInterestsScreen() {
           <PathoraInlineNotice message={submitError ?? ''} />
 
           {isCompleted ? (
-            <PathoraInlineNotice tone="success" message="Your Pathora profile is ready. You can save changes below." />
+            <PathoraInlineNotice tone="success" message="Your PATH profile is ready. You can save changes below." />
           ) : null}
 
           <PathoraButton
-            label={isSubmitting ? 'Saving…' : isCompleted ? 'Save changes' : 'Finish'}
+            label={isSubmitting ? 'Saving…' : 'Continue'}
             variant="primary"
             onPress={handleFinish}
-            disabled={!canFinish || isSubmitting}
+            disabled={!canFinish || isSubmitting || isUploadingCv}
             style={styles.finishButton}
           />
         </ScrollView>
@@ -395,6 +354,13 @@ const styles = StyleSheet.create({
     fontFamily: PathoraFonts.en.semiBold,
     fontSize: 13,
     color: PathoraColors.teal700,
+  },
+  cvRequiredHint: {
+    marginTop: 9,
+    color: PathoraColors.textSecondary,
+    fontFamily: PathoraFonts.en.medium,
+    fontSize: 12,
+    lineHeight: 18,
   },
   hint: {
     fontFamily: PathoraFonts.en.regular,

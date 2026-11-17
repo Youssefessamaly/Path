@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ApplicationStatusBadge } from '@/components/application-status-badge';
+import { ProfileAvatar } from '@/components/profile-avatar';
 import { PathoraColors, PathoraFonts, PathoraRadius, PathoraSpacing } from '@/constants/pathora-theme';
 import type { CompanyApplicationStatus } from '@/lib/api';
 import { formatDisplayDate } from '@/lib/date';
@@ -10,6 +11,8 @@ const AVATAR_TINTS = [PathoraColors.teal600, PathoraColors.amber500] as const;
 
 export type ApplicantPreviewRowProps = {
   applicantName: string | null;
+  applicantPhotoUrl?: string | null;
+  token?: string | null;
   internshipTitle: string;
   appliedAt: string;
   status: CompanyApplicationStatus;
@@ -25,6 +28,8 @@ export type ApplicantPreviewRowProps = {
  */
 export function ApplicantPreviewRow({
   applicantName,
+  applicantPhotoUrl,
+  token,
   internshipTitle,
   appliedAt,
   status,
@@ -38,9 +43,7 @@ export function ApplicantPreviewRow({
       onPress={onPress}
       accessibilityRole="button"
       style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
-      <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
-        <Text style={styles.avatarText}>{initialsForName(applicantName)}</Text>
-      </View>
+      <ProfileAvatar size={38} initials={initialsForName(applicantName)} photoUrl={applicantPhotoUrl} token={token} />
 
       <View style={styles.rowText}>
         <Text style={styles.name} numberOfLines={1}>

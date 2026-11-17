@@ -12,6 +12,7 @@ public record CompanyApplicationListItemResponse(
         UUID applicationId,
         UUID internshipId,
         String applicantName,
+        String applicantPhotoUrl,
         ApplicationStatus status,
         OffsetDateTime appliedAt,
         String institutionName,

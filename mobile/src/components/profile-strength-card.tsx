@@ -21,7 +21,7 @@ export function ProfileStrengthCard({ percentage, isOnboardingComplete, onAction
     ? 'Finish your profile so recommendations reflect who you are.'
     : clampedPercentage >= 100
       ? "You're all set — your profile is fully filled in."
-      : 'Add your CV or LinkedIn to strengthen your profile further.';
+      : 'Keep your CV current and add LinkedIn to strengthen your profile.';
 
   const actionLabel = isOnboardingComplete ? 'View profile' : 'Complete profile';
 

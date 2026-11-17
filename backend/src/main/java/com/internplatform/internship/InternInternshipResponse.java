@@ -8,6 +8,7 @@ import java.util.UUID;
 public record InternInternshipResponse(
         UUID id,
         String companyName,
+        String companyLogoUrl,
         String title,
         String description,
         String location,

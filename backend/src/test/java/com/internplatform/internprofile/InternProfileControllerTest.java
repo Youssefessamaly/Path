@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.Year;
 import java.util.HashMap;
 import java.util.List;
@@ -139,6 +140,13 @@ class InternProfileControllerTest {
         fields.put("skillIds", List.of(skillId.toString()));
         fields.put("careerInterests", "Data analytics and product management");
         return fields;
+    }
+
+    private void uploadValidCv() throws Exception {
+        mockMvc.perform(multipart(HttpMethod.POST, "/api/v1/intern/profile/cv")
+                        .file(new MockMultipartFile("file", "resume.pdf", "application/pdf", validPdfBytes()))
+                        .with(asIntern()))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -282,13 +290,16 @@ class InternProfileControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.missingFields", hasItem("lastName")))
                 .andExpect(jsonPath("$.missingFields", hasItem("skills")))
-                .andExpect(jsonPath("$.missingFields", hasItem("careerInterests")));
+                .andExpect(jsonPath("$.missingFields", hasItem("careerInterests")))
+                .andExpect(jsonPath("$.missingFields", hasItem("cv")));
     }
 
     @Test
     void completeSucceedsWhenRequiredDataPresent() throws Exception {
         UUID skillId = skillRepository.findAllByOrderByNameAsc().get(0).getId();
         patchProfile(completeOnboardingFields(skillId));
+
+        uploadValidCv();
 
         mockMvc.perform(post("/api/v1/intern/profile/complete").with(asIntern()))
                 .andExpect(status().isOk())
@@ -553,19 +564,42 @@ class InternProfileControllerTest {
     }
 
     @Test
-    void onboardingCompletesWithoutCv() throws Exception {
+    void onboardingRequiresCvEvenWhenAllOtherRequiredFieldsArePresent() throws Exception {
         UUID skillId = skillRepository.findAllByOrderByNameAsc().get(0).getId();
         patchProfile(completeOnboardingFields(skillId));
 
+        mockMvc.perform(post("/api/v1/intern/profile/complete").with(asIntern()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.missingFields", hasItem("cv")));
+
+        uploadValidCv();
         mockMvc.perform(post("/api/v1/intern/profile/complete").with(asIntern()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.onboardingCompleted").value(true));
     }
 
     @Test
+    void alreadyCompletedProfilesAreNotForcedToUploadCvRetroactively() throws Exception {
+        UUID skillId = skillRepository.findAllByOrderByNameAsc().get(0).getId();
+        patchProfile(completeOnboardingFields(skillId));
+        InternProfile existing = internProfileRepository.findByUserId(internUser.getId()).orElseThrow();
+        OffsetDateTime previouslyCompleted = OffsetDateTime.now(ZoneOffset.UTC).withNano(0);
+        existing.setOnboardingCompletedAt(previouslyCompleted);
+        internProfileRepository.saveAndFlush(existing);
+
+        mockMvc.perform(post("/api/v1/intern/profile/complete").with(asIntern()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.onboardingCompleted").value(true));
+        assertThat(internProfileRepository.findByUserId(internUser.getId()).orElseThrow()
+                .getOnboardingCompletedAt()).isEqualTo(previouslyCompleted);
+    }
+
+    @Test
     void completingTwiceDoesNotChangeCompletionTimestamp() throws Exception {
         UUID skillId = skillRepository.findAllByOrderByNameAsc().get(0).getId();
         patchProfile(completeOnboardingFields(skillId));
+
+        uploadValidCv();
 
         mockMvc.perform(post("/api/v1/intern/profile/complete").with(asIntern()))
                 .andExpect(status().isOk());

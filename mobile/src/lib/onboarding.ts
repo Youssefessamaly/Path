@@ -48,7 +48,7 @@ function isStep2Incomplete(profile: InternProfile): boolean {
 function isStep3Incomplete(profile: InternProfile): boolean {
   const hasNoSkills = profile.skills.length === 0;
   const hasNoCareerInterests = !profile.careerInterests || profile.careerInterests.trim().length === 0;
-  return hasNoSkills || hasNoCareerInterests;
+  return hasNoSkills || hasNoCareerInterests || !profile.cvFileName;
 }
 
 /**

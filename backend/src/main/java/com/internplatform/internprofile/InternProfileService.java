@@ -9,6 +9,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import com.internplatform.profilephoto.ProfilePhotoUrls;
 import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.ZoneOffset;
@@ -287,6 +288,11 @@ public class InternProfileService {
         if (isBlank(profile.getCareerInterests())) {
             missing.add("careerInterests");
         }
+        // CV is mandatory for NEW interns to complete onboarding; photo remains optional.
+        // Check the persisted storage key, not just the filename displayed in the UI.
+        if (isBlank(profile.getCvStorageKey())) {
+            missing.add("cv");
+        }
 
         if (profile.getAcademicLevel() == AcademicLevel.UNIVERSITY) {
             Short academicYear = profile.getAcademicYear();
@@ -378,6 +384,7 @@ public class InternProfileService {
                 profile.getCvOriginalFilename(),
                 profile.getCvUploadedAt(),
                 toSkillResponses(profile.getCvDetectedSkills()),
+                ProfilePhotoUrls.intern(profile),
                 profile.getCreatedAt(),
                 profile.getUpdatedAt()
         );

@@ -9,6 +9,7 @@ public record InternshipApplicationResponse(
         UUID internshipId,
         String internshipTitle,
         String companyName,
+        String companyLogoUrl,
         ApplicationStatus status,
         String coverLetter,
         String linkedinUrl,

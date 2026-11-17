@@ -27,6 +27,7 @@ public record CompanyApplicationDetailResponse(
 
     public record Applicant(
             UUID internProfileId,
+            String photoUrl,
             String firstName,
             String lastName,
             String institutionName,

@@ -16,6 +16,7 @@ public record CompanyProfileResponse(
         String contactPhone,
         boolean onboardingCompleted,
         OffsetDateTime completedAt,
+        String logoUrl,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt
 ) {

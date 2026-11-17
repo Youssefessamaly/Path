@@ -67,6 +67,9 @@ public class CompanyProfile {
     @Column(name = "approval_reviewed_at")
     private OffsetDateTime approvalReviewedAt;
 
+    @Column(name = "photo_storage_key", length = 255)
+    private String photoStorageKey;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
@@ -201,6 +204,14 @@ public class CompanyProfile {
     public void recordApprovalDecision(ApprovalStatus status, OffsetDateTime reviewedAt) {
         this.approvalStatus = status;
         this.approvalReviewedAt = reviewedAt;
+    }
+
+    public String getPhotoStorageKey() {
+        return photoStorageKey;
+    }
+
+    public void setPhotoStorageKey(String photoStorageKey) {
+        this.photoStorageKey = photoStorageKey;
     }
 
     public OffsetDateTime getCreatedAt() {

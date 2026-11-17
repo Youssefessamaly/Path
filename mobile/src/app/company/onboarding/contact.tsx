@@ -12,8 +12,8 @@ import { PathoraButton } from '@/components/pathora-button';
 import { PathoraInput } from '@/components/pathora-input';
 import { PathoraColors, PathoraSpacing } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
-import { completeCompanyOnboarding, getCompanyProfileOrNull, updateCompanyProfile } from '@/lib/api';
-import { describeOnboardingError, getOnboardingMissingFields, resolveCompanyPostAuthRoute } from '@/lib/onboarding';
+import { getCompanyProfileOrNull, updateCompanyProfile } from '@/lib/api';
+import { describeOnboardingError, getOnboardingMissingFields } from '@/lib/onboarding';
 
 const EGYPT_PHONE_PATTERN = /^(01[0125]\d{8}|\+201[0125]\d{8})$/;
 
@@ -71,17 +71,8 @@ function CompanyContactScreen() {
         contactPhone: contactPhone.trim(),
       });
 
-      // Onboarding is only marked complete once the backend confirms it — a failure here
-      // (e.g. the backend still finds required fields missing) must not navigate away.
-      await completeCompanyOnboarding(token);
-
-      // Completing onboarding never lands directly on the dashboard anymore — a brand-new
-      // company is still PENDING at this point, so the shared resolver sends it to the
-      // approval-pending screen instead (and APPROVED/REJECTED are still handled correctly
-      // for the rarer case of a company revisiting this step after already being decided).
-      // A direct replacement avoids POP_TO_TOP warnings if the route was opened
-      // without a dismissible navigation stack.
-      router.replace(await resolveCompanyPostAuthRoute(token));
+      // Required details saved; photo/logo is optional in the final onboarding step.
+      router.replace('/company/onboarding/logo');
     } catch (error) {
       const missingFields = getOnboardingMissingFields(error);
       setSubmitError(
@@ -131,7 +122,7 @@ function CompanyContactScreen() {
           <PathoraInlineNotice message={submitError ?? ''} />
 
           <PathoraButton
-            label={isSubmitting ? 'Finishing…' : 'Finish'}
+            label={isSubmitting ? 'Saving…' : 'Continue'}
             variant="primary"
             onPress={handleFinish}
             disabled={!canFinish || isSubmitting}

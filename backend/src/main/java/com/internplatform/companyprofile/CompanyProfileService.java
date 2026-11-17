@@ -1,6 +1,7 @@
 package com.internplatform.companyprofile;
 
 import com.internplatform.ats.access.CompanyAccessResolver;
+import com.internplatform.profilephoto.ProfilePhotoUrls;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -206,6 +207,7 @@ public class CompanyProfileService {
                 profile.getContactPhone(),
                 profile.isOnboardingCompleted(),
                 profile.getOnboardingCompletedAt(),
+                ProfilePhotoUrls.company(profile),
                 profile.getCreatedAt(),
                 profile.getUpdatedAt()
         );

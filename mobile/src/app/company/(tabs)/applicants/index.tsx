@@ -7,6 +7,7 @@ import Animated, { FadeInDown, ReduceMotion } from 'react-native-reanimated';
 
 import { ApplicationFilter, ApplicationMetric } from '@/components/application-polish';
 import { ApplicationStatusBadge } from '@/components/application-status-badge';
+import { ProfileAvatar } from '@/components/profile-avatar';
 import { PathoraButton } from '@/components/pathora-button';
 import { pathoraCardSurface, pathoraCardPressed } from '@/components/pathora-card-styles';
 import { PathoraSearchInput } from '@/components/pathora-search-input';
@@ -28,7 +29,9 @@ const FILTERS: { key: Filter; label: string }[] = [
   { key: 'REJECTED', label: 'Rejected' },
 ];
 
-function ApplicantCard({ applicant, index, onPress }: { applicant: CompanyApplicantEntry; index: number; onPress: () => void }) {
+function ApplicantCard({ applicant, index, onPress, token }: {
+  applicant: CompanyApplicantEntry; index: number; onPress: () => void; token: string | null;
+}) {
   return (
     <Animated.View entering={FadeInDown.duration(300).delay(Math.min(index, 7) * 35).reduceMotion(ReduceMotion.System)}>
       <Pressable
@@ -37,7 +40,7 @@ function ApplicantCard({ applicant, index, onPress }: { applicant: CompanyApplic
         onPress={onPress}
         style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
         <View style={styles.cardTop}>
-          <View style={styles.avatar}><Text style={styles.avatarText}>{initialsForName(applicant.applicantName)}</Text></View>
+          <ProfileAvatar size={46} initials={initialsForName(applicant.applicantName)} photoUrl={applicant.applicantPhotoUrl} token={token} />
           <View style={styles.cardIdentity}>
             <Text numberOfLines={1} style={styles.applicantName}>{applicant.applicantName ?? 'Unknown applicant'}</Text>
             <Text numberOfLines={2} style={styles.internshipName}>{applicant.internshipTitle}</Text>
@@ -165,7 +168,7 @@ function CompanyApplicantsContent({ initialFilter }: { initialFilter: Filter }) 
                 {all.length > 0 && <Pressable onPress={() => { setQuery(''); setFilter('ALL'); }}><Text style={styles.clearText}>Clear filters →</Text></Pressable>}
               </View>
             ) : visible.map((applicant, index) => (
-              <ApplicantCard key={applicant.applicationId} applicant={applicant} index={index}
+              <ApplicantCard key={applicant.applicationId} applicant={applicant} index={index} token={token}
                 onPress={() => router.push({ pathname: '/company/applicants/[applicationId]',
                   params: { id: applicant.internshipId, applicationId: applicant.applicationId } })} />
             ))}

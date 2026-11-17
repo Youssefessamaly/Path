@@ -14,8 +14,9 @@ export type ProfileStrength = {
  *
  * Each applicable check below counts equally. academicYear is only an applicable check for
  * UNIVERSITY-level interns, matching the same conditional the onboarding flow itself uses.
- * CV/LinkedIn are bonus checks — they are never required for onboarding to be complete, so a
- * profile can be onboarding-complete (see isOnboardingComplete) without reaching 100% here.
+ * The CV is required to finish onboarding for new interns, but existing completed profiles
+ * may predate that requirement. LinkedIn stays optional. The score remains independent
+ * from the backend's stored onboardingCompleted flag.
  */
 export function calculateProfileStrength(profile: InternProfile): ProfileStrength {
   const checks: boolean[] = [

@@ -28,6 +28,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AuthBackButton } from '@/components/auth-back-button';
 import { PathoraDetailHeader } from '@/components/pathora-detail-header';
+import { ProfileAvatar } from '@/components/profile-avatar';
 import { PathoraSectionHeading } from '@/components/pathora-section-heading';
 import { pathoraCardSurface } from '@/components/pathora-card-styles';
 import { PathoraInlineNotice } from '@/components/pathora-inline-notice';
@@ -241,9 +242,7 @@ function InternInternshipDetailsScreen({ internshipId }: { internshipId: string 
 
         <Animated.View entering={FadeInDown.duration(350).reduceMotion(ReduceMotion.System)}>
           <View style={styles.identityRow}>
-            <View style={styles.companyLogo}>
-              <Text style={styles.companyInitials}>{initials(internship.companyName)}</Text>
-            </View>
+            <ProfileAvatar company size={61} initials={initials(internship.companyName)} photoUrl={internship.companyLogoUrl} />
             <View style={styles.identityCopy}>
               <Text style={styles.identityEyebrow}>INTERNSHIP OPPORTUNITY</Text>
               <Text style={styles.roleTitle}>{internship.title}</Text>

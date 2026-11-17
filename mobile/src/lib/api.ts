@@ -4,6 +4,7 @@
  */
 
 import { File, Paths } from 'expo-file-system';
+import type { ImageURISource } from 'react-native';
 import * as LegacyFileSystem from 'expo-file-system/legacy';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
@@ -158,6 +159,47 @@ export function apiPostForm<TResponse>(
   return request<TResponse>('POST', path, formData, options);
 }
 
+/** Resolve only server-issued relative image paths (never arbitrary URLs). */
+export function photoImageSource(path: string, token?: string | null): ImageURISource {
+  if (!/^\/api\/v1\/profile-images\/(companies|interns)\/[0-9a-f-]{36}\?v=[0-9a-f-]{36}$/i.test(path)) {
+    throw new Error('Invalid profile photo URL');
+  }
+  return { uri: `${getBaseUrl().replace(/\/api\/v1\/?$/, '')}${path}`, ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}) };
+}
+
+export type ProfilePhotoFile = { uri: string; name: string; mimeType: 'image/jpeg' | 'image/png' };
+
+export async function uploadProfilePhoto(token: string, role: 'INTERN' | 'COMPANY', file: ProfilePhotoFile): Promise<{ photoUrl: string }> {
+  const location = role === 'INTERN' ? '/intern/profile/photo' : '/company/profile/logo';
+  const cache = LegacyFileSystem.cacheDirectory;
+  if (!cache) throw new NetworkError('Cannot prepare the image for upload.');
+  const directory = `${cache}path-profile-photo-uploads/`;
+  const staged = `${directory}${Date.now()}-${Math.random().toString(36).slice(2)}.${file.mimeType === 'image/png' ? 'png' : 'jpg'}`;
+  let result: LegacyFileSystem.FileSystemUploadResult;
+  try {
+    await LegacyFileSystem.makeDirectoryAsync(directory, { intermediates: true });
+    await LegacyFileSystem.copyAsync({ from: file.uri, to: staged });
+    const info = await LegacyFileSystem.getInfoAsync(staged);
+    if (!info.exists) throw new Error('Staging failed');
+    result = await LegacyFileSystem.uploadAsync(`${getBaseUrl()}${location}`, staged, {
+      httpMethod: 'POST', uploadType: LegacyFileSystem.FileSystemUploadType.MULTIPART,
+      fieldName: 'file', mimeType: file.mimeType,
+      headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
+    });
+  } catch {
+    throw new NetworkError('Could not upload the image.');
+  } finally {
+    await LegacyFileSystem.deleteAsync(staged, { idempotent: true }).catch(() => undefined);
+  }
+  if (result.status < 200 || result.status >= 300) throw new ApiError(result.status, friendlyMessageForStatus(result.status));
+  try { return JSON.parse(result.body) as { photoUrl: string }; }
+  catch { throw new NetworkError('Image upload completed, but its response was invalid.'); }
+}
+
+export function deleteProfilePhoto(token: string, role: 'INTERN' | 'COMPANY'): Promise<void> {
+  return apiDelete(role === 'INTERN' ? '/intern/profile/photo' : '/company/profile/logo', { token });
+}
+
 export type UserRole = 'INTERN' | 'COMPANY' | 'ADMIN';
 
 export type RegisterPayload = {
@@ -260,6 +302,7 @@ export type InternProfileSkill = {
 };
 
 export type InternProfile = {
+  photoUrl: string | null;
   id: string;
   userId: string;
   firstName: string | null;
@@ -490,6 +533,7 @@ export async function downloadInternCv(token: string): Promise<File> {
 }
 
 export type CompanyProfile = {
+  logoUrl: string | null;
   id: string;
   userId: string;
   companyName: string | null;
@@ -766,6 +810,7 @@ export type CompanyApplicationStatus = 'APPLIED' | 'ACCEPTED' | 'REJECTED';
  * CompanyApplicationDetail (no CV, cover letter, or answers; see getCompanyInternshipApplications).
  */
 export type CompanyApplicationListItem = {
+  applicantPhotoUrl: string | null;
   applicationId: string;
   internshipId: string;
   applicantName: string | null;
@@ -780,6 +825,7 @@ export type CompanyApplicationListItem = {
 /** Mirrors the backend's CompanyApplicationDetailResponse.Applicant nested record. Deliberately
  *  excludes date of birth and phone number — the backend never sends them to this endpoint. */
 export type CompanyApplicationApplicant = {
+  photoUrl: string | null;
   internProfileId: string;
   firstName: string | null;
   lastName: string | null;
@@ -914,6 +960,7 @@ export async function downloadCompanyApplicationCv(
  * they are used exactly as returned.
  */
 export type InternInternship = {
+  companyLogoUrl: string | null;
   id: string;
   companyName: string;
   title: string;
@@ -991,6 +1038,7 @@ export type InternApplicationAnswer = {
  * populates it.
  */
 export type InternApplication = {
+  companyLogoUrl: string | null;
   applicationId: string;
   internshipId: string;
   internshipTitle: string | null;

@@ -36,7 +36,15 @@
         }
       ],
       "expo-secure-store",
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow PATH to access a photo you choose for your profile or company logo.",
+          "cameraPermission": "Allow PATH to take a photo for your student profile.",
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

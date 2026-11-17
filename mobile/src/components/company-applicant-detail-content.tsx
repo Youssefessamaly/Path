@@ -7,6 +7,7 @@ import * as Sharing from 'expo-sharing';
 
 import { ApplicationDetailCard, ApplicationDetailText } from '@/components/application-polish';
 import { ApplicationStatusBadge } from '@/components/application-status-badge';
+import { ProfileAvatar } from '@/components/profile-avatar';
 import { AuthBackButton } from '@/components/auth-back-button';
 import { PathoraDetailHeader } from '@/components/pathora-detail-header';
 import { PathoraButton } from '@/components/pathora-button';
@@ -131,7 +132,7 @@ export function CompanyApplicantDetailContent({ internshipId, applicationId }: {
 
         <View style={styles.profileCard}>
           <View style={styles.profileTop}>
-            <View style={styles.avatar}><Text style={styles.avatarText}>{initialsForName(applicantName)}</Text></View>
+            <ProfileAvatar size={56} initials={initialsForName(applicantName)} photoUrl={applicant?.photoUrl} token={token} />
             <View style={styles.profileIdentity}>
               <Text style={styles.profileName} numberOfLines={2}>{applicantName}</Text>
               <Text style={styles.profileRole} numberOfLines={2}>{application.internshipTitle ?? 'Internship no longer available'}</Text>

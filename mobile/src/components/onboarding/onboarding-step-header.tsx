@@ -3,19 +3,19 @@ import { StyleSheet, Text, View } from 'react-native';
 import { PathoraColors, PathoraFonts, PathoraRadius, PathoraSpacing } from '@/constants/pathora-theme';
 
 export type OnboardingStepHeaderProps = {
-  step: 1 | 2 | 3;
+  step: 1 | 2 | 3 | 4;
   heading: string;
 };
 
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 4;
 
 /** The same progress treatment is used when setting up or editing either account type. */
 export function OnboardingStepHeader({ step, heading }: OnboardingStepHeaderProps) {
   return (
     <View style={styles.wrapper}>
       <View style={styles.metaRow}>
-        <Text style={styles.stepLabel}>{`STEP ${String(step).padStart(2, '0')} / 03`}</Text>
-        <Text style={styles.stepHelper}>{step === 3 ? 'Final step' : 'Your progress'}</Text>
+        <Text style={styles.stepLabel}>{`STEP ${String(step).padStart(2, '0')} / 04`}</Text>
+        <Text style={styles.stepHelper}>{step === 4 ? 'Optional finishing touch' : 'Your progress'}</Text>
       </View>
       <View style={styles.progressRow} accessibilityLabel={`Step ${step} of ${TOTAL_STEPS}`}>
         {Array.from({ length: TOTAL_STEPS }, (_, index) => {

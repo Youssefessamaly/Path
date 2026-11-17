@@ -4,6 +4,7 @@
  * Home, the complete discovery feed, and Favorites.
  */
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import { ProfileAvatar } from '@/components/profile-avatar';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { pathoraCardSurface, pathoraCardPressed } from '@/components/pathora-card-styles';
@@ -49,9 +50,7 @@ export function InternshipFeedCard({
       accessibilityLabel={`${item.title} at ${item.companyName}, ${item.relevancePercentage}% match. View internship details.`}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
       <View style={styles.topRow}>
-        <View style={styles.companyMark}>
-          <Text style={styles.companyInitials}>{companyInitials(item.companyName)}</Text>
-        </View>
+        <ProfileAvatar company size={45} initials={companyInitials(item.companyName)} photoUrl={item.companyLogoUrl} />
         <View style={styles.heading}>
           <Text style={styles.eyebrow}>INTERNSHIP OPPORTUNITY</Text>
           <Text numberOfLines={2} style={styles.title}>{item.title}</Text>
