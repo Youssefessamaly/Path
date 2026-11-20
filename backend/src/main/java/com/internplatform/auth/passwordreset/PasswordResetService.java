@@ -2,6 +2,8 @@ package com.internplatform.auth.passwordreset;
 
 import com.internplatform.user.User;
 import com.internplatform.user.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,8 @@ import java.util.Optional;
 
 @Service
 public class PasswordResetService {
+
+    private static final Logger log = LoggerFactory.getLogger(PasswordResetService.class);
 
     private static final int OTP_BOUND = 1_000_000;
     private static final long OTP_EXPIRATION_MINUTES = 5;
@@ -57,12 +61,15 @@ public class PasswordResetService {
                 userRepository.findByEmailIgnoreCase(normalizedEmail);
 
         if (userOptional.isEmpty()) {
+            // Do not disclose account existence to the API caller. Log no addresses/codes.
+            log.info("PATH reset request: deliveryAttempt=not_performed (no eligible account)");
             return;
         }
 
         User user = userOptional.get();
 
         if (!user.isEnabled()) {
+            log.info("PATH reset request: deliveryAttempt=not_performed (no eligible account)");
             return;
         }
 
@@ -72,6 +79,8 @@ public class PasswordResetService {
                 user.getEmail(),
                 issuedOtp.code()
         );
+        // SMTP send returning successfully is not confirmation of inbox delivery.
+        log.info("PATH reset request: deliveryAttempt=smtp_send_returned");
     }
 
     @Transactional(noRollbackFor = ResponseStatusException.class)

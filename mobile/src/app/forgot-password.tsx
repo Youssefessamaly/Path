@@ -63,7 +63,7 @@ export default function ForgotPasswordScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATH" title="Reset your password" subtitle="Enter your email address and we'll send you a 6-digit code to reset your password." onBack={handleBack} />
+          <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATH" title="Reset your password" subtitle="Enter the email address linked to your PATH account." onBack={handleBack} />
 
           <View style={styles.fields}>
             <PathoraInput
@@ -76,6 +76,7 @@ export default function ForgotPasswordScreen() {
               autoComplete="email"
               textContentType="emailAddress"
             />
+            <Text style={styles.helperText}>If the address belongs to an active account, we will request a six-digit code.</Text>
           </View>
 
           {(submitError) ? (<Text style={styles.submitError}>{submitError}</Text>) : null}
@@ -104,6 +105,9 @@ const styles = StyleSheet.create({
   fields: {
     gap: PathoraSpacing[20],
     marginBottom: PathoraSpacing[24],
+  },
+  helperText: {
+    fontFamily: PathoraFonts.en.regular, fontSize: 12, lineHeight: 19, color: PathoraColors.textSecondary,
   },
   submitError: {
     fontFamily: PathoraFonts.en.medium,
