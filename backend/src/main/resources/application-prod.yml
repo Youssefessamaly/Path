@@ -1,4 +1,4 @@
-# Activate on Render with SPRING_PROFILES_ACTIVE=prod.
+# Activate on Hostless with SPRING_PROFILES_ACTIVE=prod.
 # Never commit the actual values of database credentials or JWT_SECRET.
 spring:
   datasource:
@@ -7,6 +7,7 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD}
     hikari:
       maximum-pool-size: ${DB_POOL_SIZE:5}
+  # Configure a real SMTP provider on Hostless. localhost:1025 is only for local Mailpit.
   mail:
     host: ${SMTP_HOST:localhost}
     port: ${SMTP_PORT:1025}
@@ -16,8 +17,19 @@ spring:
       mail:
         smtp:
           auth: ${SMTP_AUTH:false}
+          connectiontimeout: ${SMTP_CONNECTION_TIMEOUT_MS:5000}
+          timeout: ${SMTP_READ_TIMEOUT_MS:5000}
+          writetimeout: ${SMTP_WRITE_TIMEOUT_MS:5000}
+          ssl:
+            enable: ${SMTP_SSL_ENABLED:false}
           starttls:
             enable: ${SMTP_STARTTLS:false}
+            required: ${SMTP_STARTTLS_REQUIRED:false}
+
+app:
+  password-reset:
+    # Default From to the authenticated SMTP account, not a fake .local address.
+    from-address: ${SMTP_FROM:${SMTP_USERNAME:}}
 
 server:
   port: ${PORT:10000}

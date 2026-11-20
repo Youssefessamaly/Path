@@ -104,7 +104,9 @@ export default function VerifyOtpScreen() {
       Alert.alert('Code sent', 'A new verification code has been sent to your email.');
     } catch (error) {
       if (error instanceof ApiError) {
-        setSubmitError(error.message);
+        setSubmitError(error.status === 503
+          ? 'Email delivery is temporarily unavailable. Please try again shortly.'
+          : error.message);
       } else if (error instanceof NetworkError) {
         setSubmitError('Unable to reach Path. Please try again.');
       } else {

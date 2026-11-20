@@ -38,7 +38,11 @@ export default function ForgotPasswordScreen() {
       router.push({ pathname: '/verify-otp', params: { email: trimmedEmail } });
     } catch (error) {
       if (error instanceof ApiError) {
-        setSubmitError(error.status === 400 ? 'Please enter a valid email address.' : error.message);
+        setSubmitError(error.status === 400
+          ? 'Please enter a valid email address.'
+          : error.status === 503
+            ? 'Email delivery is temporarily unavailable. Please try again shortly.'
+            : error.message);
       } else if (error instanceof NetworkError) {
         setSubmitError('Unable to reach Path. Please try again.');
       } else {
