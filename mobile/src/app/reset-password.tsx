@@ -12,7 +12,9 @@ import { ApiError, NetworkError, resetPassword } from '@/lib/api';
 export default function ResetPasswordScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ email?: string; resetToken?: string }>();
-  const [resetToken, setResetToken] = useState<string | null>(params.resetToken ?? null);
+  // Read the verified reset token without clearing it before navigation.
+  // Clearing it would trigger the missing-token guard and send users to Forgot Password.
+  const resetToken = params.resetToken ?? null;
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,9 +44,10 @@ export default function ResetPasswordScreen() {
 
     try {
       await resetPassword({ resetToken, newPassword });
-      setResetToken(null);
-      Alert.alert('Password reset', 'Your password has been reset successfully. Please log in.');
-      router.replace('/login');
+      // Return to the existing Login screen and remove the reset screens from history.
+      // Never clear resetToken here: doing so would trigger the guard above.
+      router.dismissTo('/login');
+      Alert.alert('Password reset', 'Your password has been reset successfully. Please log in with your new password.');
     } catch (error) {
       if (error instanceof ApiError) {
         setSubmitError('This reset link has expired or is invalid. Please start again.');
