@@ -4,6 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -177,6 +179,13 @@ public class InternProfileService {
 
         String previousStorageKey = profile.getCvStorageKey();
         String storageKey = cvStorageService.store(profile.getId(), content);
+        // R2 writes cannot roll back with SQL. Keep the old CV until commit succeeds.
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override public void afterCommit() { cvStorageService.delete(previousStorageKey); }
+            @Override public void afterCompletion(int status) {
+                if (status != STATUS_COMMITTED) cvStorageService.delete(storageKey);
+            }
+        });
 
         profile.setCvOriginalFilename(sanitizeCvFileName(file.getOriginalFilename()));
         profile.setCvStorageKey(storageKey);
@@ -188,10 +197,6 @@ public class InternProfileService {
         profile.setCvDetectedSkills(detectedSkills);
 
         InternProfile saved = internProfileRepository.saveAndFlush(profile);
-
-        if (previousStorageKey != null) {
-            cvStorageService.delete(previousStorageKey);
-        }
 
         return new CvUploadResponse(
                 saved.getCvOriginalFilename(),

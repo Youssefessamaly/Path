@@ -1,41 +1,58 @@
 package com.internplatform.internprofile;
 
+import com.internplatform.storage.InMemoryObjectStorage;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CvAccountCleanupTest {
-    @TempDir Path tempDir;
-
     @Test
-    void deletingProfileRemovesSnapshotsAndOrphansButNotOtherProfiles() throws Exception {
-        CvStorageService storage = new CvStorageService(tempDir.toString());
+    void deletingProfileRemovesProfileCvSnapshotsAndOrphansButNotOtherProfiles() throws Exception {
+        var objects = new InMemoryObjectStorage();
+        var storage = new CvStorageService(objects);
         UUID owner = UUID.randomUUID();
         UUID other = UUID.randomUUID();
         String first = storage.store(owner, new byte[]{1, 2, 3});
-        String second = storage.store(owner, new byte[]{4, 5, 6});
+        String snapshot = storage.storeSnapshot(owner, new byte[]{4, 5, 6});
         String unrelated = storage.store(other, new byte[]{7});
+        assertThat(first).startsWith("students/cvs/");
+        assertThat(snapshot).startsWith("applications/cv-snapshots/");
         storage.deleteAccountCleanupTask("profile:" + owner);
-        assertThat(Files.exists(tempDir.resolve(first))).isFalse();
-        assertThat(Files.exists(tempDir.resolve(second))).isFalse();
-        assertThat(Files.exists(tempDir.resolve(unrelated))).isTrue();
-        storage.deleteAccountCleanupTask("profile:" + owner); // idempotent
+        assertThat(objects.contains(first)).isFalse();
+        assertThat(objects.contains(snapshot)).isFalse();
+        assertThat(objects.contains(unrelated)).isTrue();
+        storage.deleteAccountCleanupTask("profile:" + owner);
     }
 
     @Test
     void deletingApplicationSnapshotDoesNotRemoveProfileCv() throws Exception {
-        CvStorageService storage = new CvStorageService(tempDir.toString());
+        var objects = new InMemoryObjectStorage();
+        var storage = new CvStorageService(objects);
         UUID profile = UUID.randomUUID();
-        String currentCv = storage.store(profile, new byte[]{1});
-        String submittedSnapshot = storage.store(profile, new byte[]{2});
-        storage.deleteAccountCleanupTask("file:" + submittedSnapshot);
-        assertThat(Files.exists(tempDir.resolve(submittedSnapshot))).isFalse();
-        assertThat(Files.exists(tempDir.resolve(currentCv))).isTrue();
-        storage.deleteAccountCleanupTask("file:" + submittedSnapshot); // idempotent
+        String current = storage.store(profile, new byte[]{1});
+        String snapshot = storage.storeSnapshot(profile, new byte[]{2});
+        storage.deleteAccountCleanupTask("file:" + snapshot);
+        assertThat(objects.contains(snapshot)).isFalse();
+        assertThat(storage.read(current)).containsExactly((byte) 1);
+        storage.deleteAccountCleanupTask("file:" + snapshot);
+    }
+
+    @Test
+    void legacyStorageKeysRemainReadableAfterImport() throws Exception {
+        var objects = new InMemoryObjectStorage();
+        var storage = new CvStorageService(objects);
+        String key = UUID.randomUUID() + "/" + UUID.randomUUID() + ".pdf";
+        objects.put("legacy/cvs/" + key, new byte[]{42}, "application/pdf");
+        assertThat(storage.read(key)).containsExactly((byte) 42);
+        storage.deleteAccountCleanupTask("file:" + key);
+        assertThat(objects.contains("legacy/cvs/" + key)).isFalse();
+    }
+
+    @Test
+    void rejectsArbitraryObjectKeys() {
+        var storage = new CvStorageService(new InMemoryObjectStorage());
+        assertThatThrownBy(() -> storage.read("../../secret"))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

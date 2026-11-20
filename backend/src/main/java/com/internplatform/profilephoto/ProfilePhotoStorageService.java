@@ -1,9 +1,12 @@
 package com.internplatform.profilephoto;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.internplatform.storage.ObjectStorage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -14,27 +17,23 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.nio.file.FileVisitResult;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Iterator;
 import java.util.UUID;
 
-/** Local, private, normalized profile images (not user-supplied filenames). */
+/** Normalizes profile pictures locally in memory, then persists objects privately in R2. */
 @Service
 public class ProfilePhotoStorageService {
     public static final int MAX_INPUT_BYTES = 5 * 1024 * 1024;
     private static final int MAX_EDGE = 640;
     private static final long MAX_PIXELS = 20_000_000;
-    private final Path root;
+    private static final String STUDENT_PREFIX = "students/profile-photos/";
+    private static final String COMPANY_PREFIX = "companies/logos/";
+    private static final String LEGACY_PREFIX = "legacy/profile-photos/";
+    private static final Logger log = LoggerFactory.getLogger(ProfilePhotoStorageService.class);
+    private final ObjectStorage objects;
 
-    public ProfilePhotoStorageService(@Value("${app.photo-storage.directory:./data/profile-photos}") String directory) {
-        root = Path.of(directory).toAbsolutePath().normalize();
-        try { Files.createDirectories(root); }
-        catch (IOException e) { throw new IllegalStateException("Unable to create photo storage directory", e); }
+    public ProfilePhotoStorageService(ObjectStorage objects) {
+        this.objects = objects;
     }
 
     /** Accept only actual JPEG/PNG data; strip EXIF and resize before storing PNG. */
@@ -76,54 +75,77 @@ public class ProfilePhotoStorageService {
         } catch (IOException | IllegalArgumentException e) { throw badImage(); }
     }
 
-    public String store(UUID profileId, byte[] png) {
-        String key = profileId + "/" + UUID.randomUUID() + ".png";
-        Path target = resolved(key);
+
+    public String storeIntern(UUID profileId, byte[] png) {
+        return store(STUDENT_PREFIX, profileId, png);
+    }
+
+    public String storeCompany(UUID profileId, byte[] png) {
+        return store(COMPANY_PREFIX, profileId, png);
+    }
+
+    private String store(String prefix, UUID profileId, byte[] png) {
+        String key = prefix + profileId + "/" + UUID.randomUUID() + ".png";
         try {
-            Files.createDirectories(target.getParent());
-            Files.write(target, png, StandardOpenOption.CREATE_NEW);
-        } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unable to store photo");
+            objects.put(key, png, "image/png");
+            return key;
+        } catch (RuntimeException ex) {
+            log.warn("Unable to upload profile image to R2", ex);
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Image storage is currently unavailable");
         }
-        return key;
     }
 
     public byte[] read(String key) {
-        try { return Files.readAllBytes(resolved(key)); }
-        catch (IOException e) { throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Photo not found"); }
+        try {
+            return objects.get(validate(key));
+        } catch (S3Exception ex) {
+            if (ex.statusCode() == 404) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Photo not found");
+            }
+            log.warn("R2 could not retrieve an image (status={})", ex.statusCode());
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Image storage is currently unavailable");
+        } catch (RuntimeException ex) {
+            log.warn("R2 could not retrieve an image", ex);
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Image storage is currently unavailable");
+        }
     }
 
+    /** Best-effort removal, used after a successful profile update / on rollback. */
     public void delete(String key) {
         if (key == null) return;
-        try { Files.deleteIfExists(resolved(key)); }
-        catch (IOException ignored) { /* A delayed cleanup can remove an orphaned file. */ }
+        try {
+            objects.delete(validate(key));
+        } catch (RuntimeException ex) {
+            log.warn("Unable to delete old image from private storage; cleanup may be needed");
+        }
     }
 
-    /** Retryable account deletion: deletes only this profile's generated image directory. */
+    /** Strict cleanup for the existing retryable account-deletion queue. */
     public void deleteProfileDirectory(UUID profileId) throws IOException {
-        Path directory = root.resolve(profileId.toString()).normalize();
-        if (!directory.startsWith(root) || !Files.exists(directory)) return;
-        Files.walkFileTree(directory, new SimpleFileVisitor<>() {
-            @Override public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                Files.deleteIfExists(file);
-                return FileVisitResult.CONTINUE;
-            }
-            @Override public FileVisitResult postVisitDirectory(Path dir, IOException error) throws IOException {
-                if (error != null) throw error;
-                Files.deleteIfExists(dir);
-                return FileVisitResult.CONTINUE;
-            }
-        });
+        objects.deletePrefix(STUDENT_PREFIX + profileId + "/");
+        objects.deletePrefix(COMPANY_PREFIX + profileId + "/");
+        objects.deletePrefix(LEGACY_PREFIX + profileId + "/");
     }
 
-    private Path resolved(String key) {
-        String[] segments = key.split("/", -1);
-        if (segments.length != 2 || !segments[1].endsWith(".png")) throw new IllegalArgumentException("Invalid photo key");
-        UUID.fromString(segments[0]);
-        UUID.fromString(segments[1].substring(0, segments[1].length() - 4));
-        Path path = root.resolve(key).normalize();
-        if (!path.startsWith(root)) throw new IllegalArgumentException("Invalid photo key");
-        return path;
+    private String validate(String key) {
+        if (key == null) throw new IllegalArgumentException("Missing photo key");
+        if (key.matches("[a-fA-F0-9-]{36}/[a-fA-F0-9-]{36}\\.png")) {
+            String[] parts = key.split("/");
+            UUID.fromString(parts[0]);
+            UUID.fromString(parts[1].substring(0, 36));
+            return LEGACY_PREFIX + key;
+        }
+        String prefix = key.startsWith(STUDENT_PREFIX) ? STUDENT_PREFIX
+                : key.startsWith(COMPANY_PREFIX) ? COMPANY_PREFIX
+                : key.startsWith(LEGACY_PREFIX) ? LEGACY_PREFIX : null;
+        if (prefix == null) throw new IllegalArgumentException("Invalid photo key");
+        String[] parts = key.substring(prefix.length()).split("/", -1);
+        if (parts.length != 2 || parts[1].length() != 40 || !parts[1].endsWith(".png")) {
+            throw new IllegalArgumentException("Invalid photo key");
+        }
+        UUID.fromString(parts[0]);
+        UUID.fromString(parts[1].substring(0, 36));
+        return key;
     }
 
     private ResponseStatusException badImage() {

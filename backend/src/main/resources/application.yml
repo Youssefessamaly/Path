@@ -48,10 +48,6 @@ app:
   jwt:
     secret: ${JWT_SECRET}
     expiration-seconds: 3600
-  cv-storage:
-    directory: ${CV_STORAGE_DIR:./data/cv-storage}
-  photo-storage:
-    directory: ${PHOTO_STORAGE_DIR:./data/profile-photos}
   admin:
     # Optional one-time ADMIN account provisioning — see AdminAccountBootstrapper. Left unset
     # by default (empty = no-op); set both to provision the first internal admin account, then

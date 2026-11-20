@@ -46,11 +46,11 @@ public class ProfilePhotoController {
     @Transactional
     public PhotoResponse uploadIntern(@AuthenticationPrincipal Jwt jwt, @RequestParam("file") MultipartFile file) {
         InternProfile profile = interns.findByUserId(userId(jwt)).orElseThrow(this::missing);
-        String next = storage.store(profile.getId(), storage.normalize(contents(file)));
+        String next = storage.storeIntern(profile.getId(), storage.normalize(contents(file)));
         String previous = profile.getPhotoStorageKey();
+        scheduleCleanup(next, previous);
         profile.setPhotoStorageKey(next);
         interns.saveAndFlush(profile);
-        scheduleCleanup(next, previous);
         return new PhotoResponse(ProfilePhotoUrls.intern(profile));
     }
 
@@ -70,11 +70,11 @@ public class ProfilePhotoController {
     public PhotoResponse uploadCompany(@AuthenticationPrincipal Jwt jwt, @RequestParam("file") MultipartFile file) {
         CompanyProfile profile = companyAccess.findCompanyProfile(companyAccess.resolveOwner(userId(jwt)))
                 .orElseThrow(this::missing);
-        String next = storage.store(profile.getId(), storage.normalize(contents(file)));
+        String next = storage.storeCompany(profile.getId(), storage.normalize(contents(file)));
         String previous = profile.getPhotoStorageKey();
+        scheduleCleanup(next, previous);
         profile.setPhotoStorageKey(next);
         companies.saveAndFlush(profile);
-        scheduleCleanup(next, previous);
         return new PhotoResponse(ProfilePhotoUrls.company(profile));
     }
 
