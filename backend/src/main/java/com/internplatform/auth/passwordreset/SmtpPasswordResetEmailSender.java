@@ -8,6 +8,10 @@ import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
+
+import javax.net.ssl.SSLException;
+import java.util.Locale;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -67,11 +71,52 @@ public class SmtpPasswordResetEmailSender implements PasswordResetEmailSender {
             while (root.getCause() != null && root.getCause() != root) {
                 root = root.getCause();
             }
-            log.error("PATH password reset email delivery failed: category={}, causeType={}. "
-                            + "Check Hostless SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, "
-                            + "SMTP_AUTH, SMTP_STARTTLS, SMTP_FROM and outbound SMTP access.",
-                    category, root.getClass().getSimpleName());
+            String tlsDetail = tlsDiagnostic(root);
+            if (mailSender instanceof JavaMailSenderImpl sender) {
+                // These are non-secret connection settings. Never log usernames,
+                // passwords, recipients, OTPs or the raw provider exception message.
+                var props = sender.getJavaMailProperties();
+                log.error("PATH password reset email delivery failed: category={}, causeType={}, "
+                                + "tlsDetail={}, smtpPort={}, sslEnabled={}, starttlsEnabled={}, "
+                                + "starttlsRequired={}.",
+                        category, root.getClass().getSimpleName(), tlsDetail, sender.getPort(),
+                        props.getProperty("mail.smtp.ssl.enable", "false"),
+                        props.getProperty("mail.smtp.starttls.enable", "false"),
+                        props.getProperty("mail.smtp.starttls.required", "false"));
+            } else {
+                log.error("PATH password reset email delivery failed: category={}, causeType={}, tlsDetail={}.",
+                        category, root.getClass().getSimpleName(), tlsDetail);
+            }
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, DELIVERY_UNAVAILABLE);
         }
+    }
+    /**
+     * Diagnose common TLS failures without logging arbitrary provider exception
+     * messages, which could contain recipient information or server details.
+     */
+    private static String tlsDiagnostic(Throwable root) {
+        if (!(root instanceof SSLException)) {
+            return "NOT_SSL";
+        }
+        String detail = root.getMessage() == null
+                ? "" : root.getMessage().toLowerCase(Locale.ROOT);
+        if (detail.contains("unrecognized ssl message")
+                || detail.contains("plaintext connection")
+                || detail.contains("wrong version number")) {
+            return "SSL_MODE_OR_PORT_MISMATCH";
+        }
+        if (detail.contains("pkix") || detail.contains("certification path")
+                || detail.contains("certificate_unknown") || detail.contains("certificate")) {
+            return "CERTIFICATE_VALIDATION";
+        }
+        if (detail.contains("handshake") || detail.contains("protocol_version")
+                || detail.contains("no appropriate protocol")) {
+            return "TLS_HANDSHAKE";
+        }
+        if (detail.contains("connection reset") || detail.contains("connection closed")
+                || detail.contains("remote host terminated") || detail.contains("eof")) {
+            return "CONNECTION_TERMINATED";
+        }
+        return "SSL_OTHER";
     }
 }
