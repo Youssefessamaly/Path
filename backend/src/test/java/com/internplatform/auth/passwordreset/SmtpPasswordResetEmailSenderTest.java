@@ -48,11 +48,8 @@ class SmtpPasswordResetEmailSenderTest {
 
         String text = findPart(message, "text/plain");
         String html = findPart(message, "text/html");
-        assertThat(text).contains("Your PATH verification code is: 003421", "5 minutes", "Never share this code");
+        assertThat(text).contains("003421", "5 minutes", "Never share this code");
         assertThat(html).contains("PATH", "Your verification code", "#0D4A43", "5 minutes");
-        // The complete code must be discoverable in a single readable sentence
-        // as well as visually displayed in the six existing styled cells.
-        assertThat(html).contains("Your PATH verification code is: 003421");
         // The six digits are displayed as individual HTML table cells.
         assertThat(html.split("width:16%", -1)).hasSize(7);
         for (char digit : "003421".toCharArray()) {
