@@ -19,17 +19,17 @@ const BENEFITS: Benefit[] = [
   {
     icon: { ios: 'checkmark.shield.fill', android: 'verified_user', web: 'verified_user' },
     title: 'Reviewed companies',
-    description: 'Explore internships from companies reviewed by Path.',
+    description: 'Browse their internships.',
   },
   {
     icon: { ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' },
-    title: 'Opportunities that fit',
-    description: 'See how each role matches your profile and interests.',
+    title: 'Find your fit',
+    description: 'See roles matched to your profile.',
   },
   {
     icon: { ios: 'list.clipboard.fill', android: 'assignment', web: 'assignment' },
-    title: 'Every application in one place',
-    description: 'Stay up to date as your applications progress.',
+    title: 'Track applications',
+    description: 'Follow your progress.',
   },
 ];
 
@@ -80,7 +80,7 @@ export default function WelcomeScreen() {
               <Text style={styles.heroTitleAccent}>opportunity.</Text>
             </Text>
             <Text style={styles.heroDescription}>
-              Discover internships, find your fit, and keep every application moving forward.
+              Find internships that fit.
             </Text>
           </View>
 
@@ -92,8 +92,8 @@ export default function WelcomeScreen() {
 
         <View style={styles.main}>
           <View style={styles.sectionHeading}>
-            <Text style={styles.sectionEyebrow}>WHY PATHORA</Text>
-            <Text style={styles.sectionTitle}>A simpler way to get started</Text>
+            <Text style={styles.sectionEyebrow}>WHY PATH</Text>
+            <Text style={styles.sectionTitle}>Internships, simplified.</Text>
           </View>
 
           <View style={styles.benefitsCard}>
@@ -113,7 +113,7 @@ export default function WelcomeScreen() {
               style={styles.primaryAction}
             />
             <PathoraButton
-              label="I already have an account"
+              label="Log in"
               variant="secondary"
               onPress={() => router.push('/login')}
               style={styles.secondaryAction}
