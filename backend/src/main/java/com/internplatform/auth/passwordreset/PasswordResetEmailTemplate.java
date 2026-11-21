@@ -12,7 +12,7 @@ final class PasswordResetEmailTemplate {
     static String plainText(String code) {
         requireSixDigits(code);
         return "PATH | Password reset\n\n"
-                + "Your PATH password reset verification code is:\n" + code + "\n\n"
+                + "Your PATH password reset verification code is: " + code + "\n\n"
                 + "This code expires 5 minutes after it was requested.\n"
                 + "Enter it in the PATH app to continue resetting your password.\n\n"
                 + "Never share this code, including with PATH support.\n"
@@ -48,16 +48,27 @@ final class PasswordResetEmailTemplate {
                           <p style="margin:0 0 27px;font-size:15px;line-height:1.7;color:#5B6472;">
                             We received a request to reset your PATH password. Enter this six-digit code in the app to continue.
                           </p>
-                          <!-- Keep the entire six-digit code in one text node so
-                               Mail can recognize it as a single one-time code. -->
-                          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;border-collapse:collapse;">
-                            <tr><td align="center" style="padding:18px 8px;background-color:#E4F3F0;border:1px solid #C7E8E2;border-radius:12px;color:#0D4A43;font-size:30px;line-height:1.25;letter-spacing:6px;font-weight:800;font-family:Arial,Helvetica,sans-serif;">
-                              """);
+                          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;border-collapse:separate;border-spacing:4px 0;table-layout:fixed;">
+                            <tr>
+                """);
+
+        for (int index = 0; index < code.length(); index++) {
+            html.append("""
+                              <td align="center" style="width:16%;padding:14px 0;background-color:#E4F3F0;border:1px solid #C7E8E2;border-radius:10px;color:#0D4A43;font-size:27px;line-height:1.15;font-weight:800;font-family:Arial,Helvetica,sans-serif;">
+                                """);
+            html.append(code.charAt(index));
+            html.append("</td>\n");
+        }
+
+        html.append("""
+                            </tr>
+                          </table>
+                          <p style="margin:14px 0 6px;text-align:center;color:#5B6472;font-size:12px;line-height:1.6;">Copy-friendly code</p>
+                          <p style="margin:0 0 11px;text-align:center;color:#16213A;font-size:18px;font-weight:bold;letter-spacing:3px;font-family:Arial,Helvetica,sans-serif;">
+                            """);
         html.append(code);
         html.append("""
-                            </td></tr>
-                          </table>
-                          <p style="margin:12px 0 22px;text-align:center;color:#5B6472;font-size:12px;line-height:1.6;">Your six-digit PATH verification code</p>
+                          </p>
                           <p style="margin:0 0 27px;font-size:13px;line-height:1.6;text-align:center;color:#5B6472;">
                             This code is valid for <strong style="color:#0D4A43;">5 minutes</strong> from when it was requested.
                           </p>
