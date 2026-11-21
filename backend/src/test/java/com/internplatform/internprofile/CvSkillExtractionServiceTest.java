@@ -32,6 +32,12 @@ class CvSkillExtractionServiceTest {
         return new Skill(name);
     }
 
+    private Skill skillWithAliases(String name, String... aliases) {
+        Skill skill = new Skill(name);
+        skill.getAliases().addAll(List.of(aliases));
+        return skill;
+    }
+
     private Set<String> detectedNames(String text, Skill... catalog) {
         return service.detectSkills(text, List.of(catalog)).stream()
                 .map(Skill::getName)
@@ -117,6 +123,77 @@ class CvSkillExtractionServiceTest {
         assertThatThrownBy(() -> service.extractText(fake))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("valid, text-readable PDF");
+    }
+
+    @Test
+    void aliasResolvesToCanonicalSkill() {
+        // "JS" must resolve to the canonical "JavaScript" skill, not a separate skill.
+        Skill javaScript = skillWithAliases("JavaScript", "JS");
+
+        Set<String> detected = service.detectSkills("5 years of JS experience.", List.of(javaScript)).stream()
+                .map(Skill::getName)
+                .collect(Collectors.toSet());
+
+        assertThat(detected).containsExactly("JavaScript");
+    }
+
+    @Test
+    void multipleAliasesAllResolveToTheSameCanonicalSkill() {
+        Skill postgres = skillWithAliases("PostgreSQL", "Postgres", "Postgre SQL");
+
+        assertThat(service.detectSkills("Database: Postgres.", List.of(postgres))).containsExactly(postgres);
+        assertThat(service.detectSkills("Database: PostgreSQL.", List.of(postgres))).containsExactly(postgres);
+    }
+
+    @Test
+    void aliasMatchDoesNotAlsoRequireTheCanonicalNameToBePresent() {
+        Skill react = skillWithAliases("React", "React.js");
+
+        Set<Skill> detected = service.detectSkills("Built UIs with React.js.", List.of(react));
+
+        assertThat(detected).containsExactly(react);
+    }
+
+    @Test
+    void reactMentionDoesNotFalselyDetectReactNative() {
+        Set<String> detected = detectedNames(
+                "Frontend experience with React.", skill("React"), skill("React Native"));
+
+        assertThat(detected).containsExactly("React");
+    }
+
+    @Test
+    void reactNativeMentionAlsoCountsAsReactEvidence() {
+        // Mentioning React Native genuinely implies some React exposure — the reverse of the
+        // previous case, where a bare "React" mention must NOT imply React Native.
+        Set<String> detected = detectedNames(
+                "Built mobile apps with React Native.", skill("React"), skill("React Native"));
+
+        assertThat(detected).containsExactlyInAnyOrder("React", "React Native");
+    }
+
+    @Test
+    void cPlusPlusMentionDoesNotFalselyDetectBareC() {
+        Set<String> detected = detectedNames(
+                "Systems programming in C++ and Python.", skill("C"), skill("C++"), skill("Python"));
+
+        assertThat(detected).containsExactlyInAnyOrder("C++", "Python");
+    }
+
+    @Test
+    void cSharpMentionDoesNotFalselyDetectBareC() {
+        Set<String> detected = detectedNames(
+                "Desktop apps in C# using .NET.", skill("C"), skill("C#"));
+
+        assertThat(detected).containsExactly("C#");
+    }
+
+    @Test
+    void bareCIsStillDetectedWhenGenuinelyStandalone() {
+        Set<String> detected = detectedNames(
+                "Embedded firmware written in C.", skill("C"), skill("C++"));
+
+        assertThat(detected).containsExactly("C");
     }
 
     @Test
