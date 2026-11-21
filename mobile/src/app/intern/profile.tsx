@@ -276,7 +276,7 @@ export default function InternProfileRoute() {
                 <Icon name={{ ios: 'arrow.up.doc', android: 'upload_file', web: 'upload_file' }} size={17} color="#FFFFFF" />
               )}
               <Text style={styles.cvUploadText}>
-                {cvUploading ? 'Uploading…' : profile.cvFileName ? 'Replace CV' : 'Upload CV'}
+                {cvUploading ? 'Uploading…' : profile.cvFileName ? 'Update CV' : 'Upload CV'}
               </Text>
             </Pressable>
           </View>
