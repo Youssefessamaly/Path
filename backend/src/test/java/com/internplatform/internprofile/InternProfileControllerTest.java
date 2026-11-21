@@ -242,12 +242,18 @@ class InternProfileControllerTest {
 
     @Test
     void skillsEndpointReturnsSeededCatalogSortedByName() throws Exception {
+        // 12 original (V4) + 20 added by the V24 catalog expansion — see
+        // V24__expand_skills_catalog_and_aliases.sql. Update this count if the seeded catalog
+        // size changes again.
         mockMvc.perform(get("/api/v1/intern/skills").with(asIntern()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(12)))
+                .andExpect(jsonPath("$", hasSize(32)))
                 .andExpect(jsonPath("$[*].name", hasItem("Java")))
                 .andExpect(jsonPath("$[*].name", hasItem("SQL")))
-                .andExpect(jsonPath("$[*].name", hasItem("Project Management")));
+                .andExpect(jsonPath("$[*].name", hasItem("Project Management")))
+                .andExpect(jsonPath("$[*].name", hasItem("PostgreSQL")))
+                .andExpect(jsonPath("$[*].name", hasItem("Docker")))
+                .andExpect(jsonPath("$[*].name", hasItem("React Native")));
 
         List<Skill> seeded = skillRepository.findAllByOrderByNameAsc();
         List<String> names = seeded.stream().map(Skill::getName).toList();
@@ -268,7 +274,7 @@ class InternProfileControllerTest {
 
         mockMvc.perform(get("/api/v1/intern/skills").with(asUser(companyUser)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(12)));
+                .andExpect(jsonPath("$", hasSize(32)));
     }
 
     @Test

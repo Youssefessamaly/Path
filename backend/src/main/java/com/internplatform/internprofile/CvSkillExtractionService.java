@@ -59,7 +59,7 @@ public class CvSkillExtractionService {
         Set<Skill> detected = new HashSet<>();
 
         for (Skill skill : catalog) {
-            if (buildSkillPattern(skill.getName()).matcher(normalized).find()) {
+            if (matchesNameOrAlias(skill, normalized)) {
                 detected.add(skill);
             }
         }
@@ -67,23 +67,47 @@ public class CvSkillExtractionService {
         return detected;
     }
 
+    /**
+     * A skill counts as present if its canonical name matches, OR any of its aliases does
+     * (e.g. "JS" for JavaScript, "Postgres" for PostgreSQL — see V23/V24). An alias never
+     * creates a second skill: it always resolves back to the same catalog Skill instance.
+     */
+    private boolean matchesNameOrAlias(Skill skill, String normalizedText) {
+        if (buildSkillPattern(skill.getName()).matcher(normalizedText).find()) {
+            return true;
+        }
+        for (String alias : skill.getAliases()) {
+            if (buildSkillPattern(alias).matcher(normalizedText).find()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private String normalize(String text) {
         return text == null ? "" : text.replaceAll("\\s+", " ");
     }
 
     /**
-     * Builds a case-insensitive, word-boundary-anchored pattern for a (possibly multi-word)
-     * skill name. `\b` boundaries are what prevent "Java" from matching inside "JavaScript":
-     * every character in "JavaScript" is a word character, so there is no boundary between
-     * "Java" and "Script" for `\bJava\b` to land on — it only matches "Java" as an
-     * independent token. `\s+` between words tolerates line-wrapped multi-word skills like
+     * Builds a case-insensitive, boundary-anchored pattern for a (possibly multi-word) skill
+     * name or alias. `\s+` between words tolerates line-wrapped multi-word names like
      * "Spring Boot" even though normalize() already collapsed whitespace to single spaces.
+     *
+     * The boundary is a hardened variant of `\b`: plain `\b` only distinguishes word chars
+     * (`\w`) from everything else, so `\bC\b` still matches the "C" inside "C++" or "C#" —
+     * `+` and `#` are non-word characters, so there IS a `\w`/`\W` transition right where "C"
+     * ends, even though "C++" and "C#" are different skills entirely. Excluding `+`/`#` from
+     * both sides (in addition to the usual `\w`) closes that gap while leaving every other
+     * `\b` case (spaces, punctuation, line start/end, "Java" vs "JavaScript") unchanged.
      */
     private Pattern buildSkillPattern(String skillName) {
         String joined = Arrays.stream(skillName.trim().split("\\s+"))
                 .map(Pattern::quote)
                 .collect(Collectors.joining("\\s+"));
 
-        return Pattern.compile("\\b" + joined + "\\b", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+        return Pattern.compile(
+                "(?<![\\w+#])" + joined + "(?![\\w+#])",
+                Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+        );
     }
 }
