@@ -1,8 +1,9 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
 import {
   Alert,
+  AppState,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -41,6 +42,40 @@ export default function VerifyOtpScreen() {
   const [secondsRemaining, setSecondsRemaining] = useState(OTP_DISPLAY_SECONDS);
   // This is a visual estimate. Only the server determines whether a code is valid.
   const displayDeadline = useRef<number | null>(null);
+
+  // Keep one native input behind the six visual cells: iOS recognizes native
+  // one-time-code fields, not six separate custom digit controls.
+  const codeInputRef = useRef<ComponentRef<typeof TextInput>>(null);
+
+  // Navigation animation or returning from Mail can leave the numeric keyboard
+  // dismissed. Focus the actual native field only while this route is active.
+  // The code suggestion itself is provided by iOS, not by PATH.
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS !== 'ios') return;
+
+      let isScreenActive = true;
+      let focusTimer: ReturnType<typeof setTimeout> | undefined;
+
+      const focusCodeField = () => {
+        if (focusTimer) clearTimeout(focusTimer);
+        focusTimer = setTimeout(() => {
+          if (isScreenActive) codeInputRef.current?.focus();
+        }, 300);
+      };
+
+      focusCodeField();
+      const appStateSubscription = AppState.addEventListener('change', (state) => {
+        if (state === 'active') focusCodeField();
+      });
+
+      return () => {
+        isScreenActive = false;
+        if (focusTimer) clearTimeout(focusTimer);
+        appStateSubscription.remove();
+      };
+    }, [])
+  );
 
   useEffect(() => {
     if (!email) {
@@ -99,7 +134,9 @@ export default function VerifyOtpScreen() {
       displayDeadline.current = Date.now() + OTP_DISPLAY_SECONDS * 1000;
       setSecondsRemaining(OTP_DISPLAY_SECONDS);
       setCode('');
-      Alert.alert('Request received', REQUEST_RECEIVED_MESSAGE);
+      Alert.alert('Request received', REQUEST_RECEIVED_MESSAGE, [
+        { text: 'OK', onPress: () => codeInputRef.current?.focus() },
+      ]);
     } catch (error) {
       if (error instanceof ApiError) {
         setSubmitError(error.status === 503
@@ -196,20 +233,23 @@ export default function VerifyOtpScreen() {
               </View>
               {/* One real field allows SMS/email OTP AutoFill, pasting, and reliable backspace. */}
               <TextInput
+                ref={codeInputRef}
+                testID="path-otp-native-input"
                 value={code}
+                maxLength={OTP_LENGTH}
                 onChangeText={handleChangeCode}
                 onFocus={() => setIsCodeFocused(true)}
                 onBlur={() => setIsCodeFocused(false)}
                 keyboardType="number-pad"
                 autoCapitalize="none"
                 autoCorrect={false}
-                // Keep a single real native TextInput for Apple's QuickType OTP suggestion.
-                // Open the keyboard on iPhone so an email code can be suggested immediately.
-                autoFocus={Platform.OS === 'ios'}
+                // The system keyboard must own this native field for QuickType AutoFill.
+                // iOS: oneTimeCode. Android: sms-otp. Do not set both hint props on iOS.
                 textContentType={Platform.OS === 'ios' ? 'oneTimeCode' : undefined}
                 autoComplete={Platform.OS === 'android' ? 'sms-otp' : undefined}
                 importantForAutofill="yes"
                 caretHidden
+                smartInsertDelete={false}
                 selectionColor="transparent"
                 accessibilityLabel="Verification code, 6 digits"
                 accessibilityHint="Tap to type or paste the six-digit code."

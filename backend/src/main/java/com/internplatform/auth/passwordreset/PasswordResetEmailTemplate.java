@@ -12,7 +12,7 @@ final class PasswordResetEmailTemplate {
     static String plainText(String code) {
         requireSixDigits(code);
         return "PATH | Password reset\n\n"
-                + "Your PATH verification code is: " + code + "\n\n"
+                + "Your PATH password reset verification code is: " + code + "\n\n"
                 + "This code expires 5 minutes after it was requested.\n"
                 + "Enter it in the PATH app to continue resetting your password.\n\n"
                 + "Never share this code, including with PATH support.\n"
@@ -63,10 +63,10 @@ final class PasswordResetEmailTemplate {
         html.append("""
                             </tr>
                           </table>
-                          <!-- Keep the complete OTP in one readable sentence for email code detection. -->
-                          <p style="margin:17px 0 14px;text-align:center;color:#16213A;font-size:15px;line-height:1.6;font-family:Arial,Helvetica,sans-serif;">
-                """);
-        html.append("Your PATH verification code is: ").append(code);
+                          <p style="margin:14px 0 6px;text-align:center;color:#5B6472;font-size:12px;line-height:1.6;">Copy-friendly code</p>
+                          <p style="margin:0 0 11px;text-align:center;color:#16213A;font-size:18px;font-weight:bold;letter-spacing:3px;font-family:Arial,Helvetica,sans-serif;">
+                            """);
+        html.append(code);
         html.append("""
                           </p>
                           <p style="margin:0 0 27px;font-size:13px;line-height:1.6;text-align:center;color:#5B6472;">
