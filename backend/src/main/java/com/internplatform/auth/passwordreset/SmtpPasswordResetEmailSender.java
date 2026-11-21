@@ -6,11 +6,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.mail.javamail.MimeMessageHelper;
 
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import javax.net.ssl.SSLException;
+import java.io.UnsupportedEncodingException;
 import java.util.Locale;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
@@ -48,21 +51,21 @@ public class SmtpPasswordResetEmailSender implements PasswordResetEmailSender {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, DELIVERY_UNAVAILABLE);
         }
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromAddress);
-        message.setTo(recipientEmail);
-        message.setSubject("PATH password reset code");
-        message.setText(
-                "Your PATH password reset code is: " + otp
-                        + System.lineSeparator() + System.lineSeparator()
-                        + "This code expires in 5 minutes."
-                        + System.lineSeparator()
-                        + "If you did not request a password reset, you can ignore this email."
-        );
-
         try {
+            // MIME multipart/alternative includes both polished HTML and a readable
+            // plain-text alternative for accessibility and email clients.
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromAddress, "PATH Support");
+            helper.setTo(recipientEmail);
+            helper.setSubject("Your PATH password reset code");
+            helper.setText(
+                    PasswordResetEmailTemplate.plainText(otp),
+                    PasswordResetEmailTemplate.html(otp)
+            );
+            message.setHeader("Auto-Submitted", "auto-generated");
             mailSender.send(message);
-        } catch (MailException exception) {
+        } catch (MessagingException | UnsupportedEncodingException | MailException exception) {
             // Log only exception TYPES: provider exceptions may contain sensitive mail details.
             String category = exception instanceof MailAuthenticationException
                     ? "SMTP_AUTHENTICATION"

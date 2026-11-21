@@ -1,52 +1,75 @@
 package com.internplatform.auth.passwordreset;
 
+import jakarta.mail.Multipart;
+import jakarta.mail.Part;
+import jakarta.mail.Session;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.MailSendException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.doThrow;
-import org.mockito.ArgumentCaptor;
+import static org.mockito.Mockito.when;
 
 class SmtpPasswordResetEmailSenderTest {
 
     @Test
-    void usesVerifiedSenderAndPathBrandingWithoutChangingOtp() {
-        JavaMailSender mailSender = mock(JavaMailSender.class);
+    void sendsBrandedMultipartEmailWithPlainTextFallbackAndLeadingZeros() throws Exception {
+        JavaMailSender mailSender = configuredMailSender();
         SmtpPasswordResetEmailSender sender =
                 new SmtpPasswordResetEmailSender(mailSender, "path.app.support@gmail.com", "other@gmail.com");
 
         sender.sendOtp("student@example.test", "003421");
 
-        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
         verify(mailSender).send(captor.capture());
-        SimpleMailMessage message = captor.getValue();
-        assertThat(message.getFrom()).isEqualTo("path.app.support@gmail.com");
-        assertThat(message.getTo()).containsExactly("student@example.test");
-        assertThat(message.getSubject()).isEqualTo("PATH password reset code");
-        assertThat(message.getText()).contains("003421", "5 minutes");
+        MimeMessage message = captor.getValue();
+        InternetAddress from = (InternetAddress) message.getFrom()[0];
+        assertThat(from.getAddress()).isEqualTo("path.app.support@gmail.com");
+        assertThat(from.getPersonal()).isEqualTo("PATH Support");
+        assertThat(((InternetAddress) message.getRecipients(MimeMessage.RecipientType.TO)[0]).getAddress())
+                .isEqualTo("student@example.test");
+        assertThat(message.getSubject()).isEqualTo("Your PATH password reset code");
+        assertThat(message.getHeader("Auto-Submitted", null)).isEqualTo("auto-generated");
+        assertThat(message.isMimeType("multipart/*")).isTrue();
+
+        String text = findPart(message, "text/plain");
+        String html = findPart(message, "text/html");
+        assertThat(text).contains("003421", "5 minutes", "Never share this code");
+        assertThat(html).contains("PATH", "Your verification code", "#0D4A43", "5 minutes");
+        // The six digits are displayed as individual HTML table cells.
+        assertThat(html.split("width:16%", -1)).hasSize(7);
+        for (char digit : "003421".toCharArray()) {
+            assertThat(html).contains("\n" + digit + "</td>");
+        }
+        assertThat(html).doesNotContain("<img", "<script", "http://", "https://");
     }
 
     @Test
-    void fallsBackToAuthenticatedSmtpAddressWhenFromUnset() {
-        JavaMailSender mailSender = mock(JavaMailSender.class);
+    void fallsBackToAuthenticatedSmtpAddressWhenFromUnset() throws Exception {
+        JavaMailSender mailSender = configuredMailSender();
         SmtpPasswordResetEmailSender sender =
                 new SmtpPasswordResetEmailSender(mailSender, "", "path.app.support@gmail.com");
 
         sender.sendOtp("student@example.test", "000001");
 
-        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
         verify(mailSender).send(captor.capture());
-        assertThat(captor.getValue().getFrom()).isEqualTo("path.app.support@gmail.com");
+        assertThat(((InternetAddress) captor.getValue().getFrom()[0]).getAddress())
+                .isEqualTo("path.app.support@gmail.com");
     }
 
     @Test
@@ -57,14 +80,14 @@ class SmtpPasswordResetEmailSenderTest {
         assertThatThrownBy(() -> sender.sendOtp("student@example.test", "123456"))
                 .isInstanceOfSatisfying(ResponseStatusException.class, exception ->
                         assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE));
-        verify(mailSender, never()).send(any(SimpleMailMessage.class));
+        verify(mailSender, never()).send(any(MimeMessage.class));
     }
 
     @Test
     void handlesSmtpAuthenticationFailureAsTemporaryServiceOutage() {
-        JavaMailSender mailSender = mock(JavaMailSender.class);
+        JavaMailSender mailSender = configuredMailSender();
         doThrow(new MailAuthenticationException("Invalid app password"))
-                .when(mailSender).send(any(SimpleMailMessage.class));
+                .when(mailSender).send(any(MimeMessage.class));
         SmtpPasswordResetEmailSender sender =
                 new SmtpPasswordResetEmailSender(mailSender, "path.app.support@gmail.com", "");
 
@@ -77,14 +100,46 @@ class SmtpPasswordResetEmailSenderTest {
 
     @Test
     void handlesSmtpTransportFailureAsTemporaryServiceOutage() {
-        JavaMailSender mailSender = mock(JavaMailSender.class);
+        JavaMailSender mailSender = configuredMailSender();
         doThrow(new MailSendException("Connection refused"))
-                .when(mailSender).send(any(SimpleMailMessage.class));
+                .when(mailSender).send(any(MimeMessage.class));
         SmtpPasswordResetEmailSender sender =
                 new SmtpPasswordResetEmailSender(mailSender, "path.app.support@gmail.com", "");
 
         assertThatThrownBy(() -> sender.sendOtp("student@example.test", "123456"))
                 .isInstanceOfSatisfying(ResponseStatusException.class, exception ->
                         assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE));
+    }
+
+    @Test
+    void rejectsBadOtpBeforeAttemptingEmail() {
+        JavaMailSender mailSender = configuredMailSender();
+        SmtpPasswordResetEmailSender sender =
+                new SmtpPasswordResetEmailSender(mailSender, "path.app.support@gmail.com", "");
+
+        assertThatThrownBy(() -> sender.sendOtp("student@example.test", "<script>"))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(mailSender, never()).send(any(MimeMessage.class));
+    }
+
+    private static JavaMailSender configuredMailSender() {
+        JavaMailSender sender = mock(JavaMailSender.class);
+        when(sender.createMimeMessage()).thenAnswer(invocation ->
+                new MimeMessage(Session.getInstance(new Properties())));
+        return sender;
+    }
+
+    private static String findPart(Part part, String mimeType) throws Exception {
+        if (part.isMimeType(mimeType)) {
+            return (String) part.getContent();
+        }
+        if (part.isMimeType("multipart/*")) {
+            Multipart multipart = (Multipart) part.getContent();
+            for (int index = 0; index < multipart.getCount(); index++) {
+                String content = findPart(multipart.getBodyPart(index), mimeType);
+                if (content != null) return content;
+            }
+        }
+        return null;
     }
 }
