@@ -61,3 +61,12 @@ app:
     # they may be safely left in place (an existing admin is never recreated/reset).
     bootstrap-email: ${PATHORA_ADMIN_EMAIL:}
     bootstrap-password: ${PATHORA_ADMIN_PASSWORD:}
+  ai:
+    # Provider-independent AI scaffolding (Stage 5A — see com.internplatform.screening.ai).
+    # "disabled" is the only supported value right now: no model, no network call, nothing
+    # sent anywhere. A future "local" or "hosted" value would select a different conditional
+    # bean — never change this without separate, explicit approval of a specific provider.
+    evidence-analysis:
+      mode: ${AI_EVIDENCE_ANALYSIS_MODE:disabled}
+    rubric-draft:
+      mode: ${AI_RUBRIC_DRAFT_MODE:disabled}

@@ -40,17 +40,20 @@ public class InternProfileService {
     private final SkillRepository skillRepository;
     private final CvStorageService cvStorageService;
     private final CvSkillExtractionService cvSkillExtractionService;
+    private final InternCvSkillEvidenceRepository cvSkillEvidenceRepository;
 
     public InternProfileService(
             InternProfileRepository internProfileRepository,
             SkillRepository skillRepository,
             CvStorageService cvStorageService,
-            CvSkillExtractionService cvSkillExtractionService
+            CvSkillExtractionService cvSkillExtractionService,
+            InternCvSkillEvidenceRepository cvSkillEvidenceRepository
     ) {
         this.internProfileRepository = internProfileRepository;
         this.skillRepository = skillRepository;
         this.cvStorageService = cvStorageService;
         this.cvSkillExtractionService = cvSkillExtractionService;
+        this.cvSkillEvidenceRepository = cvSkillEvidenceRepository;
     }
 
     @Transactional(readOnly = true)
@@ -174,8 +177,9 @@ public class InternProfileService {
         // can't be parsed, the upload fails cleanly with the old CV/metadata untouched,
         // exactly like a bad signature already does — never a half-applied replacement.
         String extractedText = cvSkillExtractionService.extractText(content);
-        Set<Skill> detectedSkills = cvSkillExtractionService.detectSkills(
+        List<SkillEvidence> skillEvidence = cvSkillExtractionService.detectSkillEvidence(
                 extractedText, skillRepository.findAllByOrderByNameAsc());
+        Set<Skill> detectedSkills = new HashSet<>(skillEvidence.stream().map(SkillEvidence::skill).toList());
 
         String previousStorageKey = profile.getCvStorageKey();
         String storageKey = cvStorageService.store(profile.getId(), content);
@@ -197,6 +201,7 @@ public class InternProfileService {
         profile.setCvDetectedSkills(detectedSkills);
 
         InternProfile saved = internProfileRepository.saveAndFlush(profile);
+        replaceCvSkillEvidence(saved.getId(), skillEvidence);
 
         return new CvUploadResponse(
                 saved.getCvOriginalFilename(),
@@ -393,6 +398,27 @@ public class InternProfileService {
                 profile.getCreatedAt(),
                 profile.getUpdatedAt()
         );
+    }
+
+    /**
+     * Fully replaces the intern's stored CV skill evidence — delete-then-insert, never merge,
+     * matching the existing cvDetectedSkills replace semantics — so a replaced CV never leaves
+     * evidence from an earlier, now-superseded CV behind. Never touches the intern's manually
+     * selected skills (profile.getSkills()), which this method does not reference at all.
+     */
+    private void replaceCvSkillEvidence(UUID internProfileId, List<SkillEvidence> skillEvidence) {
+        cvSkillEvidenceRepository.deleteAllByInternProfileId(internProfileId);
+
+        List<InternCvSkillEvidence> rows = skillEvidence.stream()
+                .map(evidence -> new InternCvSkillEvidence(
+                        internProfileId,
+                        evidence.skill().getId(),
+                        evidence.source(),
+                        evidence.strength(),
+                        evidence.textReference()
+                ))
+                .toList();
+        cvSkillEvidenceRepository.saveAll(rows);
     }
 
     private List<SkillResponse> toSkillResponses(Set<Skill> skills) {

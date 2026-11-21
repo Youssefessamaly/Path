@@ -86,6 +86,9 @@ class InternProfileControllerTest {
     @Autowired
     private InternProfileRepository internProfileRepository;
 
+    @Autowired
+    private InternCvSkillEvidenceRepository cvSkillEvidenceRepository;
+
     private User internUser;
 
     @BeforeEach
@@ -699,6 +702,83 @@ class InternProfileControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cvDetectedSkills.length()").value(1))
                 .andExpect(jsonPath("$.cvDetectedSkills[0].name").value("Python"));
+    }
+
+    @Test
+    void replacingCvReplacesSkillEvidenceRatherThanAccumulating() throws Exception {
+        patchProfile(Map.of("firstName", "Amina"));
+        UUID profileId = internProfileRepository.findByUserId(internUser.getId()).orElseThrow().getId();
+
+        mockMvc.perform(multipart(HttpMethod.POST, "/api/v1/intern/profile/cv")
+                        .file(new MockMultipartFile(
+                                "file", "old-resume.pdf", "application/pdf",
+                                createPdfWithLines("Skilled in Java and SQL.")))
+                        .with(asIntern()))
+                .andExpect(status().isOk());
+
+        assertThat(cvSkillEvidenceRepository.findAllByInternProfileId(profileId)).hasSize(2);
+
+        mockMvc.perform(multipart(HttpMethod.POST, "/api/v1/intern/profile/cv")
+                        .file(new MockMultipartFile(
+                                "file", "new-resume.pdf", "application/pdf",
+                                createPdfWithLines("Now focused on Python.")))
+                        .with(asIntern()))
+                .andExpect(status().isOk());
+
+        List<InternCvSkillEvidence> evidence = cvSkillEvidenceRepository.findAllByInternProfileId(profileId);
+        assertThat(evidence).hasSize(1);
+        Skill python = skillRepository.findAllByOrderByNameAsc().stream()
+                .filter(s -> s.getName().equals("Python")).findFirst().orElseThrow();
+        assertThat(evidence.get(0).getSkillId()).isEqualTo(python.getId());
+    }
+
+    @Test
+    void cvSkillEvidenceIsClassifiedBySectionEndToEnd() throws Exception {
+        patchProfile(Map.of("firstName", "Amina"));
+        UUID profileId = internProfileRepository.findByUserId(internUser.getId()).orElseThrow().getId();
+
+        mockMvc.perform(multipart(HttpMethod.POST, "/api/v1/intern/profile/cv")
+                        .file(new MockMultipartFile(
+                                "file", "resume.pdf", "application/pdf",
+                                createPdfWithLines("Projects", "Built a Java-based inventory system.")))
+                        .with(asIntern()))
+                .andExpect(status().isOk());
+
+        Skill java = skillRepository.findAllByOrderByNameAsc().stream()
+                .filter(s -> s.getName().equals("Java")).findFirst().orElseThrow();
+        InternCvSkillEvidence evidence = cvSkillEvidenceRepository.findAllByInternProfileId(profileId).stream()
+                .filter(e -> e.getSkillId().equals(java.getId())).findFirst().orElseThrow();
+
+        assertThat(evidence.getEvidenceSource()).isEqualTo(EvidenceSource.PROJECT);
+        assertThat(evidence.getEvidenceStrength()).isEqualTo(EvidenceStrength.STRONG);
+        assertThat(evidence.getTextReference()).isEqualTo("Built a Java-based inventory system.");
+    }
+
+    @Test
+    void manualSkillsUnaffectedByCvUploadAndReplacement() throws Exception {
+        patchProfile(Map.of("firstName", "Amina"));
+        UUID profileId = internProfileRepository.findByUserId(internUser.getId()).orElseThrow().getId();
+
+        Skill communication = skillRepository.findAllByOrderByNameAsc().stream()
+                .filter(s -> s.getName().equals("Communication")).findFirst().orElseThrow();
+        patchProfile(Map.of("skillIds", List.of(communication.getId().toString())));
+
+        mockMvc.perform(multipart(HttpMethod.POST, "/api/v1/intern/profile/cv")
+                        .file(new MockMultipartFile(
+                                "file", "resume.pdf", "application/pdf", createPdfWithLines("Skilled in Java.")))
+                        .with(asIntern()))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(multipart(HttpMethod.POST, "/api/v1/intern/profile/cv")
+                        .file(new MockMultipartFile(
+                                "file", "resume2.pdf", "application/pdf", createPdfWithLines("Skilled in Python.")))
+                        .with(asIntern()))
+                .andExpect(status().isOk());
+
+        InternProfile profile = internProfileRepository.findByUserId(internUser.getId()).orElseThrow();
+        assertThat(profile.getId()).isEqualTo(profileId);
+        assertThat(profile.getSkills()).extracting(Skill::getName).containsExactly("Communication");
+        assertThat(profile.getCvDetectedSkills()).extracting(Skill::getName).containsExactly("Python");
     }
 
     @Test

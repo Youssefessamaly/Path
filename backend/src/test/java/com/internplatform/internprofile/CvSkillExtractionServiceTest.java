@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -42,6 +43,17 @@ class CvSkillExtractionServiceTest {
         return service.detectSkills(text, List.of(catalog)).stream()
                 .map(Skill::getName)
                 .collect(Collectors.toSet());
+    }
+
+    private List<SkillEvidence> evidence(String text, Skill... catalog) {
+        return service.detectSkillEvidence(text, List.of(catalog));
+    }
+
+    private SkillEvidence evidenceFor(List<SkillEvidence> evidence, String skillName) {
+        return evidence.stream()
+                .filter(e -> e.skill().getName().equals(skillName))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("No evidence found for " + skillName));
     }
 
     @Test
@@ -205,6 +217,212 @@ class CvSkillExtractionServiceTest {
         Set<Skill> detected = service.detectSkills("Java developer", List.of(javaSkill));
 
         assertThat(detected).containsExactly(javaSkill);
+    }
+
+    // --- Evidence-section classification (Stage 2) ---------------------------------------
+
+    @Test
+    void skillWithNoSectionHeadersAtAllIsUnknownAndWeak() {
+        // A CV with no recognizable structure must never have evidence fabricated for it.
+        List<SkillEvidence> found = evidence("Experienced with Java and SQL.", skill("Java"), skill("SQL"));
+
+        SkillEvidence java = evidenceFor(found, "Java");
+        assertThat(java.source()).isEqualTo(EvidenceSource.UNKNOWN);
+        assertThat(java.strength()).isEqualTo(EvidenceStrength.WEAK);
+    }
+
+    @Test
+    void skillUnderSkillsListHeaderIsWeakEvidence() {
+        List<SkillEvidence> found = evidence(
+                "Skills\nJava, SQL, Excel", skill("Java"));
+
+        SkillEvidence java = evidenceFor(found, "Java");
+        assertThat(java.source()).isEqualTo(EvidenceSource.SKILLS_LIST);
+        assertThat(java.strength()).isEqualTo(EvidenceStrength.WEAK);
+    }
+
+    @Test
+    void skillUnderProjectsHeaderIsStrongEvidence() {
+        List<SkillEvidence> found = evidence(
+                "Projects\nBuilt a REST backend in Java for a course project.", skill("Java"));
+
+        SkillEvidence java = evidenceFor(found, "Java");
+        assertThat(java.source()).isEqualTo(EvidenceSource.PROJECT);
+        assertThat(java.strength()).isEqualTo(EvidenceStrength.STRONG);
+    }
+
+    @Test
+    void skillUnderWorkExperienceHeaderIsStrongEvidence() {
+        List<SkillEvidence> found = evidence(
+                "Work Experience\nWrote backend services in Java at Acme Corp.", skill("Java"));
+
+        SkillEvidence java = evidenceFor(found, "Java");
+        assertThat(java.source()).isEqualTo(EvidenceSource.WORK_EXPERIENCE);
+        assertThat(java.strength()).isEqualTo(EvidenceStrength.STRONG);
+    }
+
+    @Test
+    void skillUnderInternshipHeaderIsStrongEvidence() {
+        List<SkillEvidence> found = evidence(
+                "Internships\nSummer internship using Python for data pipelines.", skill("Python"));
+
+        SkillEvidence python = evidenceFor(found, "Python");
+        assertThat(python.source()).isEqualTo(EvidenceSource.INTERNSHIP);
+        assertThat(python.strength()).isEqualTo(EvidenceStrength.STRONG);
+    }
+
+    @Test
+    void skillUnderCertificationsHeaderIsModerateEvidence() {
+        List<SkillEvidence> found = evidence(
+                "Certifications\nAWS Certified Developer — Python track.", skill("Python"));
+
+        SkillEvidence python = evidenceFor(found, "Python");
+        assertThat(python.source()).isEqualTo(EvidenceSource.CERTIFICATION);
+        assertThat(python.strength()).isEqualTo(EvidenceStrength.MODERATE);
+    }
+
+    @Test
+    void skillUnderCourseworkHeaderIsModerateEvidence() {
+        List<SkillEvidence> found = evidence(
+                "Relevant Coursework\nData Structures in Java, Databases.", skill("Java"));
+
+        SkillEvidence java = evidenceFor(found, "Java");
+        assertThat(java.source()).isEqualTo(EvidenceSource.COURSEWORK);
+        assertThat(java.strength()).isEqualTo(EvidenceStrength.MODERATE);
+    }
+
+    @Test
+    void arabicSectionHeaderIsRecognized() {
+        // "الخبرة" ("Experience") as a standalone header line.
+        List<SkillEvidence> found = evidence(
+                "الخبرة\nعملت على تطوير الواجهات الخلفية باستخدام Java.", skill("Java"));
+
+        SkillEvidence java = evidenceFor(found, "Java");
+        assertThat(java.source()).isEqualTo(EvidenceSource.WORK_EXPERIENCE);
+        assertThat(java.strength()).isEqualTo(EvidenceStrength.STRONG);
+    }
+
+    @Test
+    void sentenceMentioningExperienceIsNotMistakenForAHeader() {
+        // "experience" appears inside a normal sentence, not as a standalone header line —
+        // ambiguous-structure case: must stay UNKNOWN rather than guessing WORK_EXPERIENCE.
+        List<SkillEvidence> found = evidence(
+                "I have five years of experience with Java development.", skill("Java"));
+
+        SkillEvidence java = evidenceFor(found, "Java");
+        assertThat(java.source()).isEqualTo(EvidenceSource.UNKNOWN);
+        assertThat(java.strength()).isEqualTo(EvidenceStrength.WEAK);
+    }
+
+    @Test
+    void duplicateEvidenceAcrossSectionsResolvesToTheStrongestSingleRecord() {
+        // Java is mentioned both in a Skills list AND in a Projects section — exactly one
+        // evidence record must result, and it must be the stronger one.
+        List<SkillEvidence> found = evidence(
+                "Skills\nJava, SQL\n\nProjects\nBuilt a Java-based inventory system.",
+                skill("Java"));
+
+        assertThat(found).hasSize(1);
+        SkillEvidence java = evidenceFor(found, "Java");
+        assertThat(java.source()).isEqualTo(EvidenceSource.PROJECT);
+        assertThat(java.strength()).isEqualTo(EvidenceStrength.STRONG);
+    }
+
+    @Test
+    void duplicateMentionsWithinTheSameSectionStillResolveToOneRecord() {
+        List<SkillEvidence> found = evidence(
+                "Projects\nBuilt a Java service.\nExtended the Java service with a new API.",
+                skill("Java"));
+
+        assertThat(found).hasSize(1);
+        assertThat(evidenceFor(found, "Java").source()).isEqualTo(EvidenceSource.PROJECT);
+    }
+
+    @Test
+    void textReferenceCapturesTheMatchingLineNotTheWholeDocument() {
+        List<SkillEvidence> found = evidence(
+                "Projects\nBuilt a Java-based inventory system for a retail client.",
+                skill("Java"));
+
+        SkillEvidence java = evidenceFor(found, "Java");
+        assertThat(java.textReference()).isEqualTo("Built a Java-based inventory system for a retail client.");
+    }
+
+    @Test
+    void detectSkillsAndDetectSkillEvidenceAgreeOnWhichSkillsAreDetected() {
+        String text = "Projects\nBuilt a Java service.\n\nSkills\nSQL, Excel.";
+        Skill java = skill("Java");
+        Skill sql = skill("SQL");
+        Skill excel = skill("Excel");
+        Skill python = skill("Python");
+
+        Set<Skill> viaDetectSkills = service.detectSkills(text, List.of(java, sql, excel, python));
+        Set<Skill> viaEvidence = evidence(text, java, sql, excel, python).stream()
+                .map(SkillEvidence::skill)
+                .collect(Collectors.toSet());
+
+        assertThat(viaDetectSkills).isEqualTo(viaEvidence);
+        assertThat(viaDetectSkills).containsExactlyInAnyOrder(java, sql, excel);
+    }
+
+    @Test
+    void aliasMatchIsAlsoClassifiedBySection() {
+        List<SkillEvidence> found = evidence(
+                "Projects\nDeployed services on Postgres.",
+                skillWithAliases("PostgreSQL", "Postgres"));
+
+        SkillEvidence postgres = evidenceFor(found, "PostgreSQL");
+        assertThat(postgres.source()).isEqualTo(EvidenceSource.PROJECT);
+        assertThat(postgres.strength()).isEqualTo(EvidenceStrength.STRONG);
+    }
+
+    // --- maximumSupportableStrength (Stage 5A: AI claim grounding support) ----------------
+
+    @Test
+    void maximumSupportableStrengthFindsTheExcerptsSection() {
+        String text = "Projects\nBuilt a Java-based inventory system for a retail client.";
+
+        Optional<EvidenceStrength> ceiling = service.maximumSupportableStrength(
+                text, "Built a Java-based inventory system for a retail client.");
+
+        assertThat(ceiling).contains(EvidenceStrength.STRONG);
+    }
+
+    @Test
+    void maximumSupportableStrengthIsWeakForABareSkillsListMention() {
+        String text = "Skills\nJava, SQL, Excel";
+
+        Optional<EvidenceStrength> ceiling = service.maximumSupportableStrength(text, "Java");
+
+        assertThat(ceiling).contains(EvidenceStrength.WEAK);
+    }
+
+    @Test
+    void maximumSupportableStrengthIsEmptyWhenExcerptIsNotInTheText() {
+        String text = "Projects\nBuilt a Java-based inventory system.";
+
+        Optional<EvidenceStrength> ceiling = service.maximumSupportableStrength(
+                text, "Led a team of ten engineers at a Fortune 500 company.");
+
+        assertThat(ceiling).isEmpty();
+    }
+
+    @Test
+    void maximumSupportableStrengthIsEmptyForBlankOrNullExcerpt() {
+        String text = "Projects\nBuilt a Java-based inventory system.";
+
+        assertThat(service.maximumSupportableStrength(text, "")).isEmpty();
+        assertThat(service.maximumSupportableStrength(text, "   ")).isEmpty();
+        assertThat(service.maximumSupportableStrength(text, null)).isEmpty();
+    }
+
+    @Test
+    void maximumSupportableStrengthPrefersTheStrongestSectionWhenExcerptAppearsInMultiple() {
+        String text = "Skills\nSame exact phrase appears here.\n\nWork Experience\nSame exact phrase appears here.";
+
+        Optional<EvidenceStrength> ceiling = service.maximumSupportableStrength(text, "Same exact phrase appears here.");
+
+        assertThat(ceiling).contains(EvidenceStrength.STRONG);
     }
 
     private static byte[] createPdfWithText(String text) throws IOException {

@@ -1,5 +1,7 @@
 package com.internplatform.internshipapplication;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -44,4 +46,9 @@ public interface InternshipApplicationRepository extends JpaRepository<Internshi
      * pattern as findByIdAndInternProfileId above.
      */
     Optional<InternshipApplication> findByIdAndInternshipId(UUID id, UUID internshipId);
+
+    /** Paginated variant of findAllByInternshipIdOrderByAppliedAtDesc — used by the screening
+     *  summary list (ScreeningService) so it never loads an internship's full applicant list
+     *  at once. */
+    Page<InternshipApplication> findByInternshipIdOrderByAppliedAtDesc(UUID internshipId, Pageable pageable);
 }
