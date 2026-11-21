@@ -203,8 +203,11 @@ export default function VerifyOtpScreen() {
                 keyboardType="number-pad"
                 autoCapitalize="none"
                 autoCorrect={false}
-                autoComplete={Platform.OS === 'ios' ? undefined : Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'}
+                // Keep a single real native TextInput for Apple's QuickType OTP suggestion.
+                // Open the keyboard on iPhone so an email code can be suggested immediately.
+                autoFocus={Platform.OS === 'ios'}
                 textContentType={Platform.OS === 'ios' ? 'oneTimeCode' : undefined}
+                autoComplete={Platform.OS === 'android' ? 'sms-otp' : undefined}
                 importantForAutofill="yes"
                 caretHidden
                 selectionColor="transparent"
