@@ -316,6 +316,147 @@ class InternshipApplicationControllerTest {
         assertThat(all.get(0).getCvStorageKey()).isNotEqualTo(profile.getCvStorageKey());
     }
 
+    // ===== AI-analysis consent (Stage 5B follow-up): captured once at submission time,
+    // entirely optional, never required to apply or to receive deterministic screening =====
+
+    @Test
+    void applicationSucceedsAndCapturesExplicitAiAnalysisConsent() throws Exception {
+        InternProfile profile = createCompletedInternProfile(internUser);
+        attachCv(profile, pdfBytes("resume-consent"), "resume.pdf");
+        Internship internship = createOpenInternalInternship();
+
+        Map<String, Object> body = validApplicationBody();
+        body.put("aiAnalysisConsent", true);
+
+        mockMvc.perform(post(applyUrl(internship.getId()))
+                        .with(asIntern())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(body)))
+                .andExpect(status().isCreated());
+
+        List<InternshipApplication> all = applicationRepository.findAll();
+        assertThat(all).hasSize(1);
+        assertThat(all.get(0).isAiAnalysisConsent()).isTrue();
+        assertThat(all.get(0).getAiAnalysisConsentAt()).isNotNull();
+    }
+
+    @Test
+    void applicationSucceedsNormallyWhenAiAnalysisConsentIsOmittedAndDefaultsToNotAuthorized() throws Exception {
+        InternProfile profile = createCompletedInternProfile(internUser);
+        attachCv(profile, pdfBytes("resume-no-consent"), "resume.pdf");
+        Internship internship = createOpenInternalInternship();
+
+        // validApplicationBody() never includes aiAnalysisConsent — confirms applying and
+        // receiving deterministic screening never depends on this choice either way.
+        mockMvc.perform(post(applyUrl(internship.getId()))
+                        .with(asIntern())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(validApplicationBody())))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("APPLIED"));
+
+        List<InternshipApplication> all = applicationRepository.findAll();
+        assertThat(all).hasSize(1);
+        assertThat(all.get(0).isAiAnalysisConsent()).isFalse();
+        assertThat(all.get(0).getAiAnalysisConsentAt()).isNull();
+    }
+
+    @Test
+    void applicationSucceedsWhenAiAnalysisConsentIsExplicitlyFalse() throws Exception {
+        InternProfile profile = createCompletedInternProfile(internUser);
+        attachCv(profile, pdfBytes("resume-explicit-false"), "resume.pdf");
+        Internship internship = createOpenInternalInternship();
+
+        Map<String, Object> body = validApplicationBody();
+        body.put("aiAnalysisConsent", false);
+
+        mockMvc.perform(post(applyUrl(internship.getId()))
+                        .with(asIntern())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(body)))
+                .andExpect(status().isCreated());
+
+        List<InternshipApplication> all = applicationRepository.findAll();
+        assertThat(all.get(0).isAiAnalysisConsent()).isFalse();
+        assertThat(all.get(0).getAiAnalysisConsentAt()).isNull();
+    }
+
+    @Test
+    void internCanWithdrawPreviouslyGrantedAiAnalysisConsent() throws Exception {
+        InternProfile profile = createCompletedInternProfile(internUser);
+        attachCv(profile, pdfBytes("resume-withdraw"), "resume.pdf");
+        Internship internship = createOpenInternalInternship();
+
+        Map<String, Object> body = validApplicationBody();
+        body.put("aiAnalysisConsent", true);
+
+        String json = mockMvc.perform(post(applyUrl(internship.getId()))
+                        .with(asIntern())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(body)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.aiAnalysisConsent").value(true))
+                .andReturn().getResponse().getContentAsString();
+        UUID applicationId = UUID.fromString(objectMapper.readTree(json).get("applicationId").asText());
+
+        mockMvc.perform(delete("/api/v1/intern/applications/" + applicationId + "/ai-analysis-consent")
+                        .with(asIntern()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.aiAnalysisConsent").value(false));
+
+        InternshipApplication updated = applicationRepository.findById(applicationId).orElseThrow();
+        assertThat(updated.isAiAnalysisConsent()).isFalse();
+        assertThat(updated.getAiAnalysisConsentAt()).isNull();
+    }
+
+    @Test
+    void withdrawingAiAnalysisConsentIsIdempotentWhenNeverGranted() throws Exception {
+        InternProfile profile = createCompletedInternProfile(internUser);
+        attachCv(profile, pdfBytes("resume-no-grant"), "resume.pdf");
+        Internship internship = createOpenInternalInternship();
+
+        String json = mockMvc.perform(post(applyUrl(internship.getId()))
+                        .with(asIntern())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(validApplicationBody())))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        UUID applicationId = UUID.fromString(objectMapper.readTree(json).get("applicationId").asText());
+
+        mockMvc.perform(delete("/api/v1/intern/applications/" + applicationId + "/ai-analysis-consent")
+                        .with(asIntern()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.aiAnalysisConsent").value(false));
+    }
+
+    @Test
+    void withdrawingAiAnalysisConsentOnAnotherInternsApplicationReturnsNotFound() throws Exception {
+        InternProfile profile = createCompletedInternProfile(internUser);
+        attachCv(profile, pdfBytes("resume-owner"), "resume.pdf");
+        Internship internship = createOpenInternalInternship();
+
+        Map<String, Object> body = validApplicationBody();
+        body.put("aiAnalysisConsent", true);
+
+        String json = mockMvc.perform(post(applyUrl(internship.getId()))
+                        .with(asIntern())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(body)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        UUID applicationId = UUID.fromString(objectMapper.readTree(json).get("applicationId").asText());
+
+        User otherInternUser = createUser(Role.INTERN);
+        createCompletedInternProfile(otherInternUser);
+
+        mockMvc.perform(delete("/api/v1/intern/applications/" + applicationId + "/ai-analysis-consent")
+                        .with(asUser(otherInternUser)))
+                .andExpect(status().isNotFound());
+
+        InternshipApplication unchanged = applicationRepository.findById(applicationId).orElseThrow();
+        assertThat(unchanged.isAiAnalysisConsent()).isTrue();
+    }
+
     // ===== OPTIONAL FIELDS =====
 
     // 2. cover letter absent succeeds

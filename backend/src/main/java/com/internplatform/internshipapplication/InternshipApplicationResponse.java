@@ -19,6 +19,10 @@ public record InternshipApplicationResponse(
         OffsetDateTime updatedAt,
         /** Empty for the compact list view; populated with the submitted snapshot (in display
          *  order) for a single application's detail — see InternshipApplicationService. */
-        List<InternshipApplicationAnswerResponse> answers
+        List<InternshipApplicationAnswerResponse> answers,
+        /** The applicant's own current choice for this application — never the recruiter's.
+         *  false after submission with no consent, or after withdrawal via DELETE
+         *  /api/v1/intern/applications/{id}/ai-analysis-consent. */
+        boolean aiAnalysisConsent
 ) {
 }

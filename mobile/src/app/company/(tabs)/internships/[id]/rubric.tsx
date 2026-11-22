@@ -235,7 +235,11 @@ function AiDraftPanel({ internshipId, nextDisplayOrder, onAddRequirement }: {
         disabled={!canGenerate}
       />
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
-      {unavailableReason ? <Text style={styles.mutedNotice}>{unavailableReason}</Text> : null}
+      {unavailableReason ? (
+        <Text style={styles.mutedNotice}>
+          AI assistance isn&rsquo;t available right now — a deliberate safety setting, not an error: {unavailableReason}
+        </Text>
+      ) : null}
       {suggestions && suggestions.length === 0 ? (
         <Text style={styles.mutedNotice}>No suggestions were generated — try adding more detail.</Text>
       ) : null}

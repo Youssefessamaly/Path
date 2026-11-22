@@ -130,8 +130,8 @@ export function AiEvidenceAnalysisPanel({
       )}
 
       {unavailableReason && (
-        <div className="banner banner-warning mt-4" role="status">
-          {unavailableReason}
+        <div className="banner banner-info mt-4" role="status">
+          AI assistance isn't available right now — this is a deliberate safety setting, not an error: {unavailableReason}
         </div>
       )}
 

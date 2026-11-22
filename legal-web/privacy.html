@@ -58,8 +58,8 @@ ul{padding-left:1.25rem;margin:0 0 14px} li{margin-bottom:9px}
   </header>
   <main id="main">
     <h1>Privacy Policy</h1>
-    <p class="meta">Last updated: 16 November 2026</p>
-    <div class="summary"><p><strong>At a glance:</strong> PATH helps interns find opportunities and apply to companies. Applications can share submitted information with employers. You may review your information, contact support, or <a href="delete-account.html">delete your account</a>.</p></div>
+    <p class="meta">Last updated: 22 November 2026</p>
+    <div class="summary"><p><strong>At a glance:</strong> PATH helps interns find opportunities and apply to companies. Applications can share submitted information with employers, and you can optionally let a company request AI-assisted CV analysis from Anthropic for a specific application. You may review your information, contact support, or <a href="delete-account.html">delete your account</a>.</p></div>
     <section aria-labelledby="section-1"><h2 id="section-1">1. Who operates PATH</h2>
 <p>PATH is an internship discovery and application service operated by the PATH project team. PATH is currently an independently operated, unincorporated project; it is not represented here as a registered company or separate legal entity.</p>
 <p>This policy covers the PATH mobile app, related company portal, and PATH-operated websites such as this legal site. For questions about personal data, privacy requests, or to reach the people operating PATH, email <a class="contact" href="mailto:path.app.support@gmail.com">path.app.support@gmail.com</a>.</p>
@@ -89,32 +89,40 @@ ul{padding-left:1.25rem;margin:0 0 14px} li{margin-bottom:9px}
 <p>PATH uses CV text extraction and skill matching to help compare an intern's experience with an internship's stated skills. Extracted indicators and match results may be incomplete, mistaken or affected by how the CV is written.</p>
 <p>A match score does not certify qualification, guarantee placement or determine a hiring outcome. Recruiting organizations remain responsible for their own screening and hiring decisions; PATH does not make a final employment decision solely from an automated score.</p>
 </section>
-<section aria-labelledby="section-7"><h2 id="section-7">7. Data retention and deletion</h2>
+<section aria-labelledby="section-7"><h2 id="section-7">7. Optional AI-assisted CV analysis (Anthropic)</h2>
+<p>Separately from the automatic skill matching described above, PATH offers hiring companies an <strong>optional</strong> feature to request AI-assisted analysis of a specific application's CV, to help a recruiter judge whether that CV supports a particular internship requirement. This feature uses Claude, an AI model provided by Anthropic, a third-party AI company based in the United States.</p>
+<p>This feature is used only with your explicit, per-application permission, given or declined when you submit that application. If you do not give permission, your application and PATH's standard automatic skill matching work exactly the same either way, and a recruiter cannot override your choice. You may withdraw a previously given permission at any time from that application's details in the app. Withdrawal takes effect immediately for any future request, but cannot undo a result a recruiter has already viewed, because PATH does not keep AI analysis results in its own records — see "What this feature actually sends," below.</p>
+<p><strong>What this feature actually sends:</strong> when a recruiter requests this analysis for an application you authorized, PATH sends the full text extracted from that application's CV to Anthropic, together with the relevant internship requirement labels (for example, skill names). Email addresses, phone numbers and web links found in that text are removed first on an automated, best-effort basis; this does not reliably remove your name or other content that may appear in the CV, since automatically detecting a name in free-form text is not reliable enough to depend on. No other profile field, such as your date of birth or the contact phone number stored on your profile, is included — only the text found in the CV document itself.</p>
+<p>Anthropic processes this information on its own infrastructure, which may be located outside your country of residence (see "Service providers and international processing," below). Anthropic states that it does not use content submitted through its API to train its models. Beyond that, Anthropic's own data retention, security and usage practices are governed by Anthropic's own commercial terms and data processing agreement, which PATH does not control and does not reproduce here.</p>
+<p>This feature only produces suggestions for a recruiter to review. It never changes an application's status and never decides whether a candidate advances; PATH's own deterministic matching and screening described above does not depend on it. Recruiting organizations remain responsible for their own screening and hiring decisions.</p>
+<p>Questions about this feature, including requests related to a specific application's AI-analysis permission, can be sent to <a class="contact" href="mailto:path.app.support@gmail.com">path.app.support@gmail.com</a>.</p>
+</section>
+<section aria-labelledby="section-8"><h2 id="section-8">8. Data retention and deletion</h2>
 <p>Account and profile information is generally kept while the account is active or as needed to provide requested features. Application records and copies of submitted CVs are maintained separately from the current profile so an earlier application reflects what was submitted at the time.</p>
 <p>Eligible users can permanently delete their own PATH accounts in the mobile app through <strong>Settings → Delete Account</strong>, or through our public <a href="delete-account.html">account-deletion webpage</a>. The deletion process requires identity verification. The backend removes the account and dependent platform records and queues associated CV files for cleanup, which may complete shortly afterward.</p>
 <p>Some limited information may continue to exist in security logs, backups or records that must be preserved for legal, fraud-prevention or dispute-resolution reasons, subject to applicable law and the relevant storage or backup cycles. Deletion from PATH does not automatically erase copies independently retained by an employer after receiving an application. Please contact that employer about its separate records.</p>
 <p>If you cannot access your account, email <a class="contact" href="mailto:path.app.support@gmail.com">path.app.support@gmail.com</a> to request help. Do not send passwords by email. You can also use this email to ask about the retention or deletion of particular records.</p>
 </section>
-<section aria-labelledby="section-8"><h2 id="section-8">8. Your choices and privacy rights</h2>
+<section aria-labelledby="section-9"><h2 id="section-9">9. Your choices and privacy rights</h2>
 <p>Use available account and profile settings to review and update information. Depending on your location and applicable law, you may have rights to access, correct or delete personal information, obtain a copy of it, object to certain uses, or request restrictions on processing.</p>
-<p>Where processing depends on your consent, you may withdraw it as allowed by law. For requests that are not available in the app, email <a class="contact" href="mailto:path.app.support@gmail.com">path.app.support@gmail.com</a>. We may need to verify your identity before handling a request. We will respond in accordance with the law applicable to the request.</p>
+<p>Where processing depends on your consent, you may withdraw it as allowed by law. For AI-assisted CV analysis specifically, you can withdraw a previously given per-application permission directly in the app at any time — see "Optional AI-assisted CV analysis," above. For requests that are not available in the app, email <a class="contact" href="mailto:path.app.support@gmail.com">path.app.support@gmail.com</a>. We may need to verify your identity before handling a request. We will respond in accordance with the law applicable to the request.</p>
 </section>
-<section aria-labelledby="section-9"><h2 id="section-9">9. Security</h2>
+<section aria-labelledby="section-10"><h2 id="section-10">10. Security</h2>
 <p>PATH uses password hashing, account-based access controls and authenticated API requests. The mobile app is designed to keep authentication tokens in device secure storage; the dedicated account-deletion webpage does not intentionally store sign-in credentials or access tokens in persistent browser storage.</p>
 <p>We use reasonable measures to protect personal information, but no online service can guarantee complete security. Keep your credentials private and report suspected account compromise to <a class="contact" href="mailto:path.app.support@gmail.com">path.app.support@gmail.com</a>.</p>
 </section>
-<section aria-labelledby="section-10"><h2 id="section-10">10. Service providers and international processing</h2>
-<p>PATH depends on cloud infrastructure and other service providers. Depending on their locations and the recipient employers you interact with, your data may be stored or accessed outside your country of residence. Where required, international transfers must comply with the applicable data-protection rules.</p>
+<section aria-labelledby="section-11"><h2 id="section-11">11. Service providers and international processing</h2>
+<p>PATH depends on cloud infrastructure and other service providers, including Anthropic for the optional AI features described above. Depending on their locations and the recipient employers you interact with, your data may be stored or accessed outside your country of residence — for example, Anthropic processes data on servers in the United States and, where applicable, relies on adequacy decisions or standard contractual clauses for transfers subject to GDPR. Where required, international transfers must comply with the applicable data-protection rules.</p>
 <p>We may change service providers as the project develops. Material changes affecting your information will be reflected in this policy when required.</p>
 </section>
-<section aria-labelledby="section-11"><h2 id="section-11">11. Children and account eligibility</h2>
+<section aria-labelledby="section-12"><h2 id="section-12">12. Children and account eligibility</h2>
 <p>PATH is intended for people who can lawfully create an account and apply for internships under the laws that apply to them. It is not designed for use by children who cannot lawfully consent or otherwise establish an account.</p>
 <p>If you believe information about a child or another ineligible person has been collected, contact <a class="contact" href="mailto:path.app.support@gmail.com">path.app.support@gmail.com</a> so we can review the situation.</p>
 </section>
-<section aria-labelledby="section-12"><h2 id="section-12">12. Changes to this policy</h2>
+<section aria-labelledby="section-13"><h2 id="section-13">13. Changes to this policy</h2>
 <p>We may update this Privacy Policy when PATH's features, providers or legal obligations change. We will revise the date at the top and provide additional notice when required for material changes.</p>
 </section>
-<section aria-labelledby="section-13"><h2 id="section-13">13. Contact</h2>
+<section aria-labelledby="section-14"><h2 id="section-14">14. Contact</h2>
 <p>PATH project team (independently operated, not currently incorporated). For privacy, account deletion, data requests, security concerns and legal correspondence, email <a href="mailto:path.app.support@gmail.com">path.app.support@gmail.com</a>.</p>
 <p>We do not list a registered-company name or registered business address because no such entity or address has been established for PATH. The identity information required for developer accounts or under applicable privacy laws must still be provided separately where required.</p>
 </section>

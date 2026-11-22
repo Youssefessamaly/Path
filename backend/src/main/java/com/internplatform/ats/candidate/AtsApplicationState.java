@@ -123,4 +123,15 @@ public class AtsApplicationState {
     public OffsetDateTime getUpdatedAt() {
         return updatedAt;
     }
+
+    /** Package-private: only AtsCandidateMovementService ever calls this. Relies on the
+     *  caller having already validated that stageId is a legitimate next stage in this exact
+     *  pipeline — this method itself performs no such check, it only records the move. The
+     *  @Version field above is what actually protects against two concurrent moves silently
+     *  clobbering each other: JPA raises an optimistic-lock failure on save if this row's
+     *  version changed since it was read, which the service translates into a 409. */
+    void moveToStage(UUID stageId, OffsetDateTime enteredAt) {
+        this.currentStageId = stageId;
+        this.enteredCurrentStageAt = enteredAt;
+    }
 }

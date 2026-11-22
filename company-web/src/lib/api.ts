@@ -1050,3 +1050,87 @@ export function draftRubricWithAi(internshipId: string, instructionsText: string
     instructionsText,
   })
 }
+
+// ===== Recruitment pipeline stage tracking (existing com.internplatform.ats.candidate backend,
+// never previously wired to company-web) + the existing accept/reject decision endpoint
+// (previously mobile-only) =====
+//
+// A candidate's pipeline stage is entirely independent of ApplicationStatus (APPLIED/ACCEPTED/
+// REJECTED) — see CandidateStageResponse's own backend javadoc. "Advance" only ever moves
+// along the SPECIFIC internship's own already-assigned, persisted stage list (never a
+// hardcoded sequence); "Reject"/"Accept" are the existing, unmodified status-decision
+// endpoint. Neither Smart ATS screening coverage nor AI suggestions can trigger either — both
+// require an explicit recruiter click.
+
+export type StageSummary = {
+  id: string
+  name: string
+  position: number
+}
+
+/** Mirrors the backend's CandidateStageResponse. All pipeline/stage fields are null together
+ *  when this application isn't tracked — no pipeline assigned to its internship, or it was
+ *  already decided before any pipeline existed. Never guess a stage when these are null. */
+export type CandidateStage = {
+  applicationId: string
+  applicationStatus: ApplicationStatus
+  pipelineId: string | null
+  pipelineName: string | null
+  stages: StageSummary[] | null
+  currentStageId: string | null
+  currentStageName: string | null
+  enteredCurrentStageAt: string | null
+  /** Null when untracked, or already at the pipeline's final stage. */
+  nextStageId: string | null
+  nextStageName: string | null
+}
+
+export type StageEventKind = 'ENTERED' | 'MOVED'
+
+export type StageEvent = {
+  id: string
+  fromStageId: string | null
+  fromStageName: string | null
+  toStageId: string
+  toStageName: string
+  eventKind: StageEventKind
+  actorMemberId: string | null
+  occurredAt: string
+}
+
+export function getCandidateStage(applicationId: string): Promise<CandidateStage> {
+  return request<CandidateStage>('GET', `/company/ats/applications/${applicationId}`)
+}
+
+/** Oldest first — the backend's own ordering contract. */
+export function getCandidateHistory(applicationId: string): Promise<StageEvent[]> {
+  return request<StageEvent[]>('GET', `/company/ats/applications/${applicationId}/history`)
+}
+
+/**
+ * Moves this application to the next stage in its internship's pipeline, using the pipeline's
+ * own persisted stage order — never a hardcoded sequence. Throws ApiError with status 409 if:
+ * the application has already been decided (ACCEPTED/REJECTED — rejected applicants can never
+ * advance), it isn't tracked in any pipeline (no pipeline assigned to its internship), or it's
+ * already at the pipeline's final stage. Throws 404 for an application that doesn't exist or
+ * doesn't belong to this company.
+ */
+export function advanceApplicationStage(applicationId: string): Promise<CandidateStage> {
+  return request<CandidateStage>('POST', `/company/ats/applications/${applicationId}/advance`)
+}
+
+/** The only two decisions a company may submit — the backend separately rejects APPLIED and
+ *  any other value with a 400. This is the SAME existing endpoint mobile's Accept/Reject
+ *  buttons already use (previously not wired into company-web at all). */
+export type ApplicationDecision = 'ACCEPTED' | 'REJECTED'
+
+/** Partial view of the backend's CompanyApplicationDetailResponse — only the fields this
+ *  client actually reads. Throws ApiError with status 409 if the application was already
+ *  decided (APPLIED -> ACCEPTED/REJECTED is one-way). */
+export function updateApplicationStatus(
+  internshipId: string,
+  applicationId: string,
+  status: ApplicationDecision,
+): Promise<{ applicationId: string; status: ApplicationStatus }> {
+  return request('PATCH', `/company/internships/${internshipId}/applications/${applicationId}/status`, { status })
+}

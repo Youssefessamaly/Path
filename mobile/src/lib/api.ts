@@ -1051,6 +1051,9 @@ export type InternApplication = {
   appliedAt: string;
   updatedAt: string;
   answers: InternApplicationAnswer[];
+  /** This applicant's own current choice for this application only — see
+   *  InternshipApplicationSubmitPayload.aiAnalysisConsent and withdrawAiAnalysisConsent. */
+  aiAnalysisConsent: boolean;
 };
 
 /** Most recently applied first — never re-sort client-side. */
@@ -1061,6 +1064,17 @@ export function getInternApplications(token: string): Promise<InternApplication[
 /** Full detail — including the answers snapshot — for one of the intern's own applications. */
 export function getInternApplication(token: string, applicationId: string): Promise<InternApplication> {
   return apiGet<InternApplication>(`/intern/applications/${applicationId}`, { token });
+}
+
+/**
+ * Withdraws a previously granted AI-analysis consent for this specific application. Takes
+ * effect immediately server-side for any future "Analyze with AI" request a recruiter makes —
+ * it does not and cannot undo an AI suggestion a recruiter may already have seen on screen
+ * before this call (PATH never stores AI suggestions server-side in the first place). Safe to
+ * call even when consent was never granted — it simply leaves it withdrawn.
+ */
+export function withdrawAiAnalysisConsent(token: string, applicationId: string): Promise<InternApplication> {
+  return apiDelete<InternApplication>(`/intern/applications/${applicationId}/ai-analysis-consent`, { token });
 }
 
 /**
@@ -1091,6 +1105,15 @@ export type InternshipApplicationSubmitPayload = {
   linkedinUrl?: string;
   portfolioUrl?: string;
   answers?: InternshipApplicationAnswerSubmission[];
+  /**
+   * Explicit, optional authorization for AI-assisted (third-party, Anthropic) analysis of
+   * THIS application's CV if a company later requests it. Omitted/false is treated the same
+   * way — never assumed, never required to apply or to receive deterministic ATS screening.
+   * Can only be GRANTED here, at submission time; once granted it can later be withdrawn (but
+   * not re-granted) via withdrawAiAnalysisConsent below. A later application has its own
+   * separate choice.
+   */
+  aiAnalysisConsent?: boolean;
 };
 
 export function submitInternshipApplication(
@@ -1335,4 +1358,68 @@ export function draftRubricWithAi(
     { instructionsText },
     { token },
   );
+}
+
+// ===== Recruitment pipeline stage tracking (existing com.internplatform.ats.candidate
+// backend, newly wired here) =====
+//
+// A candidate's pipeline stage is entirely independent of CompanyApplicationStatus (APPLIED/
+// ACCEPTED/REJECTED) — see CandidateStageResponse's own backend javadoc. "Advance" only ever
+// moves along THIS internship's own already-assigned, persisted stage list (never a hardcoded
+// sequence). Accept/Reject continue to use updateCompanyApplicationStatus above, unchanged.
+
+export type StageSummary = {
+  id: string;
+  name: string;
+  position: number;
+};
+
+/** Mirrors the backend's CandidateStageResponse. All pipeline/stage fields are null together
+ *  when this application isn't tracked — no pipeline assigned to its internship, or it was
+ *  already decided before any pipeline existed. Never guess a stage when these are null. */
+export type CandidateStage = {
+  applicationId: string;
+  applicationStatus: CompanyApplicationStatus;
+  pipelineId: string | null;
+  pipelineName: string | null;
+  stages: StageSummary[] | null;
+  currentStageId: string | null;
+  currentStageName: string | null;
+  enteredCurrentStageAt: string | null;
+  /** Null when untracked, or already at the pipeline's final stage. */
+  nextStageId: string | null;
+  nextStageName: string | null;
+};
+
+export type StageEventKind = 'ENTERED' | 'MOVED';
+
+export type StageEvent = {
+  id: string;
+  fromStageId: string | null;
+  fromStageName: string | null;
+  toStageId: string;
+  toStageName: string;
+  eventKind: StageEventKind;
+  actorMemberId: string | null;
+  occurredAt: string;
+};
+
+export function getCandidateStage(token: string, applicationId: string): Promise<CandidateStage> {
+  return apiGet<CandidateStage>(`/company/ats/applications/${applicationId}`, { token });
+}
+
+/** Oldest first — the backend's own ordering contract. */
+export function getCandidateHistory(token: string, applicationId: string): Promise<StageEvent[]> {
+  return apiGet<StageEvent[]>(`/company/ats/applications/${applicationId}/history`, { token });
+}
+
+/**
+ * Moves this application to the next stage in its internship's pipeline, using the pipeline's
+ * own persisted stage order. Throws ApiError with status 409 if: already decided (ACCEPTED/
+ * REJECTED — rejected applicants can never advance), not tracked in any pipeline, or already
+ * at the final stage. Throws 404 for an application that doesn't exist or isn't this
+ * company's.
+ */
+export function advanceApplicationStage(token: string, applicationId: string): Promise<CandidateStage> {
+  return apiPost<CandidateStage>(`/company/ats/applications/${applicationId}/advance`, undefined, { token });
 }

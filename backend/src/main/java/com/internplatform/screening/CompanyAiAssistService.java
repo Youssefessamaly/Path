@@ -100,6 +100,17 @@ public class CompanyAiAssistService {
         CompanyProfile company = findCompanyProfileOrThrow(userId);
         Internship internship = findOwnedInternshipOrThrow(internshipId, company.getId());
         InternshipApplication application = findOwnedApplicationOrThrow(applicationId, internship.getId());
+
+        // The applicant's own choice, captured once at submission time — checked BEFORE the
+        // report, rubric, or CV are even touched. A recruiter clicking "Analyze with AI" can
+        // never override this; there is no parameter, role, or code path here that bypasses
+        // it. Independent of, and in addition to, the separate business-side privacy-review
+        // gate inside AnthropicEvidenceAnalysisService itself — both must hold.
+        if (!application.isAiAnalysisConsent()) {
+            return new AiEvidenceAnalysisResponse(false, reportId, null, 0, List.of(),
+                    "The applicant has not authorized AI-assisted analysis of their CV for this application");
+        }
+
         ScreeningReport report = findOwnedReportOrThrow(reportId, application.getId());
 
         InternshipRubric activeRubric = rubricRepository.findByInternshipIdAndStatus(internship.getId(), RubricStatus.ACTIVE)

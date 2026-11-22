@@ -7,6 +7,7 @@ import * as Sharing from 'expo-sharing';
 
 import { ApplicationDetailCard, ApplicationDetailText } from '@/components/application-polish';
 import { ApplicationStatusBadge } from '@/components/application-status-badge';
+import { PipelineProgressSection } from '@/components/pipeline-progress-section';
 import { ScreeningReportSection } from '@/components/screening-report-section';
 import { ProfileAvatar } from '@/components/profile-avatar';
 import { AuthBackButton } from '@/components/auth-back-button';
@@ -15,8 +16,8 @@ import { PathoraButton } from '@/components/pathora-button';
 import { PathoraColors, PathoraFonts } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
 import {
-  ApiError, downloadCompanyApplicationCv, getCompanyApplicationDetail, updateCompanyApplicationStatus,
-  type AcademicLevel, type CompanyApplicationDecision, type CompanyApplicationDetail,
+  ApiError, downloadCompanyApplicationCv, getCompanyApplicationDetail,
+  type AcademicLevel, type CompanyApplicationDetail,
 } from '@/lib/api';
 import { formatDisplayDate } from '@/lib/date';
 import { initialsForName } from '@/lib/initials';
@@ -48,7 +49,6 @@ export function CompanyApplicantDetailContent({ internshipId, applicationId }: {
   const [application, setApplication] = useState<CompanyApplicationDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
-  const [isDeciding, setIsDeciding] = useState(false);
   const [isOpeningCv, setIsOpeningCv] = useState(false);
 
   const load = useCallback(async () => {
@@ -63,34 +63,6 @@ export function CompanyApplicantDetailContent({ internshipId, applicationId }: {
   }, [token, internshipId, applicationId]);
 
   useFocusEffect(useCallback(() => { void load(); }, [load]));
-
-  const handleDecision = (decision: CompanyApplicationDecision) => {
-    if (!token || isDeciding) return;
-    const isAccept = decision === 'ACCEPTED';
-    Alert.alert(
-      isAccept ? 'Accept applicant?' : 'Reject applicant?',
-      isAccept ? 'Accept this application?' : 'Reject this application?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: isAccept ? 'Accept' : 'Reject',
-          style: isAccept ? 'default' : 'destructive',
-          onPress: async () => {
-            setIsDeciding(true);
-            try {
-              const updated = await updateCompanyApplicationStatus(token, internshipId, applicationId, decision);
-              setApplication(updated);
-            } catch (err) {
-              if (err instanceof ApiError && err.status === 409) {
-                await load();
-                Alert.alert('Already decided', 'This application was already decided.');
-              } else Alert.alert('Something went wrong', describeOnboardingError(err));
-            } finally { setIsDeciding(false); }
-          },
-        },
-      ],
-    );
-  };
 
   const handleViewCv = async () => {
     if (!token || !application || isOpeningCv) return;
@@ -123,7 +95,6 @@ export function CompanyApplicantDetailContent({ internshipId, applicationId }: {
   const applicantName = [applicant?.firstName, applicant?.lastName].filter(Boolean).join(' ') || 'Unknown applicant';
   const manualSkills = applicant?.skills.map((skill) => skill.name) ?? [];
   const detectedSkills = applicant?.cvDetectedSkills.map((skill) => skill.name) ?? [];
-  const isApplied = application.status === 'APPLIED';
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -198,29 +169,11 @@ export function CompanyApplicantDetailContent({ internshipId, applicationId }: {
 
         <ScreeningReportSection internshipId={internshipId} applicationId={applicationId} />
 
-        <ApplicationDetailCard label="Application decision">
-          {isApplied ? (
-            <>
-              <Text style={styles.decisionHint}>Review the application carefully. Decisions are final.</Text>
-              <View style={styles.actions}>
-                <View style={styles.actionButton}>
-                  <PathoraButton label="Reject" variant="destructive" onPress={() => handleDecision('REJECTED')} disabled={isDeciding} />
-                </View>
-                <View style={styles.actionButton}>
-                  <PathoraButton label="Accept" variant="success" onPress={() => handleDecision('ACCEPTED')} disabled={isDeciding} />
-                </View>
-              </View>
-            </>
-          ) : (
-            <View style={styles.decisionDone}>
-              <SymbolView name={{ ios: application.status === 'ACCEPTED' ? 'checkmark.circle.fill' : 'xmark.circle.fill',
-                android: application.status === 'ACCEPTED' ? 'check_circle' : 'cancel',
-                web: application.status === 'ACCEPTED' ? 'check_circle' : 'cancel' }} size={20}
-                tintColor={application.status === 'ACCEPTED' ? PathoraColors.success : PathoraColors.error} />
-              <Text style={styles.decisionDoneText}>{application.status === 'ACCEPTED' ? 'You accepted this applicant' : 'You rejected this applicant'}</Text>
-            </View>
-          )}
-        </ApplicationDetailCard>
+        <PipelineProgressSection
+          internshipId={internshipId}
+          applicationId={applicationId}
+          onChanged={() => void load()}
+        />
       </ScrollView>
     </SafeAreaView>
   );

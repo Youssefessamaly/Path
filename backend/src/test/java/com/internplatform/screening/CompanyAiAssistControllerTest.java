@@ -222,6 +222,11 @@ class CompanyAiAssistControllerTest {
         application.setCvContentType("application/pdf");
         application.setCvSizeBytes(cvBytes.length);
         application.setCvUploadedAt(OffsetDateTime.now(ZoneOffset.UTC));
+        // Every other test in this class is about something OTHER than consent (ownership,
+        // disabled/rate-limited/privacy states, response mapping) — default this fixture to
+        // "consented" so those tests actually reach the AI call they're testing. The dedicated
+        // consent test below builds its own non-consenting application instead.
+        application.setAiAnalysisConsent(true, OffsetDateTime.now(ZoneOffset.UTC));
         return applicationRepository.saveAndFlush(application);
     }
 
@@ -339,6 +344,42 @@ class CompanyAiAssistControllerTest {
                         + "/ai-evidence-analysis")
                         .with(asCompany()))
                 .andExpect(status().isNotFound());
+    }
+
+    // --- Applicant AI-analysis consent: a recruiter can never override this -------------------
+
+    @Test
+    void refusesAnalysisWhenTheApplicantNeverAuthorizedAiProcessingRegardlessOfRecruiterIntent() throws Exception {
+        activateRubric(List.of(labelRequirement("Leadership potential", "REQUIRED", 40)));
+        InternProfile profile = createInternProfile();
+        // Deliberately NOT using createApplication's helper (which defaults to consent=true) —
+        // this application explicitly leaves consent at its default, unconsented state.
+        String storageKey = cvStorageService.store(profile.getId(), createPdfWithLines("SKILLS", "Python"));
+        InternshipApplication nonConsentingApplication = new InternshipApplication(internship.getId(), profile.getId());
+        nonConsentingApplication.setCvFileName("resume.pdf");
+        nonConsentingApplication.setCvStorageKey(storageKey);
+        nonConsentingApplication.setCvContentType("application/pdf");
+        nonConsentingApplication.setCvSizeBytes(1);
+        nonConsentingApplication.setCvUploadedAt(java.time.OffsetDateTime.now(ZoneOffset.UTC));
+        nonConsentingApplication = applicationRepository.saveAndFlush(nonConsentingApplication);
+
+        UUID reportId = screenAndGetReportId(nonConsentingApplication.getId());
+
+        // Even if the mocked AI bean would happily return a suggestion, the request must never
+        // reach it at all once the applicant's own consent is false.
+        when(aiEvidenceAnalysisService.analyzeEvidence(any()))
+                .thenReturn(new AiEvidenceAnalysisResult(true, List.of(), null));
+
+        mockMvc.perform(post("/api/v1/company/internships/" + internship.getId()
+                        + "/applications/" + nonConsentingApplication.getId() + "/screening-reports/" + reportId
+                        + "/ai-evidence-analysis")
+                        .with(asCompany()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.completed").value(false))
+                .andExpect(jsonPath("$.unavailableReason").value(
+                        "The applicant has not authorized AI-assisted analysis of their CV for this application"));
+
+        verify(aiEvidenceAnalysisService, never()).analyzeEvidence(any());
     }
 
     // --- AI disabled by default -----------------------------------------------------------------

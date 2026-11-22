@@ -1,7 +1,7 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ApplicationDetailCard, ApplicationDetailText } from '@/components/application-polish';
@@ -13,7 +13,7 @@ import { OnboardingGuard } from '@/components/onboarding/onboarding-guard';
 import { PathoraButton } from '@/components/pathora-button';
 import { PathoraColors, PathoraFonts } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
-import { getInternApplication, type InternApplication } from '@/lib/api';
+import { getInternApplication, withdrawAiAnalysisConsent, type InternApplication } from '@/lib/api';
 import { formatDisplayDate } from '@/lib/date';
 import { initialsForName } from '@/lib/initials';
 import { describeOnboardingError } from '@/lib/onboarding';
@@ -24,6 +24,7 @@ function ApplicationDetailsScreen({ applicationId }: { applicationId: string }) 
   const { token } = useAuth();
   const [application, setApplication] = useState<InternApplication | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isWithdrawingConsent, setIsWithdrawingConsent] = useState(false);
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -34,6 +35,33 @@ function ApplicationDetailsScreen({ applicationId }: { applicationId: string }) 
   }, [token, applicationId]);
 
   useFocusEffect(useCallback(() => { void load(); }, [load]));
+
+  const confirmWithdrawAiConsent = useCallback(() => {
+    if (!token) return;
+    Alert.alert(
+      'Withdraw AI analysis permission?',
+      'This company will no longer be able to request AI-assisted analysis of this application’s CV. '
+        + 'Your application and its standard automatic screening are not affected either way.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Withdraw',
+          style: 'destructive',
+          onPress: async () => {
+            setIsWithdrawingConsent(true);
+            try {
+              const updated = await withdrawAiAnalysisConsent(token, applicationId);
+              setApplication(updated);
+            } catch (err) {
+              Alert.alert('Unable to withdraw permission', describeOnboardingError(err));
+            } finally {
+              setIsWithdrawingConsent(false);
+            }
+          },
+        },
+      ],
+    );
+  }, [token, applicationId]);
 
   if (error || !application) {
     return (
@@ -94,6 +122,26 @@ function ApplicationDetailsScreen({ applicationId }: { applicationId: string }) 
               <Text style={styles.cvCaption}>CV attached when you applied</Text>
             </View>
           </View>
+        </ApplicationDetailCard>
+
+        <ApplicationDetailCard label="AI-assisted CV analysis">
+          <View style={styles.statusMessage}>
+            <SymbolView name={{ ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' }} size={20} tintColor={PathoraColors.teal600} />
+            <Text style={styles.explanation}>
+              {application.aiAnalysisConsent
+                ? 'You authorized this company to request AI-assisted analysis of this application’s CV, using Claude, a third-party AI model from Anthropic. You can withdraw this at any time below.'
+                : 'You have not authorized AI-assisted analysis of this application’s CV. This never affects your application or its standard automatic screening.'}
+            </Text>
+          </View>
+          {application.aiAnalysisConsent ? (
+            <PathoraButton
+              label={isWithdrawingConsent ? 'Withdrawing…' : 'Withdraw AI analysis permission'}
+              variant="destructive"
+              onPress={confirmWithdrawAiConsent}
+              disabled={isWithdrawingConsent}
+              style={styles.withdrawButton}
+            />
+          ) : null}
         </ApplicationDetailCard>
 
         <ApplicationDetailCard label="Cover letter">
@@ -158,6 +206,7 @@ const styles = StyleSheet.create({
   dateText: { color: PathoraColors.textSecondary, fontFamily: PathoraFonts.en.medium, fontSize: 11.5 },
   statusMessage: { flexDirection: 'row', alignItems: 'flex-start', gap: 9 },
   explanation: { flex: 1, color: PathoraColors.textSecondary, fontFamily: PathoraFonts.en.medium, fontSize: 13, lineHeight: 21 },
+  withdrawButton: { marginTop: 13 },
   cvRow: { flexDirection: 'row', alignItems: 'center', gap: 11 },
   cvIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: PathoraColors.teal100,
     justifyContent: 'center', alignItems: 'center' },

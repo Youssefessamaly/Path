@@ -28,6 +28,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.OffsetDateTime;
 import java.util.Set;
 import java.util.UUID;
 
@@ -93,6 +94,9 @@ class CompanyAiAssistServiceTest {
         application = new InternshipApplication(internshipId, UUID.randomUUID());
         ReflectionTestUtils.setField(application, "id", applicationId);
         application.setCvStorageKey("fake-storage-key");
+        // Default fixture consents — tests specifically about the consent gate itself
+        // (below) explicitly construct their own non-consenting application instead.
+        application.setAiAnalysisConsent(true, OffsetDateTime.now());
 
         activeRubric = new InternshipRubric(internshipId, null, 1);
         ReflectionTestUtils.setField(activeRubric, "id", rubricId);
@@ -419,5 +423,66 @@ class CompanyAiAssistServiceTest {
         org.mockito.ArgumentCaptor<AiRubricDraftRequest> captor = org.mockito.ArgumentCaptor.forClass(AiRubricDraftRequest.class);
         verify(aiRubricDraftService).draftFromInstructions(captor.capture());
         assertThat(captor.getValue().companyProfileId()).isEqualTo(companyProfileId);
+    }
+
+    // --- Applicant AI-analysis consent: the hard gate a recruiter can never override --------
+
+    @Test
+    void refusesEvidenceAnalysisWhenTheApplicantDidNotConsentEvenIfEverythingElseIsValid() {
+        InternshipApplication nonConsentingApplication = new InternshipApplication(internshipId, UUID.randomUUID());
+        ReflectionTestUtils.setField(nonConsentingApplication, "id", applicationId);
+        nonConsentingApplication.setCvStorageKey("fake-storage-key");
+        // Consent left at its default (false) — never explicitly set to true.
+        when(applicationRepository.findByIdAndInternshipId(applicationId, internshipId))
+                .thenReturn(Optional.of(nonConsentingApplication));
+
+        when(resultRepository.findAllByScreeningReportId(reportId)).thenReturn(List.of(
+                result(requirementId, ScreeningResult.NEEDS_REVIEW)));
+
+        AiEvidenceAnalysisResponse response = service.analyzeEvidence(userId, internshipId, applicationId, reportId, null);
+
+        assertThat(response.completed()).isFalse();
+        assertThat(response.unavailableReason()).containsIgnoringCase("not authorized");
+        // The gate fires before anything else is even touched — never reads the report, the
+        // rubric, the CV, or calls the AI provider.
+        verify(reportRepository, never()).findById(any());
+        verify(cvStorageService, never()).read(any());
+        verify(aiEvidenceAnalysisService, never()).analyzeEvidence(any());
+    }
+
+    @Test
+    void proceedsNormallyWhenTheApplicantDidExplicitlyConsent() {
+        // The shared setUp() fixture already sets consent=true — this test exists to make
+        // that assumption explicit and guard against it silently regressing.
+        assertThat(application.isAiAnalysisConsent()).isTrue();
+
+        when(resultRepository.findAllByScreeningReportId(reportId)).thenReturn(List.of(
+                result(requirementId, ScreeningResult.NEEDS_REVIEW)));
+        when(cvStorageService.read("fake-storage-key")).thenReturn(new byte[]{1});
+        when(cvSkillExtractionService.extractText(any())).thenReturn("cv text");
+        when(aiEvidenceAnalysisService.analyzeEvidence(any()))
+                .thenReturn(new AiEvidenceAnalysisResult(true, List.of(), null));
+
+        AiEvidenceAnalysisResponse response = service.analyzeEvidence(userId, internshipId, applicationId, reportId, null);
+
+        assertThat(response.completed()).isTrue();
+        verify(aiEvidenceAnalysisService).analyzeEvidence(any());
+    }
+
+    @Test
+    void withdrawingConsentAfterItWasGrantedBlocksAnyFutureAnalysisCall() {
+        // Same application as proceedsNormallyWhenTheApplicantDidExplicitlyConsent — starts
+        // consenting, then the applicant withdraws (the same state change
+        // InternshipApplicationService#withdrawAiAnalysisConsent performs). No caching exists
+        // anywhere between that withdrawal and this call, so the very next analyzeEvidence call
+        // must see it and refuse, exactly like a CV that was never consented to begin with.
+        assertThat(application.isAiAnalysisConsent()).isTrue();
+        application.setAiAnalysisConsent(false, null);
+
+        AiEvidenceAnalysisResponse response = service.analyzeEvidence(userId, internshipId, applicationId, reportId, null);
+
+        assertThat(response.completed()).isFalse();
+        assertThat(response.unavailableReason()).containsIgnoringCase("not authorized");
+        verify(aiEvidenceAnalysisService, never()).analyzeEvidence(any());
     }
 }

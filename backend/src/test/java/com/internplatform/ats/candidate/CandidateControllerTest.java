@@ -48,6 +48,7 @@ import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.ZoneOffset;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -105,6 +106,12 @@ class CandidateControllerTest {
 
     @Autowired
     private AtsApplicationStateRepository applicationStateRepository;
+
+    @Autowired
+    private AtsStageEventRepository stageEventRepository;
+
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
 
     private User createUser(Role role) {
         return userRepository.saveAndFlush(new User(
@@ -409,5 +416,244 @@ class CandidateControllerTest {
         userRepository.deleteById(internUser.getId());
         TestTransaction.flagForCommit();
         TestTransaction.end();
+    }
+
+    // ===== Stage 5B follow-up: advancing to the next stage (AtsCandidateMovementService) =====
+
+    private String advanceUrl(UUID applicationId) {
+        return "/api/v1/company/ats/applications/" + applicationId + "/advance";
+    }
+
+    @Test
+    void advanceMovesToTheActualNextPersistedStageRegardlessOfPipelineShape() throws Exception {
+        // Two companies, two entirely different stage sequences — proves nothing is hardcoded.
+        User ownerA = createUser(Role.COMPANY);
+        CompanyProfile companyA = createCompanyProfile(ownerA);
+        Internship internshipA = createInternship(companyA);
+        createPipelineWithStages(internshipA, "Application Review", "Technical Interview", "HR Interview", "Final Decision");
+        InternshipApplication applicationA = createApplication(internshipA, ApplicationStatus.APPLIED);
+
+        User ownerB = createUser(Role.COMPANY);
+        CompanyProfile companyB = createCompanyProfile(ownerB);
+        Internship internshipB = createInternship(companyB);
+        createPipelineWithStages(internshipB, "CV Screening", "Assessment", "Manager Interview", "Offer");
+        InternshipApplication applicationB = createApplication(internshipB, ApplicationStatus.APPLIED);
+
+        mockMvc.perform(post(advanceUrl(applicationA.getId())).with(asUser(ownerA)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currentStageName").value("Technical Interview"))
+                .andExpect(jsonPath("$.nextStageName").value("HR Interview"))
+                .andExpect(jsonPath("$.pipelineName").exists());
+
+        mockMvc.perform(post(advanceUrl(applicationB.getId())).with(asUser(ownerB)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currentStageName").value("Assessment"))
+                .andExpect(jsonPath("$.nextStageName").value("Manager Interview"));
+    }
+
+    @Test
+    void advancingTwiceInSequenceMovesThroughEachStageInOrder() throws Exception {
+        User owner = createUser(Role.COMPANY);
+        CompanyProfile company = createCompanyProfile(owner);
+        Internship internship = createInternship(company);
+        createPipelineWithStages(internship, "Applied", "Interview", "Offer");
+        InternshipApplication application = createApplication(internship, ApplicationStatus.APPLIED);
+
+        mockMvc.perform(post(advanceUrl(application.getId())).with(asUser(owner)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currentStageName").value("Interview"));
+
+        mockMvc.perform(post(advanceUrl(application.getId())).with(asUser(owner)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currentStageName").value("Offer"))
+                .andExpect(jsonPath("$.nextStageId").doesNotExist());
+    }
+
+    @Test
+    void advancingFromTheFinalStageReturnsConflict() throws Exception {
+        User owner = createUser(Role.COMPANY);
+        CompanyProfile company = createCompanyProfile(owner);
+        Internship internship = createInternship(company);
+        createPipelineWithStages(internship, "Applied", "Offer");
+        InternshipApplication application = createApplication(internship, ApplicationStatus.APPLIED);
+
+        mockMvc.perform(post(advanceUrl(application.getId())).with(asUser(owner)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currentStageName").value("Offer"));
+
+        mockMvc.perform(post(advanceUrl(application.getId())).with(asUser(owner)))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void rejectedApplicantCannotAdvance() throws Exception {
+        User owner = createUser(Role.COMPANY);
+        CompanyProfile company = createCompanyProfile(owner);
+        Internship internship = createInternship(company);
+        createPipelineWithStages(internship, "Applied", "Interview");
+        InternshipApplication application = createApplication(internship, ApplicationStatus.APPLIED);
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .patch("/api/v1/company/internships/" + internship.getId() + "/applications/" + application.getId() + "/status")
+                        .with(asUser(owner))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of("status", "REJECTED"))))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post(advanceUrl(application.getId())).with(asUser(owner)))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void acceptedApplicantCannotAdvance() throws Exception {
+        User owner = createUser(Role.COMPANY);
+        CompanyProfile company = createCompanyProfile(owner);
+        Internship internship = createInternship(company);
+        createPipelineWithStages(internship, "Applied", "Offer");
+        InternshipApplication application = createApplication(internship, ApplicationStatus.ACCEPTED);
+
+        mockMvc.perform(post(advanceUrl(application.getId())).with(asUser(owner)))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void crossCompanyCannotAdvanceAnothersApplication() throws Exception {
+        User ownerA = createUser(Role.COMPANY);
+        createCompanyProfile(ownerA);
+
+        User ownerB = createUser(Role.COMPANY);
+        CompanyProfile companyB = createCompanyProfile(ownerB);
+        Internship internshipB = createInternship(companyB);
+        createPipelineWithStages(internshipB, "Applied", "Interview");
+        InternshipApplication applicationB = createApplication(internshipB, ApplicationStatus.APPLIED);
+
+        mockMvc.perform(post(advanceUrl(applicationB.getId())).with(asUser(ownerA)))
+                .andExpect(status().isNotFound());
+
+        // Company B's own owner can, proving the 404 above was authorization, not a real fault.
+        mockMvc.perform(post(advanceUrl(applicationB.getId())).with(asUser(ownerB)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void internCannotAdvanceAnApplication() throws Exception {
+        User owner = createUser(Role.COMPANY);
+        CompanyProfile company = createCompanyProfile(owner);
+        Internship internship = createInternship(company);
+        createPipelineWithStages(internship, "Applied", "Interview");
+        InternshipApplication application = createApplication(internship, ApplicationStatus.APPLIED);
+
+        User internUser = createUser(Role.INTERN);
+        mockMvc.perform(post(advanceUrl(application.getId())).with(asUser(internUser)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void advancingWithNoPipelineAssignedReturnsConflictNotFabricatedStages() throws Exception {
+        User owner = createUser(Role.COMPANY);
+        CompanyProfile company = createCompanyProfile(owner);
+        Internship internship = createInternship(company);
+        // Deliberately no createPipelineWithStages(...) call — this internship has no pipeline.
+        InternshipApplication application = createApplication(internship, ApplicationStatus.APPLIED);
+
+        mockMvc.perform(get("/api/v1/company/ats/applications/" + application.getId()).with(asUser(owner)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currentStageId").doesNotExist())
+                .andExpect(jsonPath("$.pipelineId").doesNotExist());
+
+        mockMvc.perform(post(advanceUrl(application.getId())).with(asUser(owner)))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void advanceRecordsAMovedEventWithTheActingMemberAndATimestamp() throws Exception {
+        User owner = createUser(Role.COMPANY);
+        CompanyProfile company = createCompanyProfile(owner);
+        Internship internship = createInternship(company);
+        createPipelineWithStages(internship, "Applied", "Interview");
+        InternshipApplication application = createApplication(internship, ApplicationStatus.APPLIED);
+
+        mockMvc.perform(post(advanceUrl(application.getId())).with(asUser(owner)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/company/ats/applications/" + application.getId() + "/history").with(asUser(owner)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].eventKind").value("ENTERED"))
+                .andExpect(jsonPath("$[1].eventKind").value("MOVED"))
+                .andExpect(jsonPath("$[1].fromStageName").value("Applied"))
+                .andExpect(jsonPath("$[1].toStageName").value("Interview"))
+                .andExpect(jsonPath("$[1].occurredAt").exists());
+
+        List<AtsStageEvent> events = stageEventRepository.findAllByApplicationIdOrderByOccurredAtAsc(application.getId());
+        AtsStageEvent moved = events.get(1);
+        assertThat(moved.getEventKind()).isEqualTo(StageEventKind.MOVED);
+        // The owner used a legacy direct-profile fast path with no backfilled ats_company_members
+        // row, so actorMemberId is legitimately null here — see CompanyContext's own javadoc.
+        // A recruiter (added via addMember, which always creates a real membership row) proves
+        // the non-null case below.
+        User recruiter = createUser(Role.COMPANY);
+        addMember(company, recruiter, AtsMemberRole.RECRUITER, MemberStatus.ACTIVE);
+        InternshipApplication secondApplication = createApplication(internship, ApplicationStatus.APPLIED);
+
+        mockMvc.perform(post(advanceUrl(secondApplication.getId())).with(asUser(recruiter)))
+                .andExpect(status().isOk());
+
+        AtsStageEvent recruiterMove = stageEventRepository
+                .findAllByApplicationIdOrderByOccurredAtAsc(secondApplication.getId()).get(1);
+        assertThat(recruiterMove.getActorMemberId()).isNotNull();
+    }
+
+    @Test
+    void advanceIsReflectedImmediatelyInTheCandidateStageEndpoint() throws Exception {
+        User owner = createUser(Role.COMPANY);
+        CompanyProfile company = createCompanyProfile(owner);
+        Internship internship = createInternship(company);
+        createPipelineWithStages(internship, "Applied", "Interview", "Offer");
+        InternshipApplication application = createApplication(internship, ApplicationStatus.APPLIED);
+
+        mockMvc.perform(post(advanceUrl(application.getId())).with(asUser(owner)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/company/ats/applications/" + application.getId()).with(asUser(owner)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currentStageName").value("Interview"))
+                .andExpect(jsonPath("$.nextStageName").value("Offer"));
+    }
+
+    @Test
+    void concurrentAdvanceAttemptsAreRejectedByTheOptimisticLockRatherThanCorruptingState() throws Exception {
+        User owner = createUser(Role.COMPANY);
+        CompanyProfile company = createCompanyProfile(owner);
+        Internship internship = createInternship(company);
+        createPipelineWithStages(internship, "Applied", "Interview", "Offer");
+        InternshipApplication application = createApplication(internship, ApplicationStatus.APPLIED);
+
+        // First advance establishes the tracking row (version 0 at creation).
+        mockMvc.perform(post(advanceUrl(application.getId())).with(asUser(owner)))
+                .andExpect(status().isOk());
+
+        // Two independently-loaded copies of the same row, simulating two concurrent requests
+        // that both read before either writes, then both detached so each save() below goes
+        // through EntityManager.merge() against a genuinely fresh read rather than reusing a
+        // live, already-managed instance still sitting in this session's identity map (which
+        // would silently let the second mutation "win" without ever detecting a conflict).
+        AtsApplicationState first = applicationStateRepository.findById(application.getId()).orElseThrow();
+        AtsApplicationState second = applicationStateRepository.findById(application.getId()).orElseThrow();
+        entityManager.detach(first);
+        entityManager.detach(second);
+
+        first.moveToStage(stageRepository.findAllByPipelineIdOrderByPositionAsc(first.getPipelineId()).get(2).getId(),
+                OffsetDateTime.now(ZoneOffset.UTC));
+        applicationStateRepository.saveAndFlush(first);
+        // Evict the merged result too, so second's merge below cannot reuse it and is forced
+        // to re-read the now-newer row from the database.
+        entityManager.clear();
+
+        second.moveToStage(stageRepository.findAllByPipelineIdOrderByPositionAsc(second.getPipelineId()).get(2).getId(),
+                OffsetDateTime.now(ZoneOffset.UTC));
+        org.junit.jupiter.api.Assertions.assertThrows(
+                org.springframework.orm.ObjectOptimisticLockingFailureException.class,
+                () -> applicationStateRepository.saveAndFlush(second));
     }
 }

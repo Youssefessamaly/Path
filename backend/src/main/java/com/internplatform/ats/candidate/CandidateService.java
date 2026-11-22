@@ -2,6 +2,8 @@ package com.internplatform.ats.candidate;
 
 import com.internplatform.ats.access.CompanyAccessResolver;
 import com.internplatform.ats.access.CompanyContext;
+import com.internplatform.ats.pipeline.AtsInternshipPipeline;
+import com.internplatform.ats.pipeline.AtsInternshipPipelineRepository;
 import com.internplatform.ats.pipeline.AtsStage;
 import com.internplatform.ats.pipeline.AtsStageRepository;
 import com.internplatform.internship.Internship;
@@ -13,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -34,6 +38,7 @@ public class CandidateService {
     private final InternshipApplicationRepository applicationRepository;
     private final AtsStageEventRepository stageEventRepository;
     private final AtsStageRepository stageRepository;
+    private final AtsInternshipPipelineRepository pipelineRepository;
     private final AtsApplicationIntakeService intakeService;
     private final CompanyAccessResolver companyAccessResolver;
 
@@ -42,6 +47,7 @@ public class CandidateService {
             InternshipApplicationRepository applicationRepository,
             AtsStageEventRepository stageEventRepository,
             AtsStageRepository stageRepository,
+            AtsInternshipPipelineRepository pipelineRepository,
             AtsApplicationIntakeService intakeService,
             CompanyAccessResolver companyAccessResolver
     ) {
@@ -49,6 +55,7 @@ public class CandidateService {
         this.applicationRepository = applicationRepository;
         this.stageEventRepository = stageEventRepository;
         this.stageRepository = stageRepository;
+        this.pipelineRepository = pipelineRepository;
         this.intakeService = intakeService;
         this.companyAccessResolver = companyAccessResolver;
     }
@@ -63,7 +70,7 @@ public class CandidateService {
 
         return applicationRepository.findAllByInternshipIdOrderByAppliedAtDesc(internship.getId()).stream()
                 .map(application -> toStageResponse(
-                        application.getId(),
+                        application,
                         intakeService.ensureTracked(application.getId(), internship.getId()).orElse(null)))
                 .toList();
     }
@@ -74,7 +81,7 @@ public class CandidateService {
         InternshipApplication application = findOwnedApplicationOrThrow(applicationId, context.companyProfileId());
 
         return toStageResponse(
-                application.getId(),
+                application,
                 intakeService.ensureTracked(application.getId(), application.getInternshipId()).orElse(null));
     }
 
@@ -109,13 +116,46 @@ public class CandidateService {
         return new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found");
     }
 
-    private CandidateStageResponse toStageResponse(UUID applicationId, AtsApplicationState state) {
+    /** Package-private: also used by AtsCandidateMovementService to build its response after a
+     *  successful move, so both read and write paths render pipeline progression identically. */
+    CandidateStageResponse toStageResponse(InternshipApplication application, AtsApplicationState state) {
         if (state == null) {
-            return new CandidateStageResponse(applicationId, null, null, null);
+            return new CandidateStageResponse(
+                    application.getId(), application.getStatus(), null, null, null, null, null, null, null, null);
         }
-        String stageName = stageRepository.findById(state.getCurrentStageId()).map(AtsStage::getName).orElse(null);
+
+        List<AtsStage> stages = stageRepository.findAllByPipelineIdOrderByPositionAsc(state.getPipelineId());
+        List<StageSummaryResponse> stageSummaries = stages.stream()
+                .map(stage -> new StageSummaryResponse(stage.getId(), stage.getName(), stage.getPosition()))
+                .toList();
+
+        Map<UUID, AtsStage> stagesById = stages.stream()
+                .collect(java.util.stream.Collectors.toMap(AtsStage::getId, s -> s));
+        AtsStage currentStage = stagesById.get(state.getCurrentStageId());
+
+        AtsStage nextStage = currentStage == null ? null : stages.stream()
+                .filter(s -> s.getPosition() > currentStage.getPosition())
+                .min(Comparator.comparingInt(AtsStage::getPosition))
+                .orElse(null);
+
+        String pipelineName = pipelineRepository.findById(state.getPipelineId())
+                .map(AtsInternshipPipeline::getSourceTemplateName)
+                .orElse(null);
+        if (pipelineName == null) {
+            pipelineName = "Default Pipeline";
+        }
+
         return new CandidateStageResponse(
-                applicationId, state.getCurrentStageId(), stageName, state.getEnteredCurrentStageAt());
+                application.getId(),
+                application.getStatus(),
+                state.getPipelineId(),
+                pipelineName,
+                stageSummaries,
+                state.getCurrentStageId(),
+                currentStage != null ? currentStage.getName() : null,
+                state.getEnteredCurrentStageAt(),
+                nextStage != null ? nextStage.getId() : null,
+                nextStage != null ? nextStage.getName() : null);
     }
 
     private StageEventResponse toEventResponse(AtsStageEvent event) {

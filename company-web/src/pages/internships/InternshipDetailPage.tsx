@@ -4,6 +4,7 @@ import { EmptyView, ErrorView, LoadingView } from '../../components/StateViews'
 import { ScreeningRequirementsEditor } from '../../components/ScreeningRequirementsEditor'
 import { AiRubricDraftPanel } from '../../components/AiRubricDraftPanel'
 import { AiEvidenceAnalysisPanel } from '../../components/AiEvidenceAnalysisPanel'
+import { PipelineProgressPanel } from '../../components/PipelineProgressPanel'
 import { AppIcon } from '../../components/Visuals'
 import { useAuth } from '../../auth/useAuth'
 import {
@@ -982,7 +983,10 @@ function ApplicantRow({
           {isLoadingReport && <LoadingView />}
           {reportError && <ErrorView message={reportError} onRetry={handleToggleView} />}
           {report && !isLoadingReport && !reportError && (
-            <ReportDetailPanel report={report} internshipId={internshipId} applicationId={summary.applicationId} />
+            <>
+              <ReportDetailPanel report={report} internshipId={internshipId} applicationId={summary.applicationId} />
+              <PipelineProgressPanel internshipId={internshipId} applicationId={summary.applicationId} />
+            </>
           )}
         </>
       )}

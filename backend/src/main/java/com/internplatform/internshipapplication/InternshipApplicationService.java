@@ -22,6 +22,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -124,6 +125,8 @@ public class InternshipApplicationService {
         application.setCvContentType(profile.getCvContentType());
         application.setCvSizeBytes(profile.getCvSizeBytes());
         application.setCvUploadedAt(profile.getCvUploadedAt());
+        application.setAiAnalysisConsent(
+                Boolean.TRUE.equals(request.aiAnalysisConsent()), OffsetDateTime.now(ZoneOffset.UTC));
 
         InternshipApplication saved;
         try {
@@ -183,6 +186,32 @@ public class InternshipApplicationService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
 
         return toResponseWithAnswers(application);
+    }
+
+    /**
+     * Withdraws a previously granted AI-analysis consent for one specific application — the
+     * applicant's own choice, reversible at any time, independent of recruiter action. Does
+     * NOT delete or alter any AI suggestion a recruiter may already have seen on screen before
+     * this call: CompanyAiAssistService never persists AI suggestions server-side (see its own
+     * class doc — "writes NOTHING"), so there is no stored AI result row to invalidate here.
+     * This only prevents any FUTURE "Analyze with AI" call for this application — enforced by
+     * CompanyAiAssistService#analyzeEvidence re-reading this flag fresh on every call, with no
+     * caching anywhere in between. Idempotent: withdrawing already-withdrawn (or never-granted)
+     * consent succeeds and simply leaves it false. Granting consent is only ever possible at
+     * submission time (see submitApplication) — this method can only move true to false.
+     */
+    @Transactional
+    public InternshipApplicationResponse withdrawAiAnalysisConsent(UUID userId, UUID applicationId) {
+        InternProfile profile = requireCompletedInternProfile(userId);
+
+        InternshipApplication application = applicationRepository
+                .findByIdAndInternProfileId(applicationId, profile.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
+
+        application.setAiAnalysisConsent(false, null);
+        InternshipApplication saved = applicationRepository.saveAndFlush(application);
+
+        return toResponseWithAnswers(saved);
     }
 
     /**
@@ -378,7 +407,8 @@ public class InternshipApplicationService {
                 application.getCvFileName(),
                 application.getAppliedAt(),
                 application.getUpdatedAt(),
-                answers
+                answers,
+                application.isAiAnalysisConsent()
         );
     }
 

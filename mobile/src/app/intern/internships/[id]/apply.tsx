@@ -97,6 +97,11 @@ function ApplyScreen({ internshipId }: { internshipId: string }) {
 
   // Step 3 state
   const [confirmed, setConfirmed] = useState(false);
+  // Entirely separate from `confirmed` above — this is optional and never required to
+  // submit. Defaults to false: consent is never assumed. See InternshipApplicationService
+  // on the backend, which refuses AI analysis outright for any application where this is
+  // false, regardless of what a recruiter later requests.
+  const [aiAnalysisConsent, setAiAnalysisConsent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -229,6 +234,7 @@ function ApplyScreen({ internshipId }: { internshipId: string }) {
         ...(trimmedLinkedin ? { linkedinUrl: trimmedLinkedin } : {}),
         ...(trimmedPortfolio ? { portfolioUrl: trimmedPortfolio } : {}),
         answers: buildAnswersPayload(),
+        aiAnalysisConsent,
       });
 
       setStep('success');
@@ -497,6 +503,22 @@ function ApplyScreen({ internshipId }: { internshipId: string }) {
                   ))}
                 </View>
               )}
+
+              <Pressable
+                onPress={() => setAiAnalysisConsent((current) => !current)}
+                style={styles.confirmRow}
+                accessibilityRole="button">
+                <PathoraCheckbox checked={aiAnalysisConsent} onToggle={() => setAiAnalysisConsent((current) => !current)} />
+                <Text style={styles.confirmText}>
+                  {'(Optional) Allow this company to request AI-assisted analysis of my CV for this application, '
+                    + 'using Claude, a third-party AI model from Anthropic. If used, the full text extracted from '
+                    + 'my CV is shared with Anthropic; email addresses, phone numbers and links are automatically '
+                    + 'removed first on a best-effort basis, but my name and other CV content are not filtered '
+                    + 'out. My application and the standard automatic screening work exactly the same either way '
+                    + 'if I leave this unchecked, and I can withdraw this permission later from this '
+                    + "application's details screen."}
+                </Text>
+              </Pressable>
 
               <Pressable
                 onPress={() => setConfirmed((current) => !current)}

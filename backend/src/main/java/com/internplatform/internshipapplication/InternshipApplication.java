@@ -69,6 +69,20 @@ public class InternshipApplication {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
+    /**
+     * Whether the applicant authorized AI-assisted (third-party, Anthropic) analysis of THIS
+     * application's frozen CV snapshot — captured once at submission time, never retroactively
+     * changed by a later profile edit or company action. Defaults false: absence of an
+     * explicit yes is never treated as consent. See CompanyAiAssistService, which refuses to
+     * call the AI provider at all when this is false — a recruiter clicking "Analyze with AI"
+     * can never override the applicant's own choice.
+     */
+    @Column(name = "ai_analysis_consent", nullable = false)
+    private boolean aiAnalysisConsent;
+
+    @Column(name = "ai_analysis_consent_at")
+    private OffsetDateTime aiAnalysisConsentAt;
+
     protected InternshipApplication() {
     }
 
@@ -195,5 +209,20 @@ public class InternshipApplication {
 
     public OffsetDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public boolean isAiAnalysisConsent() {
+        return aiAnalysisConsent;
+    }
+
+    /** Only ever called once, at submission time (see InternshipApplicationService) — there is
+     *  deliberately no way to change this after the fact from outside this class. */
+    public void setAiAnalysisConsent(boolean aiAnalysisConsent, OffsetDateTime consentedAt) {
+        this.aiAnalysisConsent = aiAnalysisConsent;
+        this.aiAnalysisConsentAt = aiAnalysisConsent ? consentedAt : null;
+    }
+
+    public OffsetDateTime getAiAnalysisConsentAt() {
+        return aiAnalysisConsentAt;
     }
 }

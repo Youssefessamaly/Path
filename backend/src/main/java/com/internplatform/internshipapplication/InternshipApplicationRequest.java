@@ -41,7 +41,17 @@ public record InternshipApplicationRequest(
         /** Null/omitted is treated the same as an empty list — see
          *  InternshipApplicationService.validateAnswers. */
         @Valid
-        List<InternshipApplicationAnswerRequest> answers
+        List<InternshipApplicationAnswerRequest> answers,
+
+        /**
+         * Explicit, optional authorization for AI-assisted (third-party, Anthropic) analysis
+         * of THIS application's CV if a company later requests it — entirely separate from,
+         * and never required for, submitting the application itself or receiving deterministic
+         * ATS screening. Null/omitted is treated as false: consent is never assumed. See
+         * InternshipApplicationService#submitApplication and CompanyAiAssistService, which
+         * refuses AI analysis outright when this was not explicitly given.
+         */
+        Boolean aiAnalysisConsent
 
 ) {
 }

@@ -194,7 +194,11 @@ export function ScreeningReportSection({ internshipId, applicationId }: { intern
             disabled={isAnalyzing}
           />
           {aiError ? <Text style={styles.errorText}>{aiError}</Text> : null}
-          {aiUnavailable ? <Text style={styles.warnText}>{aiUnavailable}</Text> : null}
+          {aiUnavailable ? (
+            <Text style={styles.warnText}>
+              AI assistance isn&rsquo;t available right now — a deliberate safety setting, not an error: {aiUnavailable}
+            </Text>
+          ) : null}
           {hasRunAi && !aiError && !aiUnavailable && aiSuggestions && aiSuggestions.length === 0 ? (
             <ApplicationDetailText muted>
               AI did not find additional supporting evidence. This does not mean the candidate lacks the skill —
