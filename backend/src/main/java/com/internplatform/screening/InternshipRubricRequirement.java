@@ -8,6 +8,7 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.PrePersist;
@@ -59,7 +60,10 @@ public class InternshipRubricRequirement {
     @Column(name = "display_order", nullable = false)
     private int displayOrder;
 
-    @ElementCollection
+    // EAGER is deliberate — see the identical note on ScreeningProfileRequirement, whose
+    // LazyInitializationException on this same kind of collection was confirmed via live
+    // end-to-end HTTP verification (invisible to @Transactional-wrapped tests).
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "internship_rubric_requirement_evidence_sources",
             joinColumns = @JoinColumn(name = "requirement_id")

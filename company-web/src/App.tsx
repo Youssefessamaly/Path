@@ -15,6 +15,8 @@ import { InternshipFormPage } from './pages/internships/InternshipFormPage'
 import { ApplicationQuestionsPage } from './pages/internships/ApplicationQuestionsPage'
 import { PipelineTemplatesListPage } from './pages/pipeline-templates/PipelineTemplatesListPage'
 import { PipelineTemplateEditorPage } from './pages/pipeline-templates/PipelineTemplateEditorPage'
+import { ScreeningProfilesListPage } from './pages/screening-profiles/ScreeningProfilesListPage'
+import { ScreeningProfileEditorPage } from './pages/screening-profiles/ScreeningProfileEditorPage'
 
 /**
  * Route map:
@@ -32,6 +34,8 @@ import { PipelineTemplateEditorPage } from './pages/pipeline-templates/PipelineT
  *   /internships/:internshipId/application-questions   protected
  *   /pipeline-templates                 protected
  *   /pipeline-templates/:templateId     protected
+ *   /screening-profiles                 protected — reusable Smart ATS screening templates
+ *   /screening-profiles/:profileId      protected
  * Anything else redirects to /dashboard, which itself redirects an unauthenticated visitor to
  * /login (see ProtectedRoute). Registration only ever creates the account — it never signs the
  * new company in, matching the mobile app's own register/company.tsx exactly.
@@ -65,6 +69,8 @@ function App() {
           />
           <Route path="/pipeline-templates" element={<PipelineTemplatesListPage />} />
           <Route path="/pipeline-templates/:templateId" element={<PipelineTemplateEditorPage />} />
+          <Route path="/screening-profiles" element={<ScreeningProfilesListPage />} />
+          <Route path="/screening-profiles/:profileId" element={<ScreeningProfileEditorPage />} />
         </Route>
 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

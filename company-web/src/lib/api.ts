@@ -592,3 +592,346 @@ export function reorderPipelineStages(internshipId: string, stageIds: string[]):
     { stageIds },
   )
 }
+
+// ===== Smart ATS: screening requirements (shared shape — used by both reusable
+// ScreeningProfiles below and an internship's InternshipRubric, see api calls further down) =====
+//
+// Mirrors the backend's RequirementResponse/RequirementCreateRequest/RequirementUpdateRequest
+// exactly (com.internplatform.screening) — the backend itself uses one shared DTO for both, so
+// this client does too, rather than duplicating two near-identical shapes.
+
+export type RequirementType = 'REQUIRED' | 'PREFERRED' | 'BONUS'
+export type EvidenceSource =
+  | 'SKILLS_LIST' | 'PROJECT' | 'WORK_EXPERIENCE' | 'INTERNSHIP'
+  | 'COURSEWORK' | 'CERTIFICATION' | 'RESEARCH' | 'UNKNOWN'
+export type EvidenceStrength = 'STRONG' | 'MODERATE' | 'WEAK'
+
+export type ScreeningRequirement = {
+  id: string
+  requirementType: RequirementType
+  skillId: string | null
+  skillName: string | null
+  label: string | null
+  weight: number
+  minimumEvidenceStrength: EvidenceStrength | null
+  acceptedEvidenceSources: EvidenceSource[]
+  recruiterNotes: string | null
+  displayOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
+/** Exactly one of skillId/label must be present — the backend rejects (400) a request with
+ *  neither, and 409s if skillId duplicates an existing requirement in the same profile/rubric. */
+export type ScreeningRequirementCreatePayload = {
+  requirementType: RequirementType
+  skillId?: string
+  label?: string
+  weight: number
+  minimumEvidenceStrength?: EvidenceStrength
+  acceptedEvidenceSources?: EvidenceSource[]
+  recruiterNotes?: string
+  displayOrder: number
+}
+
+/** Partial update — an omitted field is left unchanged. There is no way to switch a
+ *  requirement between skill-based and label-based via update; delete and recreate instead
+ *  (mirrors the backend's own documented limitation). */
+export type ScreeningRequirementUpdatePayload = Partial<{
+  requirementType: RequirementType
+  label: string
+  weight: number
+  minimumEvidenceStrength: EvidenceStrength
+  acceptedEvidenceSources: EvidenceSource[]
+  recruiterNotes: string
+  displayOrder: number
+}>
+
+// ===== Smart ATS: reusable screening profiles =====
+
+export type ScreeningProfileStatus = 'ACTIVE' | 'ARCHIVED'
+
+/** Mirrors the backend's ScreeningProfileResponse. A profile is a reusable TEMPLATE only —
+ *  its requirements are copied, never referenced live, into an internship's rubric. */
+export type ScreeningProfile = {
+  id: string
+  companyProfileId: string
+  name: string
+  description: string | null
+  status: ScreeningProfileStatus
+  requirements: ScreeningRequirement[]
+  createdAt: string
+  updatedAt: string
+}
+
+export type ScreeningProfileCreatePayload = {
+  name: string
+  description?: string
+}
+
+export type ScreeningProfileUpdatePayload = Partial<{
+  name: string
+  description: string
+}>
+
+export function getScreeningProfiles(): Promise<ScreeningProfile[]> {
+  return request<ScreeningProfile[]>('GET', '/company/screening-profiles')
+}
+
+export function getScreeningProfile(profileId: string): Promise<ScreeningProfile> {
+  return request<ScreeningProfile>('GET', `/company/screening-profiles/${profileId}`)
+}
+
+export function createScreeningProfile(payload: ScreeningProfileCreatePayload): Promise<ScreeningProfile> {
+  return request<ScreeningProfile>('POST', '/company/screening-profiles', payload)
+}
+
+export function updateScreeningProfile(
+  profileId: string,
+  payload: ScreeningProfileUpdatePayload,
+): Promise<ScreeningProfile> {
+  return request<ScreeningProfile>('PATCH', `/company/screening-profiles/${profileId}`, payload)
+}
+
+export function archiveScreeningProfile(profileId: string): Promise<ScreeningProfile> {
+  return request<ScreeningProfile>('POST', `/company/screening-profiles/${profileId}/archive`)
+}
+
+export function activateScreeningProfile(profileId: string): Promise<ScreeningProfile> {
+  return request<ScreeningProfile>('POST', `/company/screening-profiles/${profileId}/activate`)
+}
+
+/** Creates an independent copy — editing the copy can never affect the original, or vice
+ *  versa (the backend copies every requirement with fresh ids). */
+export function duplicateScreeningProfile(profileId: string): Promise<ScreeningProfile> {
+  return request<ScreeningProfile>('POST', `/company/screening-profiles/${profileId}/duplicate`)
+}
+
+export function addScreeningProfileRequirement(
+  profileId: string,
+  payload: ScreeningRequirementCreatePayload,
+): Promise<ScreeningRequirement> {
+  return request<ScreeningRequirement>('POST', `/company/screening-profiles/${profileId}/requirements`, payload)
+}
+
+export function updateScreeningProfileRequirement(
+  profileId: string,
+  requirementId: string,
+  payload: ScreeningRequirementUpdatePayload,
+): Promise<ScreeningRequirement> {
+  return request<ScreeningRequirement>(
+    'PATCH',
+    `/company/screening-profiles/${profileId}/requirements/${requirementId}`,
+    payload,
+  )
+}
+
+export function deleteScreeningProfileRequirement(profileId: string, requirementId: string): Promise<void> {
+  return request<void>('DELETE', `/company/screening-profiles/${profileId}/requirements/${requirementId}`)
+}
+
+// ===== Smart ATS: an internship's versioned screening rubric =====
+//
+// Mirrors com.internplatform.screening.InternshipRubricService/Controller exactly. A rubric
+// version's requirements are mutable ONLY while it is DRAFT — the backend itself refuses
+// (409) to add/edit/delete a requirement on an ACTIVE/ARCHIVED version, and refuses (409) to
+// create a second draft, or a duplicate, while one already exists. Activating a draft
+// archives whichever version was previously ACTIVE (never deletes it) and never rewrites any
+// ScreeningReport already produced against an earlier version.
+
+export type RubricStatus = 'DRAFT' | 'ACTIVE' | 'ARCHIVED'
+
+/** Mirrors the backend's InternshipRubricResponse. */
+export type InternshipRubric = {
+  id: string
+  internshipId: string
+  screeningProfileId: string | null
+  version: number
+  status: RubricStatus
+  requirements: ScreeningRequirement[]
+  createdAt: string
+  updatedAt: string
+  activatedAt: string | null
+}
+
+/** Every version ever created for this internship, newest first — includes the current DRAFT
+ *  and/or ACTIVE version plus any ARCHIVED history. An internship with no rubric configured
+ *  at all returns an empty array (never 404). */
+export function listRubricVersions(internshipId: string): Promise<InternshipRubric[]> {
+  return request<InternshipRubric[]>('GET', `/company/internships/${internshipId}/rubric/versions`)
+}
+
+/** Creates a new DRAFT. Throws ApiError with status 409 if a draft already exists for this
+ *  internship. When screeningProfileId is given, the draft starts as a COPY of that profile's
+ *  requirements — editing the draft afterward never affects the source profile. */
+export function createRubricDraft(internshipId: string, screeningProfileId?: string): Promise<InternshipRubric> {
+  return request<InternshipRubric>(
+    'POST',
+    `/company/internships/${internshipId}/rubric`,
+    { screeningProfileId: screeningProfileId ?? null },
+  )
+}
+
+/** Throws ApiError with status 404 if there is no draft to discard. */
+export function discardRubricDraft(internshipId: string): Promise<void> {
+  return request<void>('DELETE', `/company/internships/${internshipId}/rubric`)
+}
+
+/** Freezes the current draft as the new ACTIVE version (archiving whichever version was
+ *  previously ACTIVE). Throws ApiError with status 404 if there is no draft, or 400 if the
+ *  draft has zero requirements. */
+export function activateRubricDraft(internshipId: string): Promise<InternshipRubric> {
+  return request<InternshipRubric>('POST', `/company/internships/${internshipId}/rubric/activate`)
+}
+
+/** Starts a new DRAFT by copying the most recent version's requirements (preferring ACTIVE,
+ *  else the latest version regardless of status) — the only way to "edit" an ACTIVE/ARCHIVED
+ *  rubric, since those stay frozen forever. Throws ApiError with status 409 if a draft already
+ *  exists, or 404 if no rubric exists yet at all. */
+export function duplicateRubric(internshipId: string): Promise<InternshipRubric> {
+  return request<InternshipRubric>('POST', `/company/internships/${internshipId}/rubric/duplicate`)
+}
+
+/** Throws ApiError with status 409 if the current rubric is not a DRAFT (its requirements are
+ *  frozen), 400 for an unknown skill id, or 409 for a skill already configured on this rubric. */
+export function addRubricRequirement(
+  internshipId: string,
+  payload: ScreeningRequirementCreatePayload,
+): Promise<ScreeningRequirement> {
+  return request<ScreeningRequirement>('POST', `/company/internships/${internshipId}/rubric/requirements`, payload)
+}
+
+/** Same DRAFT-only restriction as addRubricRequirement. */
+export function updateRubricRequirement(
+  internshipId: string,
+  requirementId: string,
+  payload: ScreeningRequirementUpdatePayload,
+): Promise<ScreeningRequirement> {
+  return request<ScreeningRequirement>(
+    'PATCH',
+    `/company/internships/${internshipId}/rubric/requirements/${requirementId}`,
+    payload,
+  )
+}
+
+/** Same DRAFT-only restriction as addRubricRequirement. */
+export function deleteRubricRequirement(internshipId: string, requirementId: string): Promise<void> {
+  return request<void>('DELETE', `/company/internships/${internshipId}/rubric/requirements/${requirementId}`)
+}
+
+// ===== Smart ATS: explainable applicant screening =====
+//
+// Mirrors com.internplatform.screening.ScreeningService/CompanyScreeningController and its
+// response records exactly. Screening is deterministic (no AI yet) and purely informational —
+// nothing here ever reads or writes InternshipApplication.status; see ApplicationStatus below,
+// which is a read-only label shown next to (never derived from, or affected by) a screening
+// report.
+
+/** Mirrors the backend's ApplicationStatus enum (com.internplatform.internshipapplication).
+ *  There is no company-web endpoint to change this yet (accept/reject stays mobile-only) — it
+ *  is shown here purely as read-only context alongside screening results. */
+export type ApplicationStatus = 'APPLIED' | 'ACCEPTED' | 'REJECTED'
+
+export type ScreeningOutcome = 'MATCHED' | 'NOT_EVIDENCED' | 'INSUFFICIENT_EVIDENCE' | 'NEEDS_REVIEW'
+
+/** Mirrors the backend's ScreeningResultResponse. textReference is only ever populated for a
+ *  company authorized to see this application (enforced server-side — see
+ *  CompanyScreeningController) and is always a single already-length-capped CV line, never
+ *  the full document. */
+export type ScreeningResultItem = {
+  requirementId: string
+  requirementType: RequirementType
+  skillId: string | null
+  skillName: string | null
+  label: string | null
+  weight: number
+  result: ScreeningOutcome
+  evidenceSource: EvidenceSource | null
+  evidenceStrength: EvidenceStrength | null
+  textReference: string | null
+  reasoning: string
+}
+
+/** Mirrors the backend's ScreeningReportResponse field-for-field. weightedCoveragePercentage
+ *  is a transparent, deterministic ratio — never render it as a probability or prediction of
+ *  hiring success. */
+export type ScreeningReport = {
+  id: string
+  internshipId: string
+  applicationId: string
+  internshipRubricId: string
+  rubricVersion: number
+  evaluatedAt: string
+  algorithmVersion: string
+  cvTextUnavailable: boolean
+  needsReview: boolean
+  totalRequiredCount: number
+  matchedRequiredCount: number
+  totalPreferredCount: number
+  matchedPreferredCount: number
+  totalBonusCount: number
+  matchedBonusCount: number
+  weightedCoveragePercentage: number
+  results: ScreeningResultItem[]
+}
+
+/** Mirrors the backend's ScreeningSummaryResponse. applicantName/latest* fields are null when
+ *  the application has never been screened — see getScreeningSummaries. */
+export type ScreeningSummary = {
+  applicationId: string
+  applicantName: string | null
+  applicationStatus: ApplicationStatus
+  latestReportId: string | null
+  latestEvaluatedAt: string | null
+  needsReview: boolean | null
+  weightedCoveragePercentage: number | null
+  matchedRequiredCount: number | null
+  totalRequiredCount: number | null
+}
+
+/** Only the two Spring Data Page<> fields this client actually needs and has verified exist
+ *  (see CompanyScreeningControllerTest) — deliberately not typing totalPages/number/etc.,
+ *  which this client never asked the backend to prove it doesn't need. */
+export type ScreeningSummaryPage = {
+  content: ScreeningSummary[]
+  totalElements: number
+}
+
+export const MAX_SCREENING_BATCH_SIZE = 25
+
+/** Pure read of already-stored reports — never triggers screening as a side effect of
+ *  loading this page, matching ScreeningService#listSummaries exactly. size is clamped to 50
+ *  server-side regardless of what is requested here. */
+export function getScreeningSummaries(internshipId: string, page: number, size: number): Promise<ScreeningSummaryPage> {
+  return request<ScreeningSummaryPage>(
+    'GET',
+    `/company/internships/${internshipId}/screening-reports?page=${page}&size=${size}`,
+  )
+}
+
+/** Always computes and stores a NEW report — re-screening never overwrites an earlier one.
+ *  Throws ApiError with status 409 if the internship has no ACTIVE rubric. */
+export function screenApplicant(internshipId: string, applicationId: string): Promise<ScreeningReport> {
+  return request<ScreeningReport>(
+    'POST',
+    `/company/internships/${internshipId}/applications/${applicationId}/screening-reports`,
+  )
+}
+
+/** Throws ApiError with status 404 if this application has never been screened. */
+export function getLatestScreeningReport(internshipId: string, applicationId: string): Promise<ScreeningReport> {
+  return request<ScreeningReport>(
+    'GET',
+    `/company/internships/${internshipId}/applications/${applicationId}/screening-reports/latest`,
+  )
+}
+
+/** applicationIds must be at most MAX_SCREENING_BATCH_SIZE — the backend enforces the same
+ *  limit (400 if exceeded) and 400s if any id doesn't belong to this internship. */
+export function screenApplicantsBatch(internshipId: string, applicationIds: string[]): Promise<ScreeningReport[]> {
+  return request<ScreeningReport[]>(
+    'POST',
+    `/company/internships/${internshipId}/screening-reports/batch`,
+    { applicationIds },
+  )
+}

@@ -8,6 +8,7 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.PrePersist;
@@ -58,7 +59,15 @@ public class ScreeningProfileRequirement {
     @Column(name = "display_order", nullable = false)
     private int displayOrder;
 
-    @ElementCollection
+    // EAGER is deliberate: this is a tiny (at most 8 values), always-needed-in-the-response
+    // collection. Left at JPA's default LAZY, a requirement fetched fresh (e.g. GET, PATCH,
+    // archive/activate — anything that doesn't construct or explicitly copy the entity within
+    // the same transaction) would carry an uninitialized Hibernate proxy here, which then
+    // throws LazyInitializationException when Jackson serializes the HTTP response AFTER the
+    // transaction/session has already closed. A @Transactional-wrapped test (one long-lived
+    // session spanning the whole test) cannot observe this; only a real HTTP round-trip can —
+    // confirmed via live end-to-end verification, not a test.
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "screening_profile_requirement_evidence_sources",
             joinColumns = @JoinColumn(name = "requirement_id")

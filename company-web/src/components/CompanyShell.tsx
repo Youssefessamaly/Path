@@ -12,12 +12,14 @@ const ROLE_LABELS: Record<string, string> = {
 const NAV_ITEMS = [
   { label: 'Overview', to: '/dashboard', icon: 'overview' as const },
   { label: 'Internships', to: '/internships', icon: 'briefcase' as const },
+  { label: 'Screening profiles', to: '/screening-profiles', icon: 'target' as const },
   { label: 'Pipeline templates', to: '/pipeline-templates', icon: 'workflow' as const },
   { label: 'Company profile', to: '/company-profile', icon: 'building' as const },
 ]
 
 function pageTitle(pathname: string): string {
   if (pathname.startsWith('/company-profile')) return 'Company profile'
+  if (pathname.startsWith('/screening-profiles')) return 'Screening profiles'
   if (pathname.startsWith('/pipeline-templates')) return 'Pipeline templates'
   if (pathname.startsWith('/internships')) return 'Internships'
   return 'Overview'
