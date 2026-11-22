@@ -935,3 +935,118 @@ export function screenApplicantsBatch(internshipId: string, applicationIds: stri
     { applicationIds },
   )
 }
+
+/** Downloads the application's frozen CV snapshot (existing, authorized backend endpoint —
+ *  GET /company/internships/{id}/applications/{id}/cv) as a Blob. Not routed through
+ *  request() above since that function assumes a JSON body; auth still goes through the same
+ *  bearer token, and a 401 here still triggers the shared unauthorizedHandler. Callers should
+ *  build a short-lived object URL from the Blob (URL.createObjectURL) and revoke it once done —
+ *  never persist the CV content anywhere in app state longer than needed to display it. */
+export async function downloadApplicationCv(internshipId: string, applicationId: string): Promise<Blob> {
+  const token = getStoredToken()
+  const headers: Record<string, string> = {}
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+  }
+  let response: Response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/company/internships/${internshipId}/applications/${applicationId}/cv`,
+      { headers },
+    )
+  } catch {
+    throw new NetworkError()
+  }
+  if (!response.ok) {
+    if (response.status === 401) {
+      clearStoredToken()
+      unauthorizedHandler?.()
+    }
+    throw new ApiError(response.status, friendlyMessageForStatus(response.status))
+  }
+  return response.blob()
+}
+
+// ===== Stage 5B Phase C1: optional AI assistance (disabled by default on the backend) =====
+//
+// Both endpoints always return HTTP 200 with a structured `completed` flag — never a 4xx/5xx
+// for "AI isn't available right now" (disabled, pending privacy review, rate-limited, provider
+// failure all look the same to this client: completed=false + a human-readable
+// unavailableReason). Neither endpoint ever creates, activates, or modifies a rubric, nor
+// writes to any ScreeningReport — see CompanyAiAssistService on the backend. Nothing here
+// sends raw CV text from the browser: the backend re-reads the frozen snapshot itself from
+// (internshipId, applicationId, reportId) alone.
+
+/** Mirrors the backend's AiEvidenceSuggestionResponse. Every item here has ALREADY passed the
+ *  backend's EvidenceClaimValidator — a fabricated/unsupported claim is dropped server-side
+ *  and never reaches this type at all. */
+export type AiEvidenceSuggestion = {
+  requirementId: string
+  requirementType: RequirementType
+  skillId: string | null
+  skillName: string | null
+  label: string | null
+  weight: number
+  excerptQuote: string
+  strength: EvidenceStrength | null
+  /** True when the backend downgraded an overclaimed strength, or the model itself was
+   *  unsure — always show this suggestion as needing a human look, never at face value. */
+  uncertain: boolean
+  explanation: string
+}
+
+/** Mirrors the backend's AiEvidenceAnalysisResponse. */
+export type AiEvidenceAnalysisResponse = {
+  completed: boolean
+  screeningReportId: string
+  internshipRubricId: string
+  rubricVersion: number
+  suggestions: AiEvidenceSuggestion[]
+  unavailableReason: string | null
+}
+
+/** requirementIds is optional — omit it to let the backend analyze every requirement this
+ *  report already marked NEEDS_REVIEW/INSUFFICIENT_EVIDENCE. Never send the CV, a company id,
+ *  or anything beyond these three path identifiers; the backend resolves and authorizes
+ *  everything else itself. */
+export function analyzeEvidenceWithAi(
+  internshipId: string,
+  applicationId: string,
+  reportId: string,
+  requirementIds?: string[],
+): Promise<AiEvidenceAnalysisResponse> {
+  return request<AiEvidenceAnalysisResponse>(
+    'POST',
+    `/company/internships/${internshipId}/applications/${applicationId}/screening-reports/${reportId}/ai-evidence-analysis`,
+    requirementIds ? { requirementIds } : undefined,
+  )
+}
+
+/** Mirrors the backend's AiSuggestedRequirementResponse. skillResolved=false means the AI's
+ *  free-text label did not match a real catalog skill by exact name — the recruiter must pick
+ *  a real skill themselves or keep it as a free-text requirement; never silently guess. */
+export type AiSuggestedRequirement = {
+  requirementType: RequirementType
+  resolvedSkillId: string | null
+  resolvedSkillName: string | null
+  label: string
+  suggestedWeight: number | null
+  suggestedAcceptedEvidenceSources: EvidenceSource[]
+  suggestedMinimumEvidenceStrength: EvidenceStrength | null
+  skillResolved: boolean
+}
+
+export type AiRubricDraftResponse = {
+  completed: boolean
+  suggestedRequirements: AiSuggestedRequirement[]
+  unavailableReason: string | null
+}
+
+/** instructionsText: 10–2000 characters (the backend rejects anything shorter/longer with a
+ *  400) — English or Arabic, free text. Never creates, edits, or activates any rubric; purely
+ *  returns suggestions for the recruiter to review. */
+export function draftRubricWithAi(internshipId: string, instructionsText: string): Promise<AiRubricDraftResponse> {
+  return request<AiRubricDraftResponse>('POST', `/company/internships/${internshipId}/rubric/ai-draft`, {
+    instructionsText,
+  })
+}

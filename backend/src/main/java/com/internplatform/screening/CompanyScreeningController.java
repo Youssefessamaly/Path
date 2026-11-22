@@ -26,9 +26,11 @@ public class CompanyScreeningController {
     private static final int MAX_PAGE_SIZE = 50;
 
     private final ScreeningService screeningService;
+    private final CompanyAiAssistService aiAssistService;
 
-    public CompanyScreeningController(ScreeningService screeningService) {
+    public CompanyScreeningController(ScreeningService screeningService, CompanyAiAssistService aiAssistService) {
         this.screeningService = screeningService;
+        this.aiAssistService = aiAssistService;
     }
 
     @PostMapping("/applications/{applicationId}/screening-reports")
@@ -69,6 +71,24 @@ public class CompanyScreeningController {
     ) {
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), MAX_PAGE_SIZE));
         return screeningService.listSummaries(currentUserId(jwt), internshipId, pageable);
+    }
+
+    /**
+     * Stage 5B Phase C1: optional AI-assisted re-interpretation of this specific, already-
+     * computed report's NEEDS_REVIEW/INSUFFICIENT_EVIDENCE requirements only — never a new
+     * deterministic screening pass, never a write to this or any other report. Returns 200
+     * with completed=false (never a 4xx/5xx) whenever AI is disabled, pending privacy review,
+     * rate-limited, or the provider fails — see CompanyAiAssistService.
+     */
+    @PostMapping("/applications/{applicationId}/screening-reports/{reportId}/ai-evidence-analysis")
+    public AiEvidenceAnalysisResponse analyzeEvidenceWithAi(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID internshipId,
+            @PathVariable UUID applicationId,
+            @PathVariable UUID reportId,
+            @RequestBody(required = false) AiEvidenceAnalysisApiRequest request
+    ) {
+        return aiAssistService.analyzeEvidence(currentUserId(jwt), internshipId, applicationId, reportId, request);
     }
 
     private UUID currentUserId(Jwt jwt) {

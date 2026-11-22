@@ -35,7 +35,7 @@ class AiDisabledByDefaultIntegrationTest {
     @Test
     void analyzingEvidenceWhenDisabledNeverThrowsAndNeverReturnsSuggestions() {
         AiEvidenceAnalysisRequest request = new AiEvidenceAnalysisRequest(
-                UUID.randomUUID(), UUID.randomUUID(), "some CV text", List.of(UUID.randomUUID()));
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "some CV text", List.of(UUID.randomUUID()));
 
         AiEvidenceAnalysisResult result = evidenceAnalysisService.analyzeEvidence(request);
 

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { EmptyView, ErrorView, LoadingView } from '../../components/StateViews'
 import { ScreeningRequirementsEditor } from '../../components/ScreeningRequirementsEditor'
+import { AiRubricDraftPanel } from '../../components/AiRubricDraftPanel'
+import { AiEvidenceAnalysisPanel } from '../../components/AiEvidenceAnalysisPanel'
 import { AppIcon } from '../../components/Visuals'
 import { useAuth } from '../../auth/useAuth'
 import {
@@ -15,6 +17,7 @@ import {
   deletePipelineStage,
   deleteRubricRequirement,
   discardRubricDraft,
+  downloadApplicationCv,
   duplicateRubric,
   getCompanyInternship,
   getInternshipPipeline,
@@ -639,6 +642,17 @@ function RubricSection({ internshipId }: { internshipId: string }) {
                 }}
               />
 
+              {current.status === 'DRAFT' && (
+                <AiRubricDraftPanel
+                  internshipId={internshipId}
+                  nextDisplayOrder={current.requirements.length}
+                  onAddRequirement={async (payload) => {
+                    await addRubricRequirement(internshipId, payload)
+                    load()
+                  }}
+                />
+              )}
+
               <div className="row-actions mt-4">
                 {current.status === 'DRAFT' && (
                   <>
@@ -735,13 +749,57 @@ const SCREENING_PAGE_SIZE = 10
  * against, and every requirement's outcome with its evidence source/strength, supporting CV
  * excerpt (already authorized and length-capped server-side), and reasoning.
  */
-function ReportDetailPanel({ report }: { report: ScreeningReport }) {
+function ViewCvButton({ internshipId, applicationId }: { internshipId: string; applicationId: string }) {
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleView = async () => {
+    setError(null)
+    setIsLoading(true)
+    try {
+      const blob = await downloadApplicationCv(internshipId, applicationId)
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank', 'noopener,noreferrer')
+      // Revoke once the new tab has had a moment to load it — never hold the object URL (and
+      // the CV bytes behind it) in memory longer than necessary.
+      setTimeout(() => URL.revokeObjectURL(url), 60_000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to open this CV.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <div>
+      <button type="button" className="btn btn-secondary btn-sm" onClick={handleView} disabled={isLoading}>
+        <AppIcon name="file" size={14} /> {isLoading ? 'Opening…' : 'View original CV'}
+      </button>
+      {error && (
+        <div className="banner banner-error mt-2" role="alert">
+          {error}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ReportDetailPanel({
+  report,
+  internshipId,
+  applicationId,
+}: {
+  report: ScreeningReport
+  internshipId: string
+  applicationId: string
+}) {
   return (
     <div className="card mt-2">
       <div className="row-meta mb-4">
         <span className="text-tertiary">Rubric version {report.rubricVersion}</span>
         <span className="text-tertiary">Evaluated {formatDisplayDate(report.evaluatedAt)}</span>
         <span className="text-tertiary">Algorithm {report.algorithmVersion}</span>
+        <ViewCvButton internshipId={internshipId} applicationId={applicationId} />
       </div>
 
       {report.cvTextUnavailable && (
@@ -803,6 +861,8 @@ function ReportDetailPanel({ report }: { report: ScreeningReport }) {
           </div>
         ))}
       </div>
+
+      <AiEvidenceAnalysisPanel internshipId={internshipId} applicationId={applicationId} report={report} />
     </div>
   )
 }
@@ -921,7 +981,9 @@ function ApplicantRow({
         <>
           {isLoadingReport && <LoadingView />}
           {reportError && <ErrorView message={reportError} onRetry={handleToggleView} />}
-          {report && !isLoadingReport && !reportError && <ReportDetailPanel report={report} />}
+          {report && !isLoadingReport && !reportError && (
+            <ReportDetailPanel report={report} internshipId={internshipId} applicationId={summary.applicationId} />
+          )}
         </>
       )}
     </div>

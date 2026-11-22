@@ -9,10 +9,12 @@ import {
   getCompanyInternships,
   getCompanyProfile,
   getPipelineTemplates,
+  getScreeningProfiles,
   type CompanyApprovalStatusResponse,
   type CompanyInternship,
   type CompanyProfile,
   type PipelineTemplate,
+  type ScreeningProfile,
 } from '../lib/api'
 
 type DashboardData = {
@@ -20,6 +22,7 @@ type DashboardData = {
   approval: CompanyApprovalStatusResponse
   internships: CompanyInternship[]
   templates: PipelineTemplate[]
+  screeningProfiles: ScreeningProfile[]
 }
 
 const APPROVAL_BANNER: Record<CompanyApprovalStatusResponse['status'], { className: string; message: string } | null> = {
@@ -50,13 +53,14 @@ export function DashboardPage() {
     setError(null)
     setData(null)
     try {
-      const [profile, approval, internships, templates] = await Promise.all([
+      const [profile, approval, internships, templates, screeningProfiles] = await Promise.all([
         getCompanyProfile(),
         getCompanyApprovalStatus(),
         getCompanyInternships().catch(() => [] as CompanyInternship[]),
         getPipelineTemplates().catch(() => [] as PipelineTemplate[]),
+        getScreeningProfiles().catch(() => [] as ScreeningProfile[]),
       ])
-      setData({ profile, approval, internships, templates })
+      setData({ profile, approval, internships, templates, screeningProfiles })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
     }
@@ -193,6 +197,26 @@ export function DashboardPage() {
               <p className="library-empty-text">No pipeline templates yet. Create a reusable flow for your hiring process.</p>
             )}
             <Link to="/pipeline-templates" className="dashboard-library-link">Manage templates <AppIcon name="arrow-right" size={17} /></Link>
+          </section>
+
+          <section className="dashboard-panel">
+            <div className="dashboard-panel-heading">
+              <div><p className="eyebrow-dark">HIRING TOOLS</p><h2>Smart ATS</h2></div>
+              <AppIcon name="sparkle" size={21} className="rail-heading-icon" />
+            </div>
+            <p className="library-empty-text">
+              Configure screening criteria for each internship, screen applicants against them, and optionally ask
+              AI to help interpret evidence your criteria couldn't confidently resolve. Deterministic screening
+              always runs first and never depends on AI being available — AI assistance is a separate, optional
+              step a recruiter explicitly requests, and never affects an application's status on its own.
+            </p>
+            <div className="workspace-status-meta">
+              <span>Screening profiles</span>
+              <strong>{data.screeningProfiles.length}</strong>
+            </div>
+            <Link to="/screening-profiles" className="dashboard-library-link">
+              Manage screening profiles <AppIcon name="arrow-right" size={17} />
+            </Link>
           </section>
         </div>
       </div>

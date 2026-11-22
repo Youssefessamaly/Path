@@ -142,6 +142,11 @@ function InternshipDetailsScreen() {
     router.push({ pathname: '/company/internships/[id]/application-questions', params: { id: internship.id } });
   };
 
+  const openRubric = () => {
+    if (!internship) return;
+    router.push({ pathname: '/company/internships/[id]/rubric', params: { id: internship.id } });
+  };
+
   const isOpen = internship?.status === 'OPEN';
   const isInternal = internship?.applicationMethod === 'INTERNAL';
 
@@ -263,6 +268,20 @@ function InternshipDetailsScreen() {
                         </View>
                         <Icon name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }} color={C.surface} size={17} />
                       </Pressable>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Smart ATS screening rubric"
+                        onPress={openRubric}
+                        style={({ pressed }) => [styles.secondaryPrimaryAction, pressed && styles.primaryPressed]}>
+                        <View style={styles.secondaryPrimaryIcon}>
+                          <Icon name={{ ios: 'checklist', android: 'playlist_add_check', web: 'playlist_add_check' }} color={C.teal700} size={20} />
+                        </View>
+                        <View style={styles.primaryActionCopy}>
+                          <Text style={styles.secondaryPrimaryTitle}>Screening rubric</Text>
+                          <Text style={styles.secondaryPrimaryCaption}>Configure criteria & optional AI assistance</Text>
+                        </View>
+                        <Icon name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }} color={C.teal700} size={17} />
+                      </Pressable>
                       <View style={styles.actionGrid}>
                         <ActionTile
                           icon={{ ios: 'square.and.pencil', android: 'edit', web: 'edit' }}
@@ -369,6 +388,10 @@ const styles = StyleSheet.create({
   primaryActionCopy: { flex: 1, minWidth: 0, gap: 4 },
   primaryTitle: { color: C.surface, fontFamily: F.en.bold, fontSize: 14.5 },
   primaryCaption: { color: '#D1E9E4', fontFamily: F.en.medium, fontSize: 11.5 },
+  secondaryPrimaryAction: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.teal100, borderRadius: 14, paddingHorizontal: 15, paddingVertical: 15, minHeight: 76, gap: 11 },
+  secondaryPrimaryIcon: { height: 42, width: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: C.surface },
+  secondaryPrimaryTitle: { color: C.ink900, fontFamily: F.en.bold, fontSize: 14.5 },
+  secondaryPrimaryCaption: { color: C.textSecondary, fontFamily: F.en.medium, fontSize: 11.5 },
   actionGrid: { flexDirection: 'row', gap: 10 },
   actionTile: { flex: 1, minWidth: 0, alignItems: 'flex-start', borderWidth: 1, borderColor: C.border, backgroundColor: C.paper, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 14, gap: 7, minHeight: 116 },
   tileIcon: { width: 34, height: 34, borderRadius: 10, backgroundColor: C.teal100, alignItems: 'center', justifyContent: 'center' },

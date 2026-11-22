@@ -1100,3 +1100,239 @@ export function submitInternshipApplication(
 ): Promise<InternApplication> {
   return apiPost<InternApplication>(`/intern/internships/${internshipId}/applications`, payload, { token });
 }
+
+// ===== Smart ATS (Stage 3/4) — company-side screening rubric + explainable screening =====
+//
+// Mirrors company-web's own lib/api.ts additions field-for-field (same backend DTOs,
+// com.internplatform.screening). A reusable "screening profile" template library is
+// deliberately NOT ported to mobile in this pass — only internship-level rubric creation
+// (always "start empty" here; a profile-seeded draft stays a company-web-only convenience).
+// Requirement editing on mobile is intentionally simpler than web: add/delete only, type +
+// skill-or-label + weight (no evidence-strength/source restriction picker) — a disclosed
+// scope reduction for a small screen, not a broken state; omitted fields simply mean "no
+// restriction," a valid configuration the backend already supports.
+
+export type RequirementType = 'REQUIRED' | 'PREFERRED' | 'BONUS';
+export type EvidenceSource =
+  | 'SKILLS_LIST' | 'PROJECT' | 'WORK_EXPERIENCE' | 'INTERNSHIP'
+  | 'COURSEWORK' | 'CERTIFICATION' | 'RESEARCH' | 'UNKNOWN';
+export type EvidenceStrength = 'STRONG' | 'MODERATE' | 'WEAK';
+
+export type ScreeningRequirement = {
+  id: string;
+  requirementType: RequirementType;
+  skillId: string | null;
+  skillName: string | null;
+  label: string | null;
+  weight: number;
+  minimumEvidenceStrength: EvidenceStrength | null;
+  acceptedEvidenceSources: EvidenceSource[];
+  recruiterNotes: string | null;
+  displayOrder: number;
+};
+
+export type ScreeningRequirementCreatePayload = {
+  requirementType: RequirementType;
+  skillId?: string;
+  label?: string;
+  weight: number;
+  displayOrder: number;
+};
+
+export type RubricStatus = 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
+
+export type InternshipRubric = {
+  id: string;
+  internshipId: string;
+  screeningProfileId: string | null;
+  version: number;
+  status: RubricStatus;
+  requirements: ScreeningRequirement[];
+  createdAt: string;
+  updatedAt: string;
+  activatedAt: string | null;
+};
+
+/** Every version ever created, newest first. An internship with no rubric configured yet
+ *  returns an empty array (never 404). */
+export function listRubricVersions(token: string, internshipId: string): Promise<InternshipRubric[]> {
+  return apiGet<InternshipRubric[]>(`/company/internships/${internshipId}/rubric/versions`, { token });
+}
+
+/** Always starts an empty draft on mobile (no screeningProfileId) — see the note above. Throws
+ *  ApiError with status 409 if a draft already exists. */
+export function createRubricDraft(token: string, internshipId: string): Promise<InternshipRubric> {
+  return apiPost<InternshipRubric>(
+    `/company/internships/${internshipId}/rubric`,
+    { screeningProfileId: null },
+    { token },
+  );
+}
+
+export function discardRubricDraft(token: string, internshipId: string): Promise<void> {
+  return apiDelete<void>(`/company/internships/${internshipId}/rubric`, { token });
+}
+
+/** Throws ApiError with status 400 if the draft has zero requirements. */
+export function activateRubricDraft(token: string, internshipId: string): Promise<InternshipRubric> {
+  return apiPost<InternshipRubric>(`/company/internships/${internshipId}/rubric/activate`, undefined, { token });
+}
+
+/** Starts a new draft by copying the current ACTIVE (or latest) version — the only way to
+ *  change an ACTIVE rubric, which otherwise stays frozen. */
+export function duplicateRubric(token: string, internshipId: string): Promise<InternshipRubric> {
+  return apiPost<InternshipRubric>(`/company/internships/${internshipId}/rubric/duplicate`, undefined, { token });
+}
+
+/** Throws ApiError with status 409 if the current rubric is not a DRAFT. */
+export function addRubricRequirement(
+  token: string,
+  internshipId: string,
+  payload: ScreeningRequirementCreatePayload,
+): Promise<ScreeningRequirement> {
+  return apiPost<ScreeningRequirement>(`/company/internships/${internshipId}/rubric/requirements`, payload, { token });
+}
+
+export function deleteRubricRequirement(token: string, internshipId: string, requirementId: string): Promise<void> {
+  return apiDelete<void>(`/company/internships/${internshipId}/rubric/requirements/${requirementId}`, { token });
+}
+
+/** The shared skill catalog. Lives under /intern/skills but is explicitly carved out for
+ *  COMPANY access too in SecurityConfig — the same endpoint company-web's getSkillCatalog
+ *  calls, just under this app's existing token-passing convention. */
+export function getCompanySkillCatalog(token: string): Promise<InternProfileSkill[]> {
+  return apiGet<InternProfileSkill[]>('/intern/skills', { token });
+}
+
+export type ScreeningOutcome = 'MATCHED' | 'NOT_EVIDENCED' | 'INSUFFICIENT_EVIDENCE' | 'NEEDS_REVIEW';
+
+export type ScreeningResultItem = {
+  requirementId: string;
+  requirementType: RequirementType;
+  skillId: string | null;
+  skillName: string | null;
+  label: string | null;
+  weight: number;
+  result: ScreeningOutcome;
+  evidenceSource: EvidenceSource | null;
+  evidenceStrength: EvidenceStrength | null;
+  textReference: string | null;
+  reasoning: string;
+};
+
+/** weightedCoveragePercentage is a transparent, deterministic ratio — never a probability or
+ *  prediction of hiring success; never render it as one. */
+export type ScreeningReport = {
+  id: string;
+  internshipId: string;
+  applicationId: string;
+  internshipRubricId: string;
+  rubricVersion: number;
+  evaluatedAt: string;
+  algorithmVersion: string;
+  cvTextUnavailable: boolean;
+  needsReview: boolean;
+  totalRequiredCount: number;
+  matchedRequiredCount: number;
+  totalPreferredCount: number;
+  matchedPreferredCount: number;
+  totalBonusCount: number;
+  matchedBonusCount: number;
+  weightedCoveragePercentage: number;
+  results: ScreeningResultItem[];
+};
+
+/** Always computes and stores a NEW report — re-screening never overwrites an earlier one.
+ *  Throws ApiError with status 409 if the internship has no ACTIVE rubric. */
+export function screenApplicant(token: string, internshipId: string, applicationId: string): Promise<ScreeningReport> {
+  return apiPost<ScreeningReport>(
+    `/company/internships/${internshipId}/applications/${applicationId}/screening-reports`,
+    undefined,
+    { token },
+  );
+}
+
+/** Throws ApiError with status 404 if this application has never been screened. */
+export function getLatestScreeningReport(
+  token: string,
+  internshipId: string,
+  applicationId: string,
+): Promise<ScreeningReport> {
+  return apiGet<ScreeningReport>(
+    `/company/internships/${internshipId}/applications/${applicationId}/screening-reports/latest`,
+    { token },
+  );
+}
+
+// ===== Stage 5B Phase C1: optional AI assistance (disabled by default on the backend) =====
+//
+// Both endpoints always return HTTP 200 with a structured `completed` flag — never a 4xx/5xx
+// for "AI isn't available right now." Neither endpoint ever creates/activates a rubric or
+// writes to any ScreeningReport. Nothing here sends raw CV text from the app: the backend
+// re-reads the frozen snapshot itself from (internshipId, applicationId, reportId) alone.
+
+export type AiEvidenceSuggestion = {
+  requirementId: string;
+  requirementType: RequirementType;
+  skillId: string | null;
+  skillName: string | null;
+  label: string | null;
+  weight: number;
+  excerptQuote: string;
+  strength: EvidenceStrength | null;
+  uncertain: boolean;
+  explanation: string;
+};
+
+export type AiEvidenceAnalysisResponse = {
+  completed: boolean;
+  screeningReportId: string;
+  internshipRubricId: string;
+  rubricVersion: number;
+  suggestions: AiEvidenceSuggestion[];
+  unavailableReason: string | null;
+};
+
+export function analyzeEvidenceWithAi(
+  token: string,
+  internshipId: string,
+  applicationId: string,
+  reportId: string,
+): Promise<AiEvidenceAnalysisResponse> {
+  return apiPost<AiEvidenceAnalysisResponse>(
+    `/company/internships/${internshipId}/applications/${applicationId}/screening-reports/${reportId}/ai-evidence-analysis`,
+    undefined,
+    { token },
+  );
+}
+
+export type AiSuggestedRequirement = {
+  requirementType: RequirementType;
+  resolvedSkillId: string | null;
+  resolvedSkillName: string | null;
+  label: string;
+  suggestedWeight: number | null;
+  suggestedAcceptedEvidenceSources: EvidenceSource[];
+  suggestedMinimumEvidenceStrength: EvidenceStrength | null;
+  skillResolved: boolean;
+};
+
+export type AiRubricDraftResponse = {
+  completed: boolean;
+  suggestedRequirements: AiSuggestedRequirement[];
+  unavailableReason: string | null;
+};
+
+/** instructionsText: 10–2000 characters (English or Arabic) — the backend rejects anything
+ *  outside that range with a 400. Never creates, edits, or activates any rubric. */
+export function draftRubricWithAi(
+  token: string,
+  internshipId: string,
+  instructionsText: string,
+): Promise<AiRubricDraftResponse> {
+  return apiPost<AiRubricDraftResponse>(
+    `/company/internships/${internshipId}/rubric/ai-draft`,
+    { instructionsText },
+    { token },
+  );
+}

@@ -63,10 +63,33 @@ app:
     bootstrap-password: ${PATHORA_ADMIN_PASSWORD:}
   ai:
     # Provider-independent AI scaffolding (Stage 5A — see com.internplatform.screening.ai).
-    # "disabled" is the only supported value right now: no model, no network call, nothing
-    # sent anywhere. A future "local" or "hosted" value would select a different conditional
-    # bean — never change this without separate, explicit approval of a specific provider.
+    # "disabled" (the default) means no model, no network call, nothing sent anywhere.
+    # "anthropic" (Stage 5B) selects the real Anthropic-backed implementations — see
+    # com.internplatform.screening.ai.anthropic. Never change either mode in a real
+    # environment without separate, explicit approval; real applicant CVs must never reach
+    # the provider without that approval (see Phase D of the Stage 5B plan).
     evidence-analysis:
       mode: ${AI_EVIDENCE_ANALYSIS_MODE:disabled}
+      # SEPARATE from mode above: even with mode=anthropic, AnthropicEvidenceAnalysisService
+      # refuses to run unless this is also explicitly true. This is the business-side gate —
+      # it must only be flipped once the applicable privacy notice, disclosure/consent, and
+      # lawful-processing prerequisites for sending real applicant CV content to Anthropic
+      # have actually been confirmed (Phase D). Never default this to true; never infer
+      # consent. Does not affect rubric drafting, which never contains applicant data.
+      privacy-review-passed: ${AI_EVIDENCE_ANALYSIS_PRIVACY_REVIEW_PASSED:false}
     rubric-draft:
       mode: ${AI_RUBRIC_DRAFT_MODE:disabled}
+    provider:
+      # Secret — backend environment variable or approved secrets manager only. Never
+      # committed, never logged, never exposed through any frontend config (React/Expo).
+      api-key: ${ANTHROPIC_API_KEY:}
+      base-url: ${ANTHROPIC_API_BASE_URL:https://api.anthropic.com}
+      api-version: ${ANTHROPIC_API_VERSION:2023-06-01}
+      model: ${ANTHROPIC_MODEL:claude-haiku-5-5}
+      timeout-ms: ${AI_PROVIDER_TIMEOUT_MS:8000}
+      max-retries: ${AI_PROVIDER_MAX_RETRIES:1}
+      max-output-tokens: ${AI_PROVIDER_MAX_OUTPUT_TOKENS:1024}
+      # Per-company abuse/cost cap, independent of whatever limit Anthropic itself enforces.
+      # In-memory only (see AiRateLimiter) — resets on restart; a durable quota would need a
+      # new table, deliberately not added in this increment.
+      daily-call-limit-per-company: ${AI_PROVIDER_DAILY_LIMIT:50}

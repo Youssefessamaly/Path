@@ -7,6 +7,7 @@ import * as Sharing from 'expo-sharing';
 
 import { ApplicationDetailCard, ApplicationDetailText } from '@/components/application-polish';
 import { ApplicationStatusBadge } from '@/components/application-status-badge';
+import { ScreeningReportSection } from '@/components/screening-report-section';
 import { ProfileAvatar } from '@/components/profile-avatar';
 import { AuthBackButton } from '@/components/auth-back-button';
 import { PathoraDetailHeader } from '@/components/pathora-detail-header';
@@ -194,6 +195,8 @@ export function CompanyApplicantDetailContent({ internshipId, applicationId }: {
             </View>)}
           </ApplicationDetailCard>
         )}
+
+        <ScreeningReportSection internshipId={internshipId} applicationId={applicationId} />
 
         <ApplicationDetailCard label="Application decision">
           {isApplied ? (

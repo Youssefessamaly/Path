@@ -117,6 +117,9 @@ a { text-decoration-thickness: 1px; text-underline-offset: 3px; }
 .badge-success { background: #e6f6e9; color: #207b4f; }
 .badge-muted { background: #eef0ef; color: #75847e; }
 .badge-neutral { background: #edf5e6; color: #4b7b35; }
+/* Stage 5B: subtle, distinct from success/warning/error — marks something as AI-assisted
+   rather than a deterministic result, never implying extra confidence or verification. */
+.badge-ai { background: #ece7fb; color: #5b3df0; }
 .field label { font-size: 12px; font-weight: 750; }
 .field input, .field textarea, .field select, .add-stage-form input, .stage-row input { border-radius: 11px; border: 1px solid #dce6df; padding: 12px 13px; background: #fbfdfb; color: #1b3a31; outline: none; min-width: 0; }
 .field input:focus, .field textarea:focus, .field select:focus, .add-stage-form input:focus { border-color: #7ab89c; background: #fff; outline: 3px solid rgba(55,142,103,.11); outline-offset: 0; }
@@ -128,6 +131,8 @@ a { text-decoration-thickness: 1px; text-underline-offset: 3px; }
 .stage-row-index { background: #e4f0e5; color: #346e50; width: 29px; height: 29px; }
 .icon-btn { border-radius: 8px; width: 33px; height: 33px; }
 .banner { border-radius: 12px; font-size: 12.5px; padding: 14px 17px; line-height: 1.6; }
+/* Stage 5B: neutral/explanatory, not a warning or error — e.g. "AI is optional" framing. */
+.banner-info { background: #e4f3f0; color: #0d4a43; }
 .state-view { border: 1px dashed #d7e3da; border-radius: 18px; background: rgba(255,255,255,.75); min-height: 205px; padding: 45px 23px; }
 .state-view h3 { font-size: 16px; letter-spacing: -.03em; }
 .spinner { border-top-color: #267a63; }

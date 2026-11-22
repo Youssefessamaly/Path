@@ -22,9 +22,11 @@ import java.util.UUID;
 public class CompanyInternshipRubricController {
 
     private final InternshipRubricService rubricService;
+    private final CompanyAiAssistService aiAssistService;
 
-    public CompanyInternshipRubricController(InternshipRubricService rubricService) {
+    public CompanyInternshipRubricController(InternshipRubricService rubricService, CompanyAiAssistService aiAssistService) {
         this.rubricService = rubricService;
+        this.aiAssistService = aiAssistService;
     }
 
     @PostMapping
@@ -107,6 +109,21 @@ public class CompanyInternshipRubricController {
             @PathVariable UUID requirementId
     ) {
         rubricService.deleteRequirement(currentUserId(jwt), internshipId, requirementId);
+    }
+
+    /**
+     * Stage 5B Phase C1: drafts requirement SUGGESTIONS from a recruiter's free-text
+     * description (English or Arabic) — never creates, modifies, or activates any rubric or
+     * requirement. A suggestion the recruiter wants to use still goes through the existing
+     * addRequirement endpoint above by hand. See CompanyAiAssistService#draftRubric.
+     */
+    @PostMapping("/ai-draft")
+    public AiRubricDraftResponse draftWithAi(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID internshipId,
+            @Valid @RequestBody AiRubricDraftApiRequest request
+    ) {
+        return aiAssistService.draftRubric(currentUserId(jwt), internshipId, request);
     }
 
     private UUID currentUserId(Jwt jwt) {
