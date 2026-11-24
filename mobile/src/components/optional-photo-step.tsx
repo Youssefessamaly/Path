@@ -62,7 +62,11 @@ export function OptionalPhotoStep({ role }: Props) {
 
   const photoUrl = company ? (profile as CompanyProfile | null)?.logoUrl : (profile as InternProfile | null)?.photoUrl;
   const initials = company ? initialsCompany((profile as CompanyProfile | null)?.companyName, user?.email)
-    : initialsFor((profile as InternProfile | null)?.firstName, (profile as InternProfile | null)?.lastName, user?.email);
+    : initialsFor(
+        (profile as InternProfile | null)?.firstName ?? null,
+        (profile as InternProfile | null)?.lastName ?? null,
+        user?.email,
+      );
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>

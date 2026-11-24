@@ -14,7 +14,7 @@ import { useAuth } from '@/context/auth-context';
  */
 function InternTabsGuard({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const { isAuthenticated, isInitializing, user } = useAuth();
+  const { isAuthenticated, isInitializing, user, signOut } = useAuth();
   const isIntern = user?.role === 'INTERN';
 
   useEffect(() => {
@@ -28,11 +28,18 @@ function InternTabsGuard({ children }: { children: ReactNode }) {
       return;
     }
     if (!isIntern) {
-      // Signed in, but as the wrong role — send them to their own home instead of
-      // bouncing an already-authenticated user back to the login screen.
-      router.replace(user?.role === 'COMPANY' ? '/company' : '/login');
+      if (user?.role === 'COMPANY') {
+        // Signed in, but as the wrong role — send them to their own home instead of
+        // bouncing an already-authenticated user back to the login screen.
+        router.replace('/company');
+        return;
+      }
+      // No mobile experience exists for any other role (e.g. ADMIN). Never park an
+      // authenticated session on Login — end it and let the normal signed-out routing
+      // (Welcome) take over instead.
+      void signOut();
     }
-  }, [isInitializing, isAuthenticated, isIntern, user?.role, router]);
+  }, [isInitializing, isAuthenticated, isIntern, user?.role, router, signOut]);
 
   if (isInitializing || !isAuthenticated || !isIntern) {
     return <View style={{ flex: 1, backgroundColor: PathoraColors.paper }} />;

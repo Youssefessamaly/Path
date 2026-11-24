@@ -1,5 +1,6 @@
 package com.internplatform.internprofile;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -74,10 +76,77 @@ public class InternProfileService {
         return new CvDownload(bytes, profile.getCvOriginalFilename(), profile.getCvContentType());
     }
 
+    /** Curated catalog only — see resolveOrCreateSkill for why a custom (is_standard=false)
+     *  skill is deliberately excluded from this general suggestions/browse list, and
+     *  InternProfileResponse/InternshipResponse for how a caller's own already-selected custom
+     *  skill still reaches them regardless (those come from the profile's/internship's own
+     *  skill associations, never from this list). */
     public List<SkillResponse> getSkillCatalog() {
-        return skillRepository.findAllByOrderByNameAsc().stream()
-                .map(skill -> new SkillResponse(skill.getId(), skill.getName()))
+        return skillRepository.findAllByStandardTrueOrderByNameAsc().stream()
+                .map(this::toSkillResponse)
                 .toList();
+    }
+
+    /**
+     * Resolves a user-typed skill name against the catalog — first by exact name, then by
+     * known alias, both case-insensitive — and returns that existing skill untouched. Only
+     * when neither matches is a new skill actually created, explicitly flagged as non-standard
+     * (see Skill#standard) and excluded from getSkillCatalog's general suggestions list above,
+     * though it remains fully usable (selectable, CV-detectable, rubric-eligible — nothing
+     * else filters by this flag) and resolvable again by the same name/alias lookup, so the
+     * exact same submission from anyone else reuses it rather than creating a second copy.
+     * Reused by both INTERN and COMPANY callers (same shared endpoint as getSkillCatalog).
+     *
+     * Deliberately NOT @Transactional: each repository call below gets its own independent
+     * transaction (Spring Data's default per-method demarcation). That matters specifically
+     * for the race-condition fallback — if saveAndFlush fails because a concurrent request
+     * just inserted the same (or differently-cased) name, PostgreSQL has already marked that
+     * statement's transaction unusable for anything further. Re-querying inside that same
+     * transaction would itself fail with "current transaction is aborted"; letting each call
+     * run in its own transaction means the fallback lookup below starts clean. The unique,
+     * case-insensitive uk_skills_name_lower index (V30) is what actually makes the race
+     * detectable at all — the application-level checks above it are the common-case fast path.
+     */
+    public SkillResponse resolveOrCreateSkill(String rawName) {
+        String trimmed = rawName.trim();
+        if (trimmed.length() < 2 || trimmed.length() > 100) {
+            // @Size on SkillCreateRequest checks the raw string, which padding whitespace can
+            // satisfy even when the trimmed value — the one actually stored — would not (e.g.
+            // "a " passes a raw min-length of 2 but trims to a 1-character name). This is the
+            // check that applies to what's actually persisted.
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Skill name must be between 2 and 100 characters");
+        }
+
+        Optional<Skill> existingByName = skillRepository.findByNameIgnoreCase(trimmed);
+        if (existingByName.isPresent()) {
+            return toSkillResponse(existingByName.get());
+        }
+
+        Optional<Skill> existingByAlias = skillRepository.findByAliasIgnoreCase(trimmed);
+        if (existingByAlias.isPresent()) {
+            return toSkillResponse(existingByAlias.get());
+        }
+
+        Skill custom = new Skill(trimmed);
+        custom.setStandard(false);
+        try {
+            return toSkillResponse(skillRepository.saveAndFlush(custom));
+        } catch (DataIntegrityViolationException raceLostToAnotherRequest) {
+            // Someone else created the exact same (or differently-cased) name between our
+            // check above and this insert — re-resolve rather than surface a raw 500 or a
+            // misleading "skill name already exists" error for what is, to this caller, a
+            // perfectly normal duplicate submission. Runs in its own fresh transaction (see
+            // the method-level note above) — the prior statement's aborted transaction can't
+            // affect it.
+            return skillRepository.findByNameIgnoreCase(trimmed)
+                    .map(this::toSkillResponse)
+                    .orElseThrow(() -> raceLostToAnotherRequest);
+        }
+    }
+
+    private SkillResponse toSkillResponse(Skill skill) {
+        return new SkillResponse(skill.getId(), skill.getName());
     }
 
     @Transactional

@@ -36,7 +36,14 @@ const STROKE_DASH_LENGTH = 100;
  *  handing off, per the design's ~2600ms target. */
 const SPLASH_MIN_DURATION_MS = 2600;
 
-type SplashDestination = '/welcome' | '/intern' | OnboardingRoute | CompanyPostAuthRoute;
+const SESSION_EXPIRED_LOGIN_ROUTE = { pathname: '/login', params: { sessionExpired: '1' } } as const;
+
+type SplashDestination =
+  | '/welcome'
+  | '/intern'
+  | OnboardingRoute
+  | CompanyPostAuthRoute
+  | typeof SESSION_EXPIRED_LOGIN_ROUTE;
 
 /** React Native's own built-in reduced-motion signal — no extra dependency needed. */
 function useReducedMotion(): boolean {
@@ -73,7 +80,7 @@ function useReducedMotion(): boolean {
  * resolution login already uses, reused here so launch can never disagree with it.
  */
 function useSplashDestination(): SplashDestination | null {
-  const { isAuthenticated, user, token } = useAuth();
+  const { isAuthenticated, user, token, sessionExpired, clearSessionExpired } = useAuth();
   const [destination, setDestination] = useState<SplashDestination | null>(null);
 
   useEffect(() => {
@@ -82,7 +89,16 @@ function useSplashDestination(): SplashDestination | null {
     async function resolve() {
       if (!isAuthenticated || !user || !token) {
         if (!cancelled) {
-          setDestination('/welcome');
+          // A stale/invalid stored token found during restoreSession, not simply never
+          // having signed in — say so, rather than silently landing on the generic
+          // marketing Welcome screen as if nothing happened. Consume the flag here so it
+          // can't also trigger the root layout's separate mid-session redirect later.
+          if (sessionExpired) {
+            clearSessionExpired();
+            setDestination(SESSION_EXPIRED_LOGIN_ROUTE);
+          } else {
+            setDestination('/welcome');
+          }
         }
         return;
       }
@@ -124,7 +140,7 @@ function useSplashDestination(): SplashDestination | null {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, user, token]);
+  }, [isAuthenticated, user, token, sessionExpired, clearSessionExpired]);
 
   return destination;
 }

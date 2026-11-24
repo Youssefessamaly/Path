@@ -53,6 +53,21 @@ public class InternProfileController {
         return internProfileService.getSkillCatalog();
     }
 
+    /**
+     * Resolves a typed skill name against the catalog (including aliases) or creates it as a
+     * new, explicitly non-standard skill — see InternProfileService#resolveOrCreateSkill.
+     * Same shared /intern/skills path and role access as the GET above (INTERN or COMPANY —
+     * see SecurityConfig); a COMPANY recruiter adding a required skill to an internship needs
+     * this exactly as much as an INTERN building their profile does. Deliberately not 201: the
+     * common case resolves to an existing skill rather than creating anything.
+     */
+    @PostMapping("/skills")
+    public SkillResponse createSkill(
+            @Valid @RequestBody SkillCreateRequest request
+    ) {
+        return internProfileService.resolveOrCreateSkill(request.name());
+    }
+
     @PostMapping("/profile/complete")
     public ResponseEntity<?> completeProfile(
             @AuthenticationPrincipal Jwt jwt

@@ -32,7 +32,7 @@ export function ProfileAvatar({ initials, photoUrl, token, size = 48, company = 
       backgroundColor: company ? PathoraColors.teal100 : PathoraColors.teal700,
     }, style]}>
       {source ? (
-        <Image source={source} style={[StyleSheet.absoluteFillObject, { width: size, height: size }]}
+        <Image source={source} style={[StyleSheet.absoluteFill, { width: size, height: size }]}
           resizeMode={company ? 'contain' : 'cover'} onError={() => setFailed(true)}
           accessibilityLabel={accessibilityLabel || (company ? 'Company logo' : 'Profile photo')} />
       ) : (

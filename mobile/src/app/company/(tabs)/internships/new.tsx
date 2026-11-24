@@ -17,6 +17,7 @@ import { PathoraColors, PathoraFonts, PathoraRadius } from '@/constants/pathora-
 import { useAuth } from '@/context/auth-context';
 import {
   createCompanyInternship,
+  createCustomSkill,
   getInternSkills,
   type ApplicationMethod,
   type InternProfileSkill,
@@ -94,6 +95,18 @@ function NewInternshipScreen() {
     setSelectedSkillIds((current) =>
       current.includes(skillId) ? current.filter((id) => id !== skillId) : [...current, skillId],
     );
+  };
+
+  // The server resolves `name` against the catalog (including aliases) before ever creating
+  // anything new, so the skill that comes back may not be a new row at all — it's added to the
+  // local catalog (if not already present) and selected either way.
+  const handleAddCustomSkill = async (name: string) => {
+    if (!token) {
+      return;
+    }
+    const skill = await createCustomSkill(token, name);
+    setCatalog((current) => (current.some((existing) => existing.id === skill.id) ? current : [...current, skill]));
+    setSelectedSkillIds((current) => (current.includes(skill.id) ? current : [...current, skill.id]));
   };
 
   const hasStartDateInput = Boolean(startDay || startMonth || startYear);
@@ -414,6 +427,7 @@ function NewInternshipScreen() {
         skills={catalog}
         selectedSkillIds={selectedSkillIds}
         onToggleSkill={handleToggleSkill}
+        onAddCustomSkill={handleAddCustomSkill}
         onClose={() => setIsPickerVisible(false)}
       />
     </>

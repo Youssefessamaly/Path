@@ -281,6 +281,107 @@ class InternProfileControllerTest {
     }
 
     @Test
+    void createSkillWithNoCatalogMatchCreatesANewNonStandardSkill() throws Exception {
+        String uniqueName = "Zephyr Scripting " + UUID.randomUUID();
+
+        mockMvc.perform(post("/api/v1/intern/skills")
+                        .with(asIntern())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of("name", uniqueName))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value(uniqueName))
+                .andExpect(jsonPath("$.id").exists());
+
+        Skill saved = skillRepository.findByNameIgnoreCase(uniqueName).orElseThrow();
+        assertThat(saved.isStandard()).isFalse();
+    }
+
+    @Test
+    void createSkillResolvesToAnExistingCatalogSkillCaseInsensitively() throws Exception {
+        Skill python = skillRepository.findByNameIgnoreCase("Python").orElseThrow();
+        long countBefore = skillRepository.count();
+
+        mockMvc.perform(post("/api/v1/intern/skills")
+                        .with(asIntern())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of("name", "  python  "))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(python.getId().toString()))
+                .andExpect(jsonPath("$.name").value("Python"));
+
+        assertThat(skillRepository.count()).isEqualTo(countBefore);
+    }
+
+    @Test
+    void createSkillResolvesAKnownAliasToItsCanonicalSkillInsteadOfCreatingADuplicate() throws Exception {
+        Skill javaScript = skillRepository.findByNameIgnoreCase("JavaScript").orElseThrow();
+        long countBefore = skillRepository.count();
+
+        mockMvc.perform(post("/api/v1/intern/skills")
+                        .with(asIntern())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of("name", "JS"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(javaScript.getId().toString()))
+                .andExpect(jsonPath("$.name").value("JavaScript"));
+
+        assertThat(skillRepository.count()).isEqualTo(countBefore);
+    }
+
+    @Test
+    void createSkillCalledTwiceWithTheSameNewNameReturnsTheSameSkillBothTimes() throws Exception {
+        String uniqueName = "Marine Biology Data Tools " + UUID.randomUUID();
+
+        String firstId = mockMvc.perform(post("/api/v1/intern/skills")
+                        .with(asIntern())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of("name", uniqueName))))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        mockMvc.perform(post("/api/v1/intern/skills")
+                        .with(asIntern())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of("name", uniqueName.toUpperCase()))))
+                .andExpect(status().isOk())
+                .andExpect(content().json(firstId));
+    }
+
+    @Test
+    void createSkillRejectsBlankAndTooShortNames() throws Exception {
+        mockMvc.perform(post("/api/v1/intern/skills")
+                        .with(asIntern())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of("name", "  "))))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(post("/api/v1/intern/skills")
+                        .with(asIntern())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of("name", "A"))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void companyCanAlsoCreateASkill() throws Exception {
+        User companyUser = userRepository.saveAndFlush(
+                new User(
+                        "company-" + UUID.randomUUID() + "@example.test",
+                        passwordEncoder.encode("Password123!"),
+                        Role.COMPANY
+                )
+        );
+        String uniqueName = "Blender Rendering " + UUID.randomUUID();
+
+        mockMvc.perform(post("/api/v1/intern/skills")
+                        .with(asUser(companyUser))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of("name", uniqueName))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value(uniqueName));
+    }
+
+    @Test
     void patchWithUnknownSkillIdReturns400() throws Exception {
         Map<String, Object> body = Map.of("skillIds", List.of(UUID.randomUUID().toString()));
 

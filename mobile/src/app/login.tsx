@@ -16,8 +16,9 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { registered } = useLocalSearchParams<{
+  const { registered, sessionExpired } = useLocalSearchParams<{
     registered?: 'student' | 'company';
+    sessionExpired?: string;
   }>();
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');
@@ -34,6 +35,9 @@ export default function LoginScreen() {
   } else if (registered === 'student') {
     registrationMessage = 'Student account created successfully. Log in to continue.';
   }
+  // Set by the root layout/splash when a stored or in-use session is no longer valid — never
+  // shown for an ordinary wrong-password attempt, which never carries this param.
+  const sessionExpiredMessage = sessionExpired === '1' ? 'Your session expired. Please sign in again.' : null;
 
   const handleForgotPassword = () => {
     router.push('/forgot-password');
@@ -113,6 +117,7 @@ export default function LoginScreen() {
         <PathoraDetailHeader topInset={0} bottomGap={24} eyebrow="PATH" title="Welcome back" subtitle="Log in to keep tracking your applications." onBack={() => router.replace('/welcome')} />
 
         {(registrationMessage) ? (<Text style={styles.successMessage}>{registrationMessage}</Text>) : null}
+        {(sessionExpiredMessage) ? (<Text style={styles.noticeMessage}>{sessionExpiredMessage}</Text>) : null}
 
         <View style={styles.fields}>
           <PathoraInput
@@ -189,6 +194,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
     color: PathoraColors.teal600,
+    marginTop: -PathoraSpacing[16],
+    marginBottom: PathoraSpacing[24],
+  },
+  noticeMessage: {
+    fontFamily: PathoraFonts.en.medium,
+    fontSize: 13,
+    lineHeight: 19,
+    color: PathoraColors.amber600,
     marginTop: -PathoraSpacing[16],
     marginBottom: PathoraSpacing[24],
   },

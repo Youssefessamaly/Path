@@ -16,6 +16,7 @@ import {
   ApiError,
   activateRubricDraft,
   addRubricRequirement,
+  createCustomSkill,
   createRubricDraft,
   deleteRubricRequirement,
   discardRubricDraft,
@@ -66,10 +67,13 @@ function RequirementRow({ requirement, canDelete, onDelete }: {
 /** Add-requirement form: type + (catalog skill OR free-text label) + weight. Deliberately
  *  simpler than company-web's editor — no evidence-strength/source picker on this screen;
  *  omitting them means "no restriction," a valid backend state, not a broken one. */
-function AddRequirementForm({ skillCatalog, nextDisplayOrder, onAdd }: {
+function AddRequirementForm({ skillCatalog, nextDisplayOrder, onAdd, onAddCustomSkill }: {
   skillCatalog: InternProfileSkill[];
   nextDisplayOrder: number;
   onAdd: (payload: { requirementType: RequirementType; skillId?: string; label?: string; weight: number; displayOrder: number }) => Promise<void>;
+  /** Resolves/creates the skill server-side (see lib/api.ts's createCustomSkill) and reports
+   *  it back to the parent so it's added to the shared catalog state — never just a local one. */
+  onAddCustomSkill: (name: string) => Promise<InternProfileSkill>;
 }) {
   const [type, setType] = useState<RequirementType>('REQUIRED');
   const [selectedSkill, setSelectedSkill] = useState<InternProfileSkill | null>(null);
@@ -155,6 +159,11 @@ function AddRequirementForm({ skillCatalog, nextDisplayOrder, onAdd }: {
         selectedSkillIds={selectedSkill ? [selectedSkill.id] : []}
         onToggleSkill={(skillId) => {
           const skill = skillCatalog.find((s) => s.id === skillId) ?? null;
+          setSelectedSkill(skill);
+          setPickerOpen(false);
+        }}
+        onAddCustomSkill={async (name) => {
+          const skill = await onAddCustomSkill(name);
           setSelectedSkill(skill);
           setPickerOpen(false);
         }}
@@ -297,6 +306,15 @@ function RubricScreen() {
 
   useFocusEffect(useCallback(() => { void load(); }, [load]));
 
+  const handleAddCustomSkill = async (name: string): Promise<InternProfileSkill> => {
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+    const skill = await createCustomSkill(token, name);
+    setSkillCatalog((current) => (current.some((existing) => existing.id === skill.id) ? current : [...current, skill]));
+    return skill;
+  };
+
   if (!id) return null;
 
   const draft = versions?.find((v) => v.status === 'DRAFT') ?? null;
@@ -415,6 +433,7 @@ function RubricScreen() {
                       skillCatalog={skillCatalog}
                       nextDisplayOrder={current.requirements.length}
                       onAdd={async (payload) => { await addRubricRequirement(token!, id, payload); await load(); }}
+                      onAddCustomSkill={handleAddCustomSkill}
                     />
                   </ApplicationDetailCard>
 

@@ -29,6 +29,28 @@ export class NetworkError extends Error {
   }
 }
 
+type SessionExpiredHandler = () => void;
+let sessionExpiredHandler: SessionExpiredHandler | null = null;
+
+/**
+ * Registers the single handler invoked when a request that itself carried a bearer token gets
+ * a 401 back — the backend's JWT filter rejecting that specific token (expired, malformed, or
+ * the account behind it was disabled/changed) is the one unambiguous "this session is no
+ * longer valid" signal. Deliberately NOT triggered by: a 401 from an unauthenticated call
+ * (e.g. a wrong-password login attempt never carries a token — that's a credentials problem,
+ * not a session problem), a 403 (the session is fine, this particular action just isn't
+ * permitted), or any network/5xx failure. Pass null to unregister.
+ */
+export function registerSessionExpiredHandler(handler: SessionExpiredHandler | null): void {
+  sessionExpiredHandler = handler;
+}
+
+function notifySessionExpiredIfApplicable(status: number, hadToken: boolean): void {
+  if (status === 401 && hadToken) {
+    sessionExpiredHandler?.();
+  }
+}
+
 function getBaseUrl(): string {
   if (!API_BASE_URL) {
     throw new Error(
@@ -99,6 +121,7 @@ async function request<TResponse>(
     } catch {
       errorBody = undefined;
     }
+    notifySessionExpiredIfApplicable(response.status, Boolean(options?.token));
     throw new ApiError(response.status, friendlyMessageForStatus(response.status), errorBody);
   }
 
@@ -191,7 +214,10 @@ export async function uploadProfilePhoto(token: string, role: 'INTERN' | 'COMPAN
   } finally {
     await LegacyFileSystem.deleteAsync(staged, { idempotent: true }).catch(() => undefined);
   }
-  if (result.status < 200 || result.status >= 300) throw new ApiError(result.status, friendlyMessageForStatus(result.status));
+  if (result.status < 200 || result.status >= 300) {
+    notifySessionExpiredIfApplicable(result.status, true);
+    throw new ApiError(result.status, friendlyMessageForStatus(result.status));
+  }
   try { return JSON.parse(result.body) as { photoUrl: string }; }
   catch { throw new NetworkError('Image upload completed, but its response was invalid.'); }
 }
@@ -376,6 +402,18 @@ export function updateInternProfile(
 
 export function getInternSkills(token: string): Promise<InternProfileSkill[]> {
   return apiGet<InternProfileSkill[]>('/intern/skills', { token });
+}
+
+/**
+ * Resolves `name` against PATH's skill catalog (including known aliases, checked server-side)
+ * and returns that existing skill — or, only when nothing matches even case-insensitively,
+ * creates a new, explicitly non-standard skill and returns it. Never creates a true duplicate
+ * of an existing catalog entry. Shared by both INTERN and COMPANY callers, same as
+ * getInternSkills/getCompanySkillCatalog above (same underlying path, see SecurityConfig's
+ * carve-out for it).
+ */
+export function createCustomSkill(token: string, name: string): Promise<InternProfileSkill> {
+  return apiPost<InternProfileSkill>('/intern/skills', { name }, { token });
 }
 
 export function completeInternOnboarding(token: string): Promise<InternProfile> {

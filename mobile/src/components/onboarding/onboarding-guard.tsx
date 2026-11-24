@@ -18,7 +18,7 @@ export type OnboardingGuardProps = {
  */
 export function OnboardingGuard({ children, role = 'INTERN' }: OnboardingGuardProps) {
   const router = useRouter();
-  const { isAuthenticated, isInitializing, user } = useAuth();
+  const { isAuthenticated, isInitializing, user, signOut } = useAuth();
   const hasRequiredRole = user?.role === role;
 
   useEffect(() => {
@@ -29,9 +29,12 @@ export function OnboardingGuard({ children, role = 'INTERN' }: OnboardingGuardPr
       // A cleared session (including logout from an approval screen) goes to Welcome.
       router.replace('/welcome');
     } else if (!hasRequiredRole) {
-      router.replace('/login');
+      // Signed in, but as a role this onboarding flow doesn't apply to. Never park an
+      // already-authenticated session on Login — end it and let the normal signed-out
+      // routing (Welcome) take over instead.
+      void signOut();
     }
-  }, [isInitializing, isAuthenticated, hasRequiredRole, router]);
+  }, [isInitializing, isAuthenticated, hasRequiredRole, router, signOut]);
 
   if (isInitializing || !isAuthenticated || !hasRequiredRole) {
     return <View style={{ flex: 1, backgroundColor: PathoraColors.paper }} />;

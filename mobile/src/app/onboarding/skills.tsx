@@ -25,6 +25,7 @@ import { PathoraInput } from '@/components/pathora-input';
 import { PathoraColors, PathoraFonts, PathoraRadius, PathoraSpacing } from '@/constants/pathora-theme';
 import { useAuth } from '@/context/auth-context';
 import {
+  createCustomSkill,
   getInternProfileOrNull,
   getInternSkills,
   updateInternProfile,
@@ -65,7 +66,14 @@ function SkillsAndInterestsScreen() {
         if (cancelled) {
           return;
         }
-        setCatalog(skills);
+        // getInternSkills only returns the curated catalog (a custom skill is deliberately
+        // excluded from general browsing — see the backend's getSkillCatalog). Without this
+        // merge, a custom skill already on this profile would vanish from view entirely: its
+        // id would still be in selectedSkillIds, but selectedSkills derives each chip's label
+        // by looking the id up in `catalog`, which wouldn't contain it.
+        const ownSkills = profile?.skills ?? [];
+        const missingOwnSkills = ownSkills.filter((owned) => !skills.some((s) => s.id === owned.id));
+        setCatalog([...skills, ...missingOwnSkills]);
         if (profile) {
           setSelectedSkillIds(profile.skills.map((skill) => skill.id));
           setCareerInterests(profile.careerInterests ?? '');
@@ -90,6 +98,18 @@ function SkillsAndInterestsScreen() {
     setSelectedSkillIds((current) =>
       current.includes(skillId) ? current.filter((id) => id !== skillId) : [...current, skillId],
     );
+  };
+
+  // The server resolves `name` against the catalog (including aliases) before ever creating
+  // anything new, so the skill that comes back may not be a new row at all — it's added to the
+  // local catalog (if not already present) and selected either way.
+  const handleAddCustomSkill = async (name: string) => {
+    if (!token) {
+      return;
+    }
+    const skill = await createCustomSkill(token, name);
+    setCatalog((current) => (current.some((existing) => existing.id === skill.id) ? current : [...current, skill]));
+    setSelectedSkillIds((current) => (current.includes(skill.id) ? current : [...current, skill.id]));
   };
 
   const handlePickCv = async () => {
@@ -280,6 +300,7 @@ function SkillsAndInterestsScreen() {
         skills={catalog}
         selectedSkillIds={selectedSkillIds}
         onToggleSkill={handleToggleSkill}
+        onAddCustomSkill={handleAddCustomSkill}
         onClose={() => setIsPickerVisible(false)}
       />
       </SafeAreaView>

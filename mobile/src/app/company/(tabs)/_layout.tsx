@@ -34,11 +34,18 @@ function CompanyTabsGuard({ children }: { children: ReactNode }) {
       return;
     }
     if (!isCompany) {
-      // Signed in, but as the wrong role — send them to their own home instead of bouncing an
-      // already-authenticated user back to the login screen.
-      router.replace(user?.role === 'INTERN' ? '/intern' : '/login');
+      if (user?.role === 'INTERN') {
+        // Signed in, but as the wrong role — send them to their own home instead of bouncing
+        // an already-authenticated user back to the login screen.
+        router.replace('/intern');
+        return;
+      }
+      // No mobile experience exists for any other role (e.g. ADMIN). Never park an
+      // authenticated session on Login — end it and let the normal signed-out routing
+      // (Welcome) take over instead.
+      void signOut();
     }
-  }, [isInitializing, isAuthenticated, isCompany, user?.role, router]);
+  }, [isInitializing, isAuthenticated, isCompany, user?.role, router, signOut]);
 
   const checkApproval = useCallback(() => {
     if (!token) {
