@@ -1,0 +1,31 @@
+/* Page-specific additions only — everything shared (header, panel, button, input, form styles)
+   comes from delete-account.css, linked alongside this file, so this page matches the rest of
+   the site exactly. Kept as a real external file (not an inline <style> block) because the
+   site's CSP uses style-src 'self' with no 'unsafe-inline' — see support.html/delete-account.html. */
+.faq-group { margin-bottom: 36px; }
+.faq-group:last-child { margin-bottom: 0; }
+.faq-group h2 { margin-bottom: 16px; }
+details.faq-item { border: 1px solid #e2ebe7; border-radius: 12px; margin-bottom: 10px; background: #fff; overflow: hidden; }
+details.faq-item + details.faq-item { margin-top: 10px; }
+details.faq-item summary {
+  list-style: none; cursor: pointer; padding: 16px 20px; font-weight: 680; font-size: 15px;
+  color: #17383a; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+details.faq-item summary::-webkit-details-marker { display: none; }
+details.faq-item summary::after {
+  content: "+"; font-size: 20px; font-weight: 400; color: #0e625c; flex: 0 0 auto; transition: transform .15s;
+}
+details.faq-item[open] summary::after { transform: rotate(45deg); }
+details.faq-item .faq-answer { padding: 0 20px 18px; color: #4f6668; font-size: 14.5px; line-height: 1.65; }
+details.faq-item .faq-answer p { margin: 0 0 10px; }
+details.faq-item .faq-answer p:last-child { margin-bottom: 0; }
+select { min-width: 0; font: inherit; font-size: 15px; width: 100%; padding: 13px 14px; background: #fff; border: 1px solid #ccdcd7; border-radius: 10px; color: #17383a; margin-bottom: 22px; appearance: none; }
+select:focus { outline: none; border-color: #11816f; box-shadow: 0 0 0 3px rgba(20,135,116,.12); }
+textarea { min-width: 0; font: inherit; font-size: 15px; width: 100%; padding: 13px 14px; background: #fff; border: 1px solid #ccdcd7; border-radius: 10px; color: #17383a; margin-bottom: 22px; resize: vertical; min-height: 120px; }
+textarea:focus { outline: none; border-color: #11816f; box-shadow: 0 0 0 3px rgba(20,135,116,.12); }
+.char-count { margin: -15px 0 22px; font-size: 12px; color: var(--muted); text-align: right; }
+.notice-success { background: #e9f6f1; border: 1px solid #bfe3d4; color: #0f5c47; }
+/* Honeypot: hidden from sighted users and excluded from the tab order, but still present in
+   the DOM for simple bots that fill every field indiscriminately — see support.js and the
+   backend's SupportRequestCreateRequest#website. */
+.hp-field { position: absolute; left: -9999px; top: -9999px; width: 1px; height: 1px; overflow: hidden; }

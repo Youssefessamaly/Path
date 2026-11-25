@@ -51,6 +51,7 @@ public class SecurityConfig {
                         "/api/v1/auth/verify-otp",
                         "/api/v1/auth/reset-password",
                         "/api/v1/profile-images/companies/**",
+                        "/api/v1/support/contact",
                         "/actuator/health",
                         "/actuator/info"
                 ).permitAll()

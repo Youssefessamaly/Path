@@ -52,6 +52,11 @@ app:
   password-reset:
     # Mailpit accepts this development-only sender. Production overrides it.
     from-address: ${SMTP_FROM:no-reply@path.local}
+  support:
+    # Where a public support-form submission (legal-web/support.html) is delivered.
+    # Correct out of the box in every environment; override only if PATH's support inbox
+    # ever changes.
+    notification-email: ${SUPPORT_NOTIFICATION_EMAIL:path.app.support@gmail.com}
   jwt:
     secret: ${JWT_SECRET}
     expiration-seconds: 3600
